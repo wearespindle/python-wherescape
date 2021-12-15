@@ -43,8 +43,8 @@ Adding more connectors.
 
 If you want to report an issue see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more info.
 
-We will be happy to answer your other questions at {opensource@wearespindle.com or insert alias}
+We will be happy to answer your other questions at opensource@wearespindle.com.
 
 ## License
 
-{Project} is made available under the {license type} license. See the [LICENSE file](LICENSE) for more info.
+Python-wherescape is made available under the MIT license. See the [LICENSE file](LICENSE) for more info.
