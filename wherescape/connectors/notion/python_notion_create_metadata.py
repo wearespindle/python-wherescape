@@ -4,18 +4,16 @@ import logging
 
 from wherescape import WhereScape
 from wherescape.helper_functions import prepare_metadata_query, create_column_names
-from wherescape.logging import initialise_wherescape_logging
 
 
 def notion_create_metadata():
-    initialise_wherescape_logging()
+    wherescape = WhereScape()
     start_time = datetime.now()
     logging.info(
         "Start time: %s for notion_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
     # Initialise WhereScape
-    wherescape = WhereScape()
     key = wherescape.read_parameter("notion_key")
     wherescape_object_id = wherescape.object_key
     notion_database_id = wherescape.top_level_name
