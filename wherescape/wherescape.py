@@ -53,6 +53,8 @@ class WhereScape:
         self.task_name = os.getenv("WSL_TASK_NAME")
 
         self.schema = os.getenv("WSL_LOAD_SCHEMA")
+        self.table = os.getenv("WSL_LOAD_TABLE")
+        self.load_full_name = os.getenv("WSL_LOAD_FULLNAME")
         if self.schema == "load":
             # This script is attached to a load table.
             sql = "SELECT lt_obj_key, lt_file_path, lt_file_name FROM ws_load_tab WHERE lt_table_name = ?"
@@ -168,3 +170,63 @@ class WhereScape:
             logging.error(e)
             raise
         return rowcount
+
+    def push_many_to_target(self, sql, params=[]):
+        """
+        Function to push data to the target database.
+
+        Input :
+        sql     : a sql statement, possibly with ? placeholders for parameters
+        params  : list of tuples with values to replace ? placeholders in the SQL
+
+        Example:
+        row1 = ('a',)
+        row2 = ('b',)
+        rows = [row1, row2]
+        push_to_target('INSERT INTO schemaname.tablename (columname) VALUES (?)',  rows )
+        """
+        try:
+            conn = pyodbc.connect(self.target_db_connection_string)
+            conn.autocommit = False
+            cursor = conn.cursor()
+            cursor.executemany(sql, params)
+        except Exception as e:
+            conn.rollback()
+            logging.error(e)
+            raise
+        else:
+            conn.commit()
+            cursor.close()
+
+    def read_parameter(self, name, include_comment=False):
+        """
+        Function to read a parameter from Wherescape.
+        """
+        # Intialize return values
+        result = ""
+        comment = ""
+
+        sql = """
+            DECLARE @out varchar(max),@out1 varchar(max);
+            EXEC WsParameterRead
+        	  @p_parameter = ?
+            ,@p_value = @out OUTPUT
+            ,@p_comment=@out1 OUTPUT
+            SELECT @out AS p_value,@out1 AS p_comment;"""
+
+        try:
+            result = self.query_meta(sql, [name])
+        except Exception as e:
+            logging.error(e)
+            raise
+        else:
+            if len(result) == 0:
+                parameter = ""
+            else:
+                parameter = result[0][0]
+                comment = result[0][1]
+
+        if include_comment:
+            return parameter, comment
+        else:
+            return parameter

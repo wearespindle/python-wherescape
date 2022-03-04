@@ -21,6 +21,16 @@ def create_column_names(display_names=[]):
     return columns
 
 
+def create_display_names(columns=[]):
+    """
+    Change column names in to display names.
+    """
+    display_names = []
+    for column in columns:
+        display_names.append(column.replace("_", " ").capitalize())
+    return display_names
+
+
 def prepare_metadata_query(
     lt_obj_key, src_table_name, columns=[], display_names=[], types=[], comments=[]
 ):
@@ -79,3 +89,36 @@ def prepare_metadata_query(
     """
 
     return sql
+
+
+def filter_dict(dict_to_filter, keys_to_keep):
+    return dict(
+        [
+            (key, dict_to_filter[key])
+            for key in dict_to_filter
+            if key in set(keys_to_keep)
+        ]
+    )
+
+
+def flatten_json(json_response, name_to_skip):
+    out = {}
+
+    def flatten(x, name=""):
+        if type(x) is dict:
+            for a in x:
+                if name_to_skip == a:
+                    new_name = name
+                else:
+                    new_name = name + a + "_"
+                flatten(x[a], new_name)
+        elif type(x) is list:
+            i = 0
+            for a in x:
+                flatten(a, name + str(i) + "_")
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(json_response)
+    return out
