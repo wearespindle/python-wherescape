@@ -55,7 +55,10 @@ class Jira:
         self.user = user
         self.apikey = apikey
         self.base_url = base_url
-        self.search_issues = "/search?jql=project={}&startAt={}&maxResults=1"
+        self.search_issues = (
+            "/search?jql=project={}&startAt={}&maxResults=1"  # &fields="
+            # + ",".join(KEYS_TO_KEEP_FROM_TICKETS_JSON.keys())
+        )
         self.search_projects = "/project/search"
 
     def issue_column_names_and_types(self):
@@ -85,11 +88,12 @@ class Jira:
 
         if as_numpy:
             for project in json_response["values"]:
-                projects[project["id"]] = filter_dict(
-                    project, KEYS_TO_KEEP_FROM_PROJECTS_JSON.keys()
-                )
+                project_keys_list = KEYS_TO_KEEP_FROM_PROJECTS_JSON.keys()
+                projects[project["id"]] = filter_dict(project, project_keys_list)
 
-            data_as_frame = pd.DataFrame(projects).transpose()
+            data_as_frame = pd.DataFrame(
+                projects, index=[0], columns=list(project_keys_list)
+            )
             data_as_frame = self.clean_dataframe(
                 data_as_frame, KEYS_TO_KEEP_FROM_PROJECTS_JSON
             )
@@ -103,14 +107,12 @@ class Jira:
 
         all_issues_per_project = []
         for project in projects:
-            issue_url = self.base_url + self.search_issues.format(project["id"], 0)
             all_issues_per_project.extend(
-                self.get_issue_data_per_project(project["id"], issue_url)
+                self.get_issue_data_per_project(project["id"])
             )
-            break
         return all_issues_per_project
 
-    def get_issue_data_per_project(self, project_id, url):
+    def get_issue_data_per_project(self, project_id):
         total_of_issues = 1
         max_results = 1
         start_at = 0
@@ -126,9 +128,12 @@ class Jira:
             # total_of_issues = json_response["total"]
             max_results = json_response["maxResults"]
             start_at = json_response["startAt"] + json_response["maxResults"]
-
-            all_issues.extend(self.clean_issue_data(json_response))
-            break
+            if len(json_response["issues"]) > 0:
+                try:
+                    all_issues.extend(self.clean_issue_data(json_response["issues"]))
+                except:
+                    logging.error(json_response)
+                    raise
         return all_issues
 
     def clean_dataframe(self, dataframe, properties_to_transform):
@@ -147,23 +152,21 @@ class Jira:
                 dataframe[key] = ""  # todo: check if now keys are missing.
         return dataframe
 
-    def clean_issue_data(self, json_response):
+    def clean_issue_data(self, issues):
         data = {}
 
-        if json_response["issues"]:
-            for issue in json_response["issues"]:
-                flattend_dict = flatten_json(json_response=issue, name_to_skip="fields")
-                new_dict = filter_dict(
-                    flattend_dict, KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()
-                )
-                data[new_dict["id"]] = new_dict
-            data_as_frame = pd.DataFrame(data).transpose()
+        for issue in issues:
+            flattend_dict = flatten_json(json_response=issue, name_to_skip="fields")
+            issues_keys_list = KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()
+            data = filter_dict(flattend_dict, issues_keys_list)
 
-            data_as_frame = self.clean_dataframe(
-                data_as_frame, KEYS_TO_KEEP_FROM_TICKETS_JSON
-            )
-            try:
-                tickets_in_tuples = data_as_frame.values.tolist()
-            except:
-                raise
-            return tickets_in_tuples
+        data_as_frame = pd.DataFrame(data, index=[0], columns=list(issues_keys_list))
+
+        data_as_frame = self.clean_dataframe(
+            data_as_frame, KEYS_TO_KEEP_FROM_TICKETS_JSON
+        )
+        try:
+            issue_data_in_list = data_as_frame.values.tolist()
+        except:
+            raise
+        return issue_data_in_list
