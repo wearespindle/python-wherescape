@@ -1,7 +1,6 @@
 import pandas as pd
 import logging
 import requests
-import os
 
 from requests.auth import HTTPBasicAuth
 
@@ -55,10 +54,7 @@ class Jira:
         self.user = user
         self.apikey = apikey
         self.base_url = base_url
-        self.search_issues = (
-            "/search?jql=project={}&startAt={}&maxResults=1"  # &fields="
-            # + ",".join(KEYS_TO_KEEP_FROM_TICKETS_JSON.keys())
-        )
+        self.search_issues = "/search?jql=project={}&startAt={}&maxResults=1"
         self.search_projects = "/project/search"
 
     def issue_column_names_and_types(self):
@@ -87,19 +83,22 @@ class Jira:
         projects = {}
 
         if as_numpy:
+            project_keys_list = KEYS_TO_KEEP_FROM_PROJECTS_JSON.keys()
+
             for project in json_response["values"]:
-                project_keys_list = KEYS_TO_KEEP_FROM_PROJECTS_JSON.keys()
                 projects[project["id"]] = filter_dict(project, project_keys_list)
 
             data_as_frame = pd.DataFrame(
-                projects, index=[0], columns=list(project_keys_list)
+                projects.values(),
+                index=list(projects.keys()),
+                columns=list(project_keys_list),
             )
+
             data_as_frame = self.clean_dataframe(
                 data_as_frame, KEYS_TO_KEEP_FROM_PROJECTS_JSON
             )
 
-            projects_in_tuples = data_as_frame.to_records(index=False)
-            return list(projects_in_tuples)
+            return data_as_frame.values.tolist()
         return json_response["values"]
 
     def get_all_issues(self):
@@ -124,10 +123,16 @@ class Jira:
 
             response = self.make_request(url, "GET")
             json_response = response.json()
+
+            if "errorMessages" in json_response:
+                logging.warn(json_response["errorMessages"])
+                return []
+
             # logging.info(json_response)
             # total_of_issues = json_response["total"]
             max_results = json_response["maxResults"]
             start_at = json_response["startAt"] + json_response["maxResults"]
+
             if len(json_response["issues"]) > 0:
                 try:
                     all_issues.extend(self.clean_issue_data(json_response["issues"]))
@@ -155,13 +160,15 @@ class Jira:
     def clean_issue_data(self, issues):
         data = {}
 
+        issues_keys_list = KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()
+
         for issue in issues:
             flattend_dict = flatten_json(json_response=issue, name_to_skip="fields")
-            issues_keys_list = KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()
-            data = filter_dict(flattend_dict, issues_keys_list)
+            data[issue["id"]] = filter_dict(flattend_dict, issues_keys_list)
 
-        data_as_frame = pd.DataFrame(data, index=[0], columns=list(issues_keys_list))
-
+        data_as_frame = pd.DataFrame(
+            data.values(), list(data.keys()), columns=list(issues_keys_list)
+        )
         data_as_frame = self.clean_dataframe(
             data_as_frame, KEYS_TO_KEEP_FROM_TICKETS_JSON
         )
