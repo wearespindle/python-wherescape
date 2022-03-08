@@ -86,6 +86,8 @@ class Jira:
             project_keys_list = KEYS_TO_KEEP_FROM_PROJECTS_JSON.keys()
 
             for project in json_response["values"]:
+                if project["isPrivate"]:
+                    continue
                 projects[project["id"]] = filter_dict(project, project_keys_list)
 
             data_as_frame = pd.DataFrame(
@@ -106,6 +108,8 @@ class Jira:
 
         all_issues_per_project = []
         for project in projects:
+            if project["isPrivate"]:
+                continue
             all_issues_per_project.extend(
                 self.get_issue_data_per_project(project["id"])
             )
