@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import logging
 import requests
@@ -50,11 +51,15 @@ KEYS_TO_KEEP_FROM_PROJECTS_JSON = {
 
 
 class Jira:
-    def __init__(self, user, apikey, base_url):
+    def __init__(self, user, apikey, base_url, created_or_updated_since="-24h"):
         self.user = user
         self.apikey = apikey
         self.base_url = base_url
-        self.search_issues = "/search?jql=project={}&startAt={}&maxResults=1"
+
+        self.created_or_updated_since = created_or_updated_since
+        self.issue_jql = "project = {} AND (created >= {} OR updated >= {})"
+        self.search_issues = "/search"
+
         self.search_projects = "/project/search"
 
     def issue_column_names_and_types(self):
@@ -63,12 +68,14 @@ class Jira:
     def project_column_names_and_types(self):
         return KEYS_TO_KEEP_FROM_PROJECTS_JSON
 
-    def make_request(self, url, method):
-        headers = {"Accept": "application/json"}
+    def make_request(self, url, method, payload={}):
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
 
         auth = HTTPBasicAuth(self.user, self.apikey)
 
-        response = requests.request(method, url, headers=headers, auth=auth)
+        response = requests.request(
+            method, url, data=payload, headers=headers, auth=auth
+        )
         return response
 
     def get_all_projects(self, as_numpy=True):
@@ -123,9 +130,22 @@ class Jira:
         all_issues = []
 
         while start_at <= (total_of_issues - max_results):
-            url = self.base_url + self.search_issues.format(project_id, start_at)
 
-            response = self.make_request(url, "GET")
+            url = self.base_url + self.search_issues
+
+            payload = json.dumps(
+                {
+                    "jql": self.issue_jql.format(
+                        project_id,
+                        self.created_or_updated_since,
+                        self.created_or_updated_since,
+                    ),
+                    "maxResults": max_results,
+                    "startAt": start_at,
+                }
+            )
+            response = self.make_request(url, "POST", payload=payload)
+            response.raise_for_status()
             json_response = response.json()
 
             if "errorMessages" in json_response:
@@ -133,7 +153,7 @@ class Jira:
                 return []
 
             # logging.info(json_response)
-            # total_of_issues = json_response["total"]
+            total_of_issues = json_response["total"]
             max_results = json_response["maxResults"]
             start_at = json_response["startAt"] + json_response["maxResults"]
 
