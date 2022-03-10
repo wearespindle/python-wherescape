@@ -117,7 +117,6 @@ class Jira:
 
     def get_all_projects(self, as_numpy=True):
         url = f"{self.base_url}{self.search_projects}"
-        logging.info(url)
 
         response = self.make_request(url, "GET")
         json_response = response.json()
