@@ -1,6 +1,6 @@
 import json
-import pandas as pd
 import logging
+import pandas as pd
 import requests
 
 from requests.auth import HTTPBasicAuth
@@ -51,15 +51,14 @@ KEYS_TO_KEEP_FROM_PROJECTS_JSON = {
 
 
 class Jira:
-    def __init__(self, user, apikey, base_url, created_or_updated_since="-24h"):
+    def __init__(self, user, apikey, base_url):
         self.user = user
         self.apikey = apikey
         self.base_url = base_url
 
-        self.created_or_updated_since = created_or_updated_since
-        self.issue_jql = "project = {} AND (created >= {} OR updated >= {})"
+        self.issue_jql = "project = {}"
+        self.issue_jql_since = "project = {} AND (created >= {} OR updated >= {})"
         self.search_issues = "/search"
-
         self.search_projects = "/project/search"
 
     def issue_column_names_and_types(self):
@@ -70,9 +69,7 @@ class Jira:
 
     def make_request(self, url, method, payload={}):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-
         auth = HTTPBasicAuth(self.user, self.apikey)
-
         response = requests.request(
             method, url, data=payload, headers=headers, auth=auth
         )
@@ -83,9 +80,6 @@ class Jira:
         logging.info(url)
 
         response = self.make_request(url, "GET")
-        # logging.info(response)
-        # logging.info(response.content)
-
         json_response = response.json()
         projects = {}
 
@@ -110,7 +104,7 @@ class Jira:
             return data_as_frame.values.tolist()
         return json_response["values"]
 
-    def get_all_issues(self):
+    def get_all_issues(self, since=None):
         projects = self.get_all_projects(as_numpy=False)
 
         all_issues_per_project = []
@@ -118,14 +112,18 @@ class Jira:
             if project["isPrivate"]:
                 continue
             all_issues_per_project.extend(
-                self.get_issue_data_per_project(project["id"])
+                self.get_issue_data_per_project(project["id"], since)
             )
         return all_issues_per_project
 
-    def get_issue_data_per_project(self, project_id):
+    def get_issue_data_per_project(self, project_id, since=None):
         total_of_issues = 1
         max_results = 1
         start_at = 0
+        if since:
+            jql = self.issue_jql_since.format(project_id, since, since)
+        else:
+            jql = self.issue_jql.format(project_id)
 
         all_issues = []
 
@@ -135,11 +133,7 @@ class Jira:
 
             payload = json.dumps(
                 {
-                    "jql": self.issue_jql.format(
-                        project_id,
-                        self.created_or_updated_since,
-                        self.created_or_updated_since,
-                    ),
+                    "jql": jql,
                     "maxResults": max_results,
                     "startAt": start_at,
                 }
@@ -152,7 +146,6 @@ class Jira:
                 logging.warn(json_response["errorMessages"])
                 return []
 
-            # logging.info(json_response)
             total_of_issues = json_response["total"]
             max_results = json_response["maxResults"]
             start_at = json_response["startAt"] + json_response["maxResults"]
