@@ -117,13 +117,13 @@ def filter_dict(dict_to_filter, keys_to_keep):
     )
 
 
-def flatten_json(json_response, name_to_skip):
+def flatten_json(json_response, name_to_skip=None):
     out = {}
 
     def flatten(x, name=""):
         if type(x) is dict:
             for a in x:
-                if name_to_skip == a:
+                if name_to_skip and name_to_skip == a:
                     new_name = name
                 else:
                     new_name = name + a + "_"

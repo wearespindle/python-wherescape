@@ -6,3 +6,4 @@ wherescape.log
 __pycache__
 virtual/
 config.py
+script_tester.py
