@@ -8,7 +8,8 @@ from requests.auth import HTTPBasicAuth
 from wherescape.helper_functions import filter_dict, flatten_json
 
 
-"""Keys to keep from ... Dictionaries
+"""
+Keys to keep from ... Dictionaries
 
 In the keys to keep object we keep the fields from JIRA we would like to keep.
 
@@ -18,8 +19,9 @@ flattened -> so this response from JIRA:
 }}
 becomes: issuetype_description: 'A description of the issuetype'.
 
-It is paired together with the python type we want the field to be in, since the response is all strings.
-Later on these types can be converted to the DB type you need.
+It is paired together with the python type we want the field to be in, since
+the response is all strings. Later on these types can be converted to the DB
+type you need.
 
 """
 KEYS_TO_KEEP_FROM_TICKETS_JSON = {
@@ -48,7 +50,6 @@ KEYS_TO_KEEP_FROM_TICKETS_JSON = {
 }
 
 KEYS_TO_KEEP_FROM_PROJECTS_JSON = {
-    # "expand": "object",
     "self": "object",
     "id": "int",
     "key": "object",
@@ -57,7 +58,6 @@ KEYS_TO_KEEP_FROM_PROJECTS_JSON = {
     "simplified": "boolean",
     "style": "object",
     "isPrivate": "boolean",
-    # "properties": "object",
     "entityId": "object",
     "uuid": "object",
 }
@@ -74,17 +74,23 @@ class Jira:
         self.search_issues = "/search"
         self.search_projects = "/project/search"
 
-    """Return value is the Dictionary for issues of what we keep from the JIRA response."""
-
     def issue_column_names_and_types(self):
+        """
+        Return value is the Dictionary for issues of what we keep from the
+        JIRA response.
+        """
         return KEYS_TO_KEEP_FROM_TICKETS_JSON
 
-    """Return value is the Dictionary for projects of what we keep from the JIRA response."""
-
     def project_column_names_and_types(self):
+        """
+        Return value is the Dictionary for projects of what we keep from the
+        JIRA response.
+        """
         return KEYS_TO_KEEP_FROM_PROJECTS_JSON
 
-    """ Make request
+    def make_request(self, url, method, payload={}):
+        """
+        Function that makes the actual request to JIRA.
 
         Parameters:
         url (string): The url the request should be made to
@@ -93,17 +99,22 @@ class Jira:
 
         Returns:
         response object: response of the request made
-    """
-
-    def make_request(self, url, method, payload={}):
+        """
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         auth = HTTPBasicAuth(self.user, self.apikey)
         response = requests.request(
             method, url, data=payload, headers=headers, auth=auth
         )
+        if response.status_code != 200:
+            raise Exception(
+                "JIRA connection error %d: %s"
+                % (response.status_code, response.content)
+            )
         return response
 
-    """ Get all projects
+    def get_all_projects(self, as_numpy=True):
+        """
+        Get all projects
 
         Parameters:
         as_numpy (boolean): set to False when you just need the response
@@ -113,9 +124,7 @@ class Jira:
         project data in list of lists
         OR
         response object: response of the request made
-    """
-
-    def get_all_projects(self, as_numpy=True):
+        """
         url = f"{self.base_url}{self.search_projects}"
 
         response = self.make_request(url, "GET")
@@ -143,17 +152,17 @@ class Jira:
             return data_as_frame.values.tolist()
         return json_response["values"]
 
-    """ Get all issues
-    
+    def get_all_issues(self, since=None):
+        """
+        Get all issues
+
         Parameters:
         since (string): For values accepted check here:
         https://support.atlassian.com/jira-software-cloud/docs/advanced-search-reference-jql-fields/#Created
 
         Returns:
         all_issues_per_project: list of lists with issue data
-    """
-
-    def get_all_issues(self, since=None):
+        """
         projects = self.get_all_projects(as_numpy=False)
 
         all_issues_per_project = []
@@ -165,7 +174,9 @@ class Jira:
             )
         return all_issues_per_project
 
-    """ Get all issue data per project
+    def get_issue_data_per_project(self, project_id, since=None):
+        """
+        Get all issue data per project
         Pagination to retrieve all issue per project from the API
 
         Parameters:
@@ -174,9 +185,7 @@ class Jira:
 
         Returns:
         all_issues: list of issues for one project
-    """
-
-    def get_issue_data_per_project(self, project_id, since=None):
+        """
         total_of_issues = 1
         max_results = 1
         start_at = 0
@@ -188,8 +197,7 @@ class Jira:
         all_issues = []
 
         while start_at <= (total_of_issues - max_results):
-
-            url = self.base_url + self.search_issues
+            url = f"{self.base_url}{self.search_issues}"
 
             payload = json.dumps(
                 {
@@ -211,14 +219,11 @@ class Jira:
             start_at = json_response["startAt"] + json_response["maxResults"]
 
             if len(json_response["issues"]) > 0:
-                try:
-                    all_issues.extend(self.clean_issue_data(json_response["issues"]))
-                except:
-                    logging.error(json_response)
-                    raise
+                all_issues.extend(self.clean_issue_data(json_response["issues"]))
         return all_issues
 
-    """ Clean dataframe
+    def clean_dataframe(self, dataframe, properties_to_transform):
+        """
         Will transform the strings to the types given in the keys to keep dictionary
 
         Parameters:
@@ -227,9 +232,7 @@ class Jira:
 
         Returns:
         dataframe: a clean dataframe with the correct types
-    """
-
-    def clean_dataframe(self, dataframe, properties_to_transform):
+        """
         # Only have one type that is empty: None
         dataframe = dataframe.where(dataframe.notnull(), None)
         for key, value in properties_to_transform.items():
@@ -245,7 +248,8 @@ class Jira:
                 dataframe[key] = ""  # todo: check if now keys are missing.
         return dataframe
 
-    """ Clean issue data
+    def clean_issue_data(self, issues):
+        """
         Flattens the json response and filters that dictionary for the keys you want to keep
         Will also clean the dataframe transforming the strings into the correct types
 
@@ -254,9 +258,7 @@ class Jira:
 
         Returns:
         issue_data_in_list: a list of lists with all issue data
-    """
-
-    def clean_issue_data(self, issues):
+        """
         data = {}
 
         issues_keys_list = KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()

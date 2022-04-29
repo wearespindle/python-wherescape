@@ -34,24 +34,25 @@ def jira_create_metadata(title):
     and WhereScape.
     """
     start_time = datetime.now()
+    # First initialise WhereScape to setup logging
+    wherescape_instance = WhereScape()
     logging.info(
         "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
     # Initialise WhereScape and get the relevant WhereScape values.
     logging.info("Connecting to WhereScape")
-    wherescape_instance = WhereScape()
     user = wherescape_instance.read_parameter("jira_user")
-    apikey = wherescape_instance.read_parameter("jira_key")
+    apikey = wherescape_instance.read_parameter("jira_apikey")
     wherescape_object_id = wherescape_instance.object_key
-    base_url = wherescape_instance.top_level_name
+    base_url = wherescape_instance.base_uri
 
     # Initialise the Jira connector and get the columns.
     logging.info("Getting the columns data from Jira.")
     jira_instance = Jira(user, apikey, base_url)
     if title == "projects":
         columns = jira_instance.project_column_names_and_types()
-    elif title == "ussues":
+    elif title == "issues":
         columns = jira_instance.issue_column_names_and_types()
     python_types = list(columns.values())
     columns = list(columns.keys())
@@ -84,7 +85,7 @@ def jira_create_metadata(title):
     # Execute the sql
     wherescape_instance.push_to_meta(sql)
     logging.info(f"Metadata table for {title} created.")
-    wherescape_instance.main_message = f"Created metadata table for {title}."
+    wherescape_instance.main_message = f"Metadata table for JIRA {title} created."
 
     # Final logging
     end_time = datetime.now()
