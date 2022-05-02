@@ -36,14 +36,14 @@ class WhereScape:
         wsl_meta_user = os.getenv("WSL_META_USER")
         wsl_meta_pwd = os.getenv("WSL_META_PWD")
         self.meta_db_connection_string = (
-            "DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
+            f"DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
         )
 
         wsl_tgt_dns = os.getenv("WSL_TGT_DSN")
         wsl_tgt_user = os.getenv("WSL_TGT_USER")
         wsl_tgt_pwd = os.getenv("WSL_TGT_PWD")
         self.target_db_connection_string = (
-            "DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd}"
+            f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd}"
         )
 
         self.sequence = os.getenv("WSL_SEQUENCE")
@@ -52,16 +52,18 @@ class WhereScape:
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
 
+        self.table = os.getenv("WSL_LOAD_TABLE")
         self.schema = os.getenv("WSL_LOAD_SCHEMA")
         if self.schema == "load":
-            # This script is attached to a load table.
+            # This script is related to a load table.
             sql = "SELECT lt_obj_key, lt_file_path, lt_file_name FROM ws_load_tab WHERE lt_table_name = ?"
             results = self.query_meta(sql, [self.table])
             self.object_key = results[0][0]
             self.base_uri = results[0][1]
             self.top_level_name = results[0][2]
+            self.load_full_name = os.getenv("WSL_LOAD_FULLNAME")
         elif self.schema == "stage":
-            # This script is attached to a stage table.
+            # This script is related to a stage table.
             sql = "SELECT st_obj_key FROM ws_stage_tab WHERE st_table_name = ?"
             results = self.query_meta(sql, [self.table])
             self.object_key = results[0][0]
@@ -168,3 +170,63 @@ class WhereScape:
             logging.error(e)
             raise
         return rowcount
+
+    def push_many_to_target(self, sql, params=[]):
+        """
+        Function to push data to the target database.
+
+        Input :
+        sql     : a sql statement, possibly with ? placeholders for parameters
+        params  : list of tuples with values to replace ? placeholders in the SQL
+
+        Example:
+        row1 = ('a',)
+        row2 = ('b',)
+        rows = [row1, row2]
+        push_to_target('INSERT INTO schemaname.tablename (columname) VALUES (?)',  rows )
+        """
+        try:
+            conn = pyodbc.connect(self.target_db_connection_string)
+            conn.autocommit = False
+            cursor = conn.cursor()
+            cursor.executemany(sql, params)
+        except Exception as e:
+            conn.rollback()
+            logging.error(e)
+            raise
+        else:
+            conn.commit()
+            cursor.close()
+
+    def read_parameter(self, name, include_comment=False):
+        """
+        Function to read a parameter from Wherescape.
+        """
+        # Intialize return values
+        result = ""
+        comment = ""
+
+        sql = """
+            DECLARE @out varchar(max),@out1 varchar(max);
+            EXEC WsParameterRead
+        	  @p_parameter = ?
+            ,@p_value = @out OUTPUT
+            ,@p_comment=@out1 OUTPUT
+            SELECT @out AS p_value,@out1 AS p_comment;"""
+
+        try:
+            result = self.query_meta(sql, [name])
+        except Exception as e:
+            logging.error(e)
+            raise
+        else:
+            if len(result) == 0:
+                parameter = ""
+            else:
+                parameter = result[0][0]
+                comment = result[0][1]
+
+        if include_comment:
+            return parameter, comment
+        else:
+            return parameter

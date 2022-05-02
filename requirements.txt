@@ -1,3 +1,5 @@
 notion-client
+pandas
 pyodbc
 python-slugify
+requests

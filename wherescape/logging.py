@@ -1,4 +1,5 @@
 import logging
+import sys
 
 
 class WhereScapeLogHandler(logging.Handler):
@@ -38,8 +39,10 @@ class WhereScapeLogHandler(logging.Handler):
         in the WhereScape Audit Log (subsequent messages are visible in the
         detail log).
 
-        Prints '-1' + Error/warning messages & Messages if there are warnings.
-        Prints '-2' + Error/warning messages & Messages if there are errors.
+        Prints '-1' + Warning messages & Messages if there are warnings.
+        Prints '-2' + Error messages & Messages if there are errors.
+        Prints '-3' + Error messages & Messages if something critical has gone
+        wrong.
         """
 
         self.acquire()
@@ -75,15 +78,31 @@ class WhereScapeLogHandler(logging.Handler):
         self.output = False
 
 
+def handle_exception(exc_type, exc_value, exc_traceback):
+    """
+    Function to log unhandled exceptions.
+    https://codegrepr.com/question/logging-uncaught-exceptions-in-python/
+    https://docs.python.org/3/library/sys.html#sys.excepthook
+    """
+    logger = logging.getLogger()
+    logger.critical(
+        "Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback)
+    )
+
+
 def initialise_wherescape_logging(wherescape):
     """
     Function to configure the logging for WhereScape.
     """
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
     fmt = "[%(levelname)s] %(asctime)s %(filename)s %(funcName)s():%(lineno)i: %(message)s"
     message_format = logging.Formatter(fmt=fmt, datefmt="%H:%M:%S")
+
+    # Get the root logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    logger.handlers = []
 
     w_handler = WhereScapeLogHandler(wherescape, level=logging.INFO)
     w_handler.setFormatter(message_format)
@@ -92,3 +111,4 @@ def initialise_wherescape_logging(wherescape):
     f_handler = logging.FileHandler(f"{wherescape.workdir}wherescape.log")
     f_handler.setFormatter(message_format)
     logger.addHandler(f_handler)
+    sys.excepthook = handle_exception

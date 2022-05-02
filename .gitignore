@@ -3,3 +3,6 @@
 wherescape.log
 .DS_Store
 *.pyc
+__pycache__
+virtual/
+config.py
