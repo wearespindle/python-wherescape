@@ -4,10 +4,7 @@ import logging
 from wherescape.helper_functions import flatten_json, filter_dict
 
 from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
-    PROJECTS_COLUMN_NAMES_DATA_TYPES,
-    TAGS_COLUMN_NAMES_DATA_TYPES,
-    ISSUES_COLUMN_NAMES_DATA_TYPES,
-    PIPELINE_COLUMN_NAMES_DATA_TYPES,
+    COLUMN_NAMES_AND_DATA_TYPES,
 )
 
 
@@ -16,11 +13,7 @@ class Gitlab:
         self.access_token = access_token
         self.base_url = base_url
 
-    def project_column_names_and_types(self):
-        return PROJECTS_COLUMN_NAMES_DATA_TYPES
-
-    def tags_column_names_and_types(self):
-        return TAGS_COLUMN_NAMES_DATA_TYPES
+        self.projects = self.get_projects_from_api()
 
     def make_request(self, url, method, payload={}):
         headers = {
@@ -71,8 +64,11 @@ class Gitlab:
 
         return all_resources
 
-    def get_all_projects(self):
-        keys_to_keep = PROJECTS_COLUMN_NAMES_DATA_TYPES.keys()
+    def get_projects(self):
+        return self.projects
+
+    def get_projects_from_api(self):
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["projects"].keys()
         resource_api = "projects"
 
         all_projects = self.paginate_through_resource(
@@ -80,13 +76,13 @@ class Gitlab:
         )
         return all_projects
 
-    def get_release_tags(self, projects):
+    def get_release_tags(self):
 
-        keys_to_keep = TAGS_COLUMN_NAMES_DATA_TYPES.keys()
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["tags"].keys()
 
         all_tags = []
 
-        for project in projects:
+        for project in self.projects:
             project_id = project[0]
 
             resource_api = f"projects/{project_id}/repository/tags"
@@ -96,12 +92,12 @@ class Gitlab:
 
         return all_tags
 
-    def get_issues(self, projects):
-        keys_to_keep = ISSUES_COLUMN_NAMES_DATA_TYPES.keys()
+    def get_issues(self):
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["issues"].keys()
 
         all_issues = []
         # projects is a list of tuples, so the first item in the tuple is the id
-        for project in projects:
+        for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/issues"
 
@@ -110,13 +106,13 @@ class Gitlab:
 
         return all_issues
 
-    def get_pipelines(self, projects):
+    def get_pipelines(self):
 
         all_pipelines = []
 
-        keys_to_keep = PIPELINE_COLUMN_NAMES_DATA_TYPES.keys()
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["pipelines"].keys()
         # projects is a list of tuples, so the first item in the tuple is the id
-        for project in projects:
+        for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/pipelines"
             project_pipelines = self.paginate_through_resource(
