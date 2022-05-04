@@ -3,6 +3,7 @@ import logging
 
 from wherescape.helper_functions import flatten_json, filter_dict
 
+"""COLUMN_NAMES_AND_DATA_TYPES is a dictionary with the flattened values and belonging data types returned from the Gitlab API """
 from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
     COLUMN_NAMES_AND_DATA_TYPES,
 )
@@ -13,7 +14,19 @@ class Gitlab:
         self.access_token = access_token
         self.base_url = base_url
 
+        """Project IDs are needed to get the other resources as well."""
         self.projects = self.get_projects_from_api()
+
+    """ Make request
+
+        Parameters:
+        url (string): The url the request should be made to
+        method (string): The request method (e.g. POST GET)
+        payload (json): The payload when a POST request is made
+
+        Returns:
+        response object: response of the request made
+    """
 
     def make_request(self, url, method, payload={}):
         headers = {
@@ -24,8 +37,39 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
+    """ Format URL
+
+        Parameters:
+        resource_api (string): The location of the resource requested
+        page_variables (object): {
+            "per_page": string or int,
+            "current_page": string or int
+        }
+        simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
+
+        Returns:
+        Formatted url which can be used to make the request
+    """
+
     def format_url(self, resource_api, page_variables, simple):
         return f"{self.base_url}/{resource_api}?simple={simple}&per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
+
+    """ Paginate through resources
+        Since the Gitlab API has pagination, this helper function will paginate through the resource API.
+        It will do that until all responses are collected.
+        It cleans the response immediately and turns it into a tuple.
+        It does expect a list with objects in the response of the API.
+
+        Parameters:
+        resource_api (string): The location of the resource requested
+        keys_to_keep (list): List of keys returned by the API you want to keep
+        per_page (int): How many results per page you would like to get
+        simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
+
+        Returns:
+        List of tuples with the values from the request
+
+    """
 
     def paginate_through_resource(
         self, resource_api, keys_to_keep, per_page=50, simple="false"
