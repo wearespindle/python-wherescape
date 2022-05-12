@@ -45,7 +45,7 @@ def jira_create_metadata(title):
     user = wherescape_instance.read_parameter("jira_user")
     apikey = wherescape_instance.read_parameter("jira_apikey")
     wherescape_object_id = wherescape_instance.object_key
-    base_url = wherescape_instance.base_uri
+    base_url = wherescape_instance.file_path
 
     # Initialise the Jira connector and get the columns.
     logging.info("Getting the columns data from Jira.")

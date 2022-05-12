@@ -23,16 +23,16 @@ def jira_load_data_issue():
     jira_load_data("issue")
 
 
-def jira_load_data_issue_incremental(since="-48h"):
+def jira_load_data_issue_incremental():
     """
     Function to be called from the host script in WhereScape. Will import
     issue data to the load table that has been added or modified in the last
     period. Defaults to 48 hours. Ideally for running every 24 hours.
     """
-    jira_load_data("issue", since)
+    jira_load_data("issue", use_high_water_mark=True)
 
 
-def jira_load_data(load_type, since=None):
+def jira_load_data(load_type, use_high_water_mark=False, since=None):
     """
     Main jira load data function. Loads data from Jira and pushes it to
     the warehouse. This is the glue between the jira_wrapper and WhereScape.
@@ -44,12 +44,21 @@ def jira_load_data(load_type, since=None):
         "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
+    # Get the high_water_mark if applicable
+    if use_high_water_mark:
+        since = wherescape_instance.read_parameter("jira_high_water_mark")
+        if since == "":
+            logging.info("High water mark is empty so fetching all issues")
+            since = None
+        else:
+            logging.info("Using high water mark: %s" % since)
+
     # Initialise WhereScape and get the relevant WhereScape values.
     logging.info("Connecting to WhereScape")
     user = wherescape_instance.read_parameter("jira_user")
     apikey = wherescape_instance.read_parameter("jira_apikey")
     wherescape_object_id = wherescape_instance.object_key
-    base_url = wherescape_instance.base_uri
+    base_url = wherescape_instance.file_path
     table_name = wherescape_instance.load_full_name
 
     # Request data from Jira.
@@ -86,9 +95,20 @@ def jira_load_data(load_type, since=None):
         # Execute the sql
         wherescape_instance.push_many_to_target(sql, rows)
         logging.info(f"Successfully inserted {len(rows)} rows in to the load table.")
+
+        # Update the high_water_mark. Will also be updated if use_high_water_mark=False
+        wherescape_instance.write_parameter(
+            "jira_high_water_mark", start_time.strftime("%Y-%m-%d %H:%M")
+        )
+        logging.info(
+            "New high water mark is: %s" % start_time.strftime("%Y-%m-%d %H:%M")
+        )
+
+        # Add success message
         wherescape_instance.main_message = (
             f"Successfully inserted {len(rows)} rows in to the load table."
         )
+
     else:
         logging.warn("No data received from JIRA")
 

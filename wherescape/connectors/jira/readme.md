@@ -10,6 +10,10 @@ a Jira environment.
 Add the following parameters to WhereScape:
 * `jira_user`
 * `jira_apikey`
+* `jira_high_water_mark`
+
+Fill in the correct jira_user and jira_apikey. The jira_high_water_mark will
+be filled automatically.
 
 ## Load table
 Add 2 load tables: one for projects and one for issues. with the correct Jira

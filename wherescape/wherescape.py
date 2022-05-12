@@ -27,7 +27,7 @@ class WhereScape:
         load_full_name              - 'schema.table' from the WhereScape Context
         column_names, column_types  - column_names, column_types of a load or stage table
         object_key                  - object_key of a load or stage table
-        base_uri, top_level_name    - Taken from the lt_file_path, lt_file_name of the Wherescape object context
+        file_path, file_name        - Taken from the lt_file_path, lt_file_name of the Wherescape object context
         """
         self.workdir = os.getenv("WSL_WORKDIR")
         initialise_wherescape_logging(self)
@@ -59,8 +59,8 @@ class WhereScape:
             sql = "SELECT lt_obj_key, lt_file_path, lt_file_name FROM ws_load_tab WHERE lt_table_name = ?"
             results = self.query_meta(sql, [self.table])
             self.object_key = results[0][0]
-            self.base_uri = results[0][1]
-            self.top_level_name = results[0][2]
+            self.file_path = results[0][1]
+            self.file_name = results[0][2]
             self.load_full_name = os.getenv("WSL_LOAD_FULLNAME")
         elif self.schema == "stage":
             # This script is related to a stage table.
@@ -230,3 +230,23 @@ class WhereScape:
             return parameter, comment
         else:
             return parameter
+
+    def write_parameter(self, name, value="", comment=None):
+        """
+        Function to update or insert a parameter into Wherescape.
+
+        Returns result number:
+        1 Metadata Parameter Updated
+        2 Metadata Parameter Added
+        -3 Fatal/Unexpected Error
+        """
+        sql = """
+        DECLARE @out INT;
+        EXEC  @out=WsParameterWrite
+          @p_parameter = ?
+        , @p_value = ?
+        , @p_comment  = ?
+        SELECT @out AS return_value;"""
+        result_number = self.push_to_meta(sql, [name, value, comment])
+        result_number = int(result_number)
+        return result_number

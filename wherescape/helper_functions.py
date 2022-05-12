@@ -76,7 +76,7 @@ def prepare_metadata_query(
             display_name = display_names[i]
 
         if source_columns == []:
-            if display_columns == []:
+            if display_names == []:
                 source_column = ""
             else:
                 source_column = display_names[i]
