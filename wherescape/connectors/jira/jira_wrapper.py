@@ -69,8 +69,8 @@ class Jira:
         self.apikey = apikey
         self.base_url = base_url
 
-        self.issue_jql = "project = {}"
-        self.issue_jql_since = "project = {} AND (created >= {} OR updated >= {})"
+        self.issue_jql = "project = {} ORDER BY key"
+        self.issue_jql_since = 'project = {} AND (created >= "{}" OR updated >= "{}")'
         self.search_issues = "/search"
         self.search_projects = "/project/search"
 
