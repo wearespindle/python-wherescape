@@ -54,8 +54,6 @@ class WhereScape:
 
         self.table = os.getenv("WSL_LOAD_TABLE")
         self.schema = os.getenv("WSL_LOAD_SCHEMA")
-        self.table = os.getenv("WSL_LOAD_TABLE")
-        self.load_full_name = os.getenv("WSL_LOAD_FULLNAME")
         if self.schema == "load":
             # This script is related to a load table.
             sql = "SELECT lt_obj_key, lt_file_path, lt_file_name FROM ws_load_tab WHERE lt_table_name = ?"
@@ -232,3 +230,23 @@ class WhereScape:
             return parameter, comment
         else:
             return parameter
+
+    def write_parameter(self, name, value="", comment=None):
+        """
+        Function to update or insert a parameter into Wherescape.
+
+        Returns result number:
+        1 Metadata Parameter Updated
+        2 Metadata Parameter Added
+        -3 Fatal/Unexpected Error
+        """
+        sql = """
+        DECLARE @out INT;
+        EXEC  @out=WsParameterWrite
+          @p_parameter = ?
+        , @p_value = ?
+        , @p_comment  = ?
+        SELECT @out AS return_value;"""
+        result_number = self.push_to_meta(sql, [name, value, comment])
+        result_number = int(result_number)
+        return result_number

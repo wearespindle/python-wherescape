@@ -37,7 +37,7 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
-    def format_url(self, resource_api, page_variables, simple):
+    def format_url(self, resource_api, page_variables, simple, order_by, since):
         """Format URL
 
         Parameters:
@@ -47,15 +47,23 @@ class Gitlab:
             "current_page": string or int
         }
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
+        since (string): ISO formatted datetime string to indicate since which date you want values back
 
         Returns:
         Formatted url which can be used to make the request
         """
-        # created_after en updated_after -> toevoegen voor issues en tags?
-        return f"{self.base_url}/{resource_api}?order_by=id&sort=asc&simple={simple}&per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}&updated_after={self.since}"
+        updated_since = f"updated_after={since}"
+        pagination = f"per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
+        return f"{self.base_url}/{resource_api}?order_by={order_by}&sort=asc&simple={simple}&{pagination}&{updated_since}"
 
     def paginate_through_resource(
-        self, resource_api, keys_to_keep, per_page=50, simple="false"
+        self,
+        resource_api,
+        keys_to_keep,
+        since=None,
+        per_page=50,
+        simple="false",
+        order_by="id",
     ):
         """Paginate through resources
         Since the Gitlab API has pagination, this helper function will paginate through the resource API.
@@ -68,6 +76,7 @@ class Gitlab:
         keys_to_keep (list): List of keys returned by the API you want to keep
         per_page (int): How many results per page you would like to get
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
+        since (string): ISO formatted datetime string to indicate since which date you want values back
 
         Returns:
         List of tuples with the values from the request
@@ -80,9 +89,10 @@ class Gitlab:
 
         while current_page < total_pages:
             page_variables = {"per_page": per_page, "current_page": current_page}
-            url = self.format_url(resource_api, page_variables, simple)
+            url = self.format_url(resource_api, page_variables, simple, order_by, since)
 
             response = self.make_request(url, "GET")
+            response.raise_for_status()
 
             if response.status_code == 403:
                 logging.warn(
@@ -102,8 +112,6 @@ class Gitlab:
                 current_page = response.headers["X-Page"]
             except:
                 current_page = current_page + 1
-
-            break
 
         return all_resources
 
@@ -129,7 +137,9 @@ class Gitlab:
             project_id = project[0]
 
             resource_api = f"projects/{project_id}/repository/tags"
-            tag_in_tuple = self.paginate_through_resource(resource_api, keys_to_keep)
+            tag_in_tuple = self.paginate_through_resource(
+                resource_api, keys_to_keep, since=self.since
+            )
 
             all_tags.extend(tag_in_tuple)
 
@@ -144,7 +154,9 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/issues"
 
-            project_issues = self.paginate_through_resource(resource_api, keys_to_keep)
+            project_issues = self.paginate_through_resource(
+                resource_api, keys_to_keep, since=self.since
+            )
             all_issues.extend(project_issues)
 
         return all_issues
@@ -159,7 +171,7 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/pipelines"
             project_pipelines = self.paginate_through_resource(
-                resource_api, keys_to_keep
+                resource_api, keys_to_keep, since=self.since
             )
             all_pipelines.extend(project_pipelines)
 
@@ -175,9 +187,8 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/merge_requests"
             project_merge_requests = self.paginate_through_resource(
-                resource_api, keys_to_keep
+                resource_api, keys_to_keep, since=self.since, order_by="title"
             )
             all_merge_requests.extend(project_merge_requests)
-            print(all_merge_requests)
 
         return all_merge_requests
