@@ -10,14 +10,16 @@ from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
 
 
 class Gitlab:
-    def __init__(self, access_token, base_url):
+    def __init__(self, access_token, base_url, since):
         self.access_token = access_token
         self.base_url = base_url
+        self.since = since
 
         """Project IDs are needed to get the other resources as well."""
         self.projects = self.get_projects_from_api()
 
-    """ Make request
+    def make_request(self, url, method, payload={}):
+        """Make request
 
         Parameters:
         url (string): The url the request should be made to
@@ -26,9 +28,7 @@ class Gitlab:
 
         Returns:
         response object: response of the request made
-    """
-
-    def make_request(self, url, method, payload={}):
+        """
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -37,7 +37,8 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
-    """ Format URL
+    def format_url(self, resource_api, page_variables, simple):
+        """Format URL
 
         Parameters:
         resource_api (string): The location of the resource requested
@@ -49,12 +50,14 @@ class Gitlab:
 
         Returns:
         Formatted url which can be used to make the request
-    """
+        """
+        # created_after en updated_after -> toevoegen voor issues en tags?
+        return f"{self.base_url}/{resource_api}?order_by=id&sort=asc&simple={simple}&per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}&updated_after={self.since}"
 
-    def format_url(self, resource_api, page_variables, simple):
-        return f"{self.base_url}/{resource_api}?simple={simple}&per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
-
-    """ Paginate through resources
+    def paginate_through_resource(
+        self, resource_api, keys_to_keep, per_page=50, simple="false"
+    ):
+        """Paginate through resources
         Since the Gitlab API has pagination, this helper function will paginate through the resource API.
         It will do that until all responses are collected.
         It cleans the response immediately and turns it into a tuple.
@@ -69,11 +72,7 @@ class Gitlab:
         Returns:
         List of tuples with the values from the request
 
-    """
-
-    def paginate_through_resource(
-        self, resource_api, keys_to_keep, per_page=50, simple="false"
-    ):
+        """
         total_pages = 1
         current_page = 0
 
@@ -165,3 +164,20 @@ class Gitlab:
             all_pipelines.extend(project_pipelines)
 
         return all_pipelines
+
+    def get_merge_requests(self):
+
+        all_merge_requests = []
+
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["merge_requests"].keys()
+        # projects is a list of tuples, so the first item in the tuple is the id
+        for project in self.projects:
+            project_id = project[0]
+            resource_api = f"projects/{project_id}/merge_requests"
+            project_merge_requests = self.paginate_through_resource(
+                resource_api, keys_to_keep
+            )
+            all_merge_requests.extend(project_merge_requests)
+            print(all_merge_requests)
+
+        return all_merge_requests

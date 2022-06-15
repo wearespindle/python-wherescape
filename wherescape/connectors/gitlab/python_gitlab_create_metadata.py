@@ -2,12 +2,8 @@ from datetime import datetime
 import logging
 
 from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
-    PROJECTS_COLUMN_NAMES_DATA_TYPES,
-    TAGS_COLUMN_NAMES_DATA_TYPES,
-    ISSUES_COLUMN_NAMES_DATA_TYPES,
-    PIPELINES_COLUMN_NAMES_DATA_TYPES,
+    COLUMN_NAMES_AND_DATA_TYPES,
 )
-
 from wherescape import WhereScape
 from wherescape.helper_functions import (
     prepare_metadata_query,
@@ -16,18 +12,10 @@ from wherescape.helper_functions import (
 )
 
 
-all_resource_keys_and_data_types = [
-    PROJECTS_COLUMN_NAMES_DATA_TYPES,
-    TAGS_COLUMN_NAMES_DATA_TYPES,
-    ISSUES_COLUMN_NAMES_DATA_TYPES,
-    PIPELINES_COLUMN_NAMES_DATA_TYPES,
-]
-
-
 def gitlab_create_all_metadata():
     wherescape_instance = WhereScape()
 
-    for resource_type in all_resource_keys_and_data_types:
+    for resource_type in COLUMN_NAMES_AND_DATA_TYPES:
         for key, value in resource_type:
             gitlab_create_metadata(
                 wherescape_instance,
