@@ -3,8 +3,8 @@ import logging
 
 from .jira_wrapper import Jira
 
-from wherescape import WhereScape
-from wherescape.helper_functions import (
+from ... import WhereScape
+from ...helper_functions import (
     prepare_metadata_query,
     create_column_names,
     create_display_names,

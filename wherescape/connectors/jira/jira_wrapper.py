@@ -5,7 +5,7 @@ import requests
 
 from requests.auth import HTTPBasicAuth
 
-from wherescape.helper_functions import filter_dict, flatten_json
+from ...helper_functions import filter_dict, flatten_json
 
 
 """

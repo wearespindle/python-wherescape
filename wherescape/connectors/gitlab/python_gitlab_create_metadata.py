@@ -1,11 +1,11 @@
 from datetime import datetime
 import logging
 
-from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
+from ...connectors.gitlab.gitlab_data_types_column_names import (
     COLUMN_NAMES_AND_DATA_TYPES,
 )
-from wherescape import WhereScape
-from wherescape.helper_functions import (
+from ... import WhereScape
+from ...helper_functions import (
     prepare_metadata_query,
     create_column_names,
     create_display_names,

@@ -2,7 +2,7 @@ import os
 
 import pyodbc
 import logging
-from wherescape.logging import initialise_wherescape_logging
+from . import initialise_wherescape_logging
 
 
 class WhereScape:

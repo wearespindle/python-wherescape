@@ -3,10 +3,9 @@ import logging
 
 from .gitlab_wrapper import Gitlab
 
-from wherescape import WhereScape
-from wherescape.helper_functions import create_column_names
-
-from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
+from ... import WhereScape
+from ...helper_functions import create_column_names
+from ...connectors.gitlab.gitlab_data_types_column_names import (
     COLUMN_NAMES_AND_DATA_TYPES,
 )
 

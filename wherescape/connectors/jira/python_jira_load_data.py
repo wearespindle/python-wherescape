@@ -3,8 +3,8 @@ import logging
 
 from .jira_wrapper import Jira
 
-from wherescape import WhereScape
-from wherescape.helper_functions import create_column_names
+from ... import WhereScape
+from ...helper_functions import create_column_names
 
 
 def jira_load_data_project():
