@@ -1,8 +1,7 @@
 from datetime import datetime
 import logging
 
-from .gitlab_wrapper import Gitlab
-
+from . import Gitlab
 from ... import WhereScape
 from ...helper_functions import create_column_names
 from ...connectors.gitlab.gitlab_data_types_column_names import (

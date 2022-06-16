@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 
+from . import Gitlab
 from ...connectors.gitlab.gitlab_data_types_column_names import (
     COLUMN_NAMES_AND_DATA_TYPES,
 )
@@ -10,6 +11,15 @@ from ...helper_functions import (
     create_column_names,
     create_display_names,
 )
+
+
+def gitlab_create_metadata_project():
+    wherescape_instance = WhereScape()
+    access_token = wherescape_instance.read_parameter("gitlab_access_token")
+    base_url = wherescape_instance.read_parameter("gitlab_base_url")
+    gitlab_instance = Gitlab(access_token, base_url, "")
+    for project in gitlab_instance.projects:
+        logging.info(project[1])
 
 
 def gitlab_create_all_metadata():

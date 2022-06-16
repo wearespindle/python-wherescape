@@ -4,7 +4,7 @@ import logging
 from ...helper_functions import flatten_json, filter_dict
 
 """COLUMN_NAMES_AND_DATA_TYPES is a dictionary with the flattened values and belonging data types returned from the Gitlab API """
-from wherescape.connectors.gitlab.gitlab_data_types_column_names import (
+from ...connectors.gitlab.gitlab_data_types_column_names import (
     COLUMN_NAMES_AND_DATA_TYPES,
 )
 
