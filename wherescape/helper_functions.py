@@ -128,7 +128,7 @@ def flatten_json(json_response, name_to_skip=None):
                 else:
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
-        elif type(x) is list:
+        elif type(x) is list and x:
             i = 0
             for a in x:
                 flatten(a, name + str(i) + "_")
