@@ -8,7 +8,6 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "path_with_namespace": "object",
         "created_at": "datetime64[ns]",
         "default_branch": "object",
-        "tag_list": "object",
         "topics": "object",
         "ssh_url_to_repo": "object",
         "http_url_to_repo": "object",
