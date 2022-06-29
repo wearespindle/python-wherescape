@@ -70,7 +70,7 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "due_date": "datetime64[ns]",
         "confidential": "boolean",
         "discussion_locked": "boolean",
-        "issue_type": "issue",
+        "issue_type": "object",
         "web_url": "object",
         "time_stats_time_estimate": "int",
         "time_stats_total_time_spent": "int",

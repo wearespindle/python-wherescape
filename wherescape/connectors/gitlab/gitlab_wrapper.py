@@ -2,7 +2,7 @@
 import requests
 import logging
 
-from ...helper_functions import flatten_json, filter_dict
+from ...helper_functions import flatten_json, filter_dict, fill_out_empty_keys
 
 """COLUMN_NAMES_AND_DATA_TYPES is a dictionary with the flattened values and belonging data types returned from the Gitlab API """
 from ...connectors.gitlab.gitlab_data_types_column_names import (
@@ -106,7 +106,8 @@ class Gitlab:
 
             for resource_object in json_response:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
-                all_resources.append(tuple(cleaned_json.values()))
+                final_json = fill_out_empty_keys(cleaned_json, keys_to_keep)
+                all_resources.append(list(final_json.values()))
 
             try:
                 total_pages = response.headers["X-Total-Pages"]

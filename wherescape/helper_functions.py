@@ -140,3 +140,13 @@ def flatten_json(json_response, name_to_skip=None):
 
     flatten(json_response)
     return out
+
+
+def fill_out_empty_keys(cleaned_json, keys_to_keep):
+    out = {}
+    for key in keys_to_keep:
+        if not key in set(cleaned_json.keys()):
+            out[key] = ""
+        else:
+            out[key] = cleaned_json[key]
+    return out
