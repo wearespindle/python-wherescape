@@ -140,7 +140,7 @@ class Gitlab:
 
             resource_api = f"projects/{project_id}/repository/tags"
             tag_in_tuple = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since
+                resource_api, keys_to_keep, order_by="name", since=self.since
             )
 
             all_tags.extend(tag_in_tuple)
