@@ -1,3 +1,4 @@
+"""Module to fetch data (e.g. tickets, projects, pipelines) from the Gitlab API"""
 import requests
 import logging
 
@@ -52,9 +53,9 @@ class Gitlab:
         Returns:
         Formatted url which can be used to make the request
         """
-        updated_since = f"updated_after={since}"
+        updated_since = f"&updated_after={since}" if since else ""
         pagination = f"per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
-        return f"{self.base_url}/{resource_api}?order_by={order_by}&sort=asc&simple={simple}&{pagination}&{updated_since}"
+        return f"{self.base_url}/{resource_api}?order_by={order_by}&sort=asc&simple={simple}&{pagination}{updated_since}"
 
     def paginate_through_resource(
         self,
@@ -155,7 +156,7 @@ class Gitlab:
             resource_api = f"projects/{project_id}/issues"
 
             project_issues = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since
+                resource_api, keys_to_keep, order_by="created_at", since=self.since
             )
             all_issues.extend(project_issues)
 

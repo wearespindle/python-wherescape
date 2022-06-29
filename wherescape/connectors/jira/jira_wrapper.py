@@ -1,3 +1,4 @@
+"""Module to fetch tickets and projects from the Jira API"""
 import json
 import logging
 import pandas as pd
