@@ -95,7 +95,7 @@ class Gitlab:
             response = self.make_request(url, "GET")
 
             if response.status_code == 403:
-                logging.warn(
+                logging.info(
                     f"{url} \n Forbidden resource, please check the user's rights"
                 )
                 current_page = current_page + 1
