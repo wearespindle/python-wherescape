@@ -93,7 +93,6 @@ class Gitlab:
             url = self.format_url(resource_api, page_variables, simple, order_by, since)
 
             response = self.make_request(url, "GET")
-            response.raise_for_status()
 
             if response.status_code == 403:
                 logging.warn(
@@ -101,6 +100,8 @@ class Gitlab:
                 )
                 current_page = current_page + 1
                 continue
+
+            response.raise_for_status()
 
             json_response = response.json()
 
