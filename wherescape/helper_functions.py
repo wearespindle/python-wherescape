@@ -146,7 +146,7 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep):
     out = {}
     for key in keys_to_keep:
         if not key in set(cleaned_json.keys()):
-            out[key] = ""
+            out[key] = None
         else:
             out[key] = cleaned_json[key]
     return out
