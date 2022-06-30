@@ -13,26 +13,33 @@ from ...helper_functions import (
 )
 
 
-def gitlab_create_metadata_project():
-    wherescape_instance = WhereScape()
-    access_token = wherescape_instance.read_parameter("gitlab_access_token")
-    base_url = wherescape_instance.read_parameter("gitlab_base_url")
-    gitlab_instance = Gitlab(access_token, base_url, "")
-    for project in gitlab_instance.projects:
-        logging.info(project[1])
-
-
-def gitlab_create_all_metadata():
+def gitlab_create_metadata_smart():
+    """
+    docstring
+    """
     wherescape_instance = WhereScape()
 
-    for resource_type in COLUMN_NAMES_AND_DATA_TYPES:
-        for key, value in resource_type:
-            gitlab_create_metadata(
-                wherescape_instance,
-                list(value.keys()),
-                list(value.values()),
-                key,
-            )
+    table_name = wherescape_instance.table
+    if "project" in table_name:
+        title = "projects"
+    elif "tag" in table_name:
+        title = "tags"
+    elif "issue" in table_name:
+        title = "issues"
+    elif "pipeline" in table_name:
+        title = "pipelines"
+    elif "merge_request" in table_name:
+        title = "merge_requests"
+    else:
+        raise Exception("Could not find the specific Gitlab object type")
+    columns = COLUMN_NAMES_AND_DATA_TYPES[title]
+
+    gitlab_create_metadata(
+        wherescape_instance,
+        list(columns.keys()),
+        list(columns.values()),
+        title,
+    )
 
 
 def gitlab_create_metadata(wherescape_instance, columns, python_types, title):

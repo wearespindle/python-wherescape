@@ -9,34 +9,37 @@ from ...connectors.gitlab.gitlab_data_types_column_names import (
 )
 
 
-def gitlab_load_data_project():
-    gitlab_load_data("projects")
-
-
-def gitlab_load_data_issues():
-    gitlab_load_data("issues")
-
-
-def gitlab_load_data_pipelines():
-    gitlab_load_data("pipelines")
-
-
-def gitlab_load_data_tags():
-    gitlab_load_data("tags")
-
-
-def gitlab_load_data(load_type):
+def gitlab_load_data_smart():
     wherescape_instance = WhereScape()
+
+    table_name = wherescape_instance.table
+    if "project" in table_name:
+        title = "projects"
+    elif "tag" in table_name:
+        title = "tags"
+    elif "issue" in table_name:
+        title = "issues"
+    elif "pipeline" in table_name:
+        title = "pipelines"
+    elif "merge_request" in table_name:
+        title = "merge_requests"
+    else:
+        raise Exception("Could not find the specific Gitlab object type")
+
+    gitlab_load_data(wherescape_instance, title)
+
+
+def gitlab_load_data(wherescape_instance, load_type):
     start_time = datetime.now()
     logging.info(
         "Start time: %s for gitlab_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
-    apikey = wherescape_instance.read_parameter("gitlab_apikey")
-    base_url = wherescape_instance.base_uri
+    access_token = wherescape_instance.read_parameter("gitlab_access_token")
+    base_url = wherescape_instance.read_parameter("gitlab_base_url")
     table_name = wherescape_instance.load_full_name
 
-    gitlab_instance = Gitlab(apikey, base_url)
+    gitlab_instance = Gitlab(access_token, base_url)
 
     if load_type == "projects":
         columns = COLUMN_NAMES_AND_DATA_TYPES["projects"]
@@ -44,12 +47,15 @@ def gitlab_load_data(load_type):
     elif load_type == "pipelines":
         columns = COLUMN_NAMES_AND_DATA_TYPES["pipelines"]
         values = gitlab_instance.get_pipelines()
-    elif load_type == "issue":
+    elif load_type == "issues":
         columns = COLUMN_NAMES_AND_DATA_TYPES["issues"]
         values = gitlab_instance.get_issues()
     elif load_type == "tags":
         columns = COLUMN_NAMES_AND_DATA_TYPES["tags"]
         values = gitlab_instance.get_release_tags()
+    elif load_type == "merge_requests":
+        columns = COLUMN_NAMES_AND_DATA_TYPES["merge_requests"]
+        values = gitlab_instance.get_merge_requests()
     else:
         raise Exception("Wrong gitlab load type supplied")
 
