@@ -24,7 +24,6 @@ api url in the `Source Directory` field. The url should look like this:
 Create a new python host script and add it to the load table. Example code:
 
 ```
-import logging
 from wherescape.connectors.jira.python_jira_load_data import jira_load_data_project
 
 if __name__ == "__main__":
