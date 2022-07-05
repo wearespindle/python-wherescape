@@ -1,10 +1,7 @@
 from datetime import datetime
 import logging
 
-from . import Gitlab
-from ...connectors.gitlab.gitlab_data_types_column_names import (
-    COLUMN_NAMES_AND_DATA_TYPES,
-)
+from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
 from ... import WhereScape
 from ...helper_functions import (
     prepare_metadata_query,
@@ -15,7 +12,10 @@ from ...helper_functions import (
 
 def gitlab_create_metadata_smart():
     """
-    docstring
+    Function to create the metadata for Gitlab objects. Will look at the load
+    table names to determine the object type. So in order for this funtion to
+    work as intended, correct load table names need to be chosen. Can be
+    easily extended with more object types.
     """
     wherescape_instance = WhereScape()
 
@@ -43,6 +43,11 @@ def gitlab_create_metadata_smart():
 
 
 def gitlab_create_metadata(wherescape_instance, columns, python_types, title):
+    """
+    Main Gitlab metadata function. Creates the metadata queries and pushes
+    them to the WhereScape repository. This is the glue between the
+    gitlab_wrapper and WhereScape.
+    """
     start_time = datetime.now()
     logging.info(
         "Start time: %s for Gitlab_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -82,6 +87,6 @@ def gitlab_create_metadata(wherescape_instance, columns, python_types, title):
     # Final logging
     end_time = datetime.now()
     logging.info(
-        "Time elapsed: %s seconds for Gitlab_load_data"
+        "Time elapsed: %s seconds for gitlab_load_data"
         % (end_time - start_time).seconds
     )

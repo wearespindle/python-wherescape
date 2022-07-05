@@ -2,21 +2,22 @@
 import requests
 import logging
 
+from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
 from ...helper_functions import flatten_json, filter_dict, fill_out_empty_keys
-
-"""COLUMN_NAMES_AND_DATA_TYPES is a dictionary with the flattened values and belonging data types returned from the Gitlab API """
-from ...connectors.gitlab.gitlab_data_types_column_names import (
-    COLUMN_NAMES_AND_DATA_TYPES,
-)
 
 
 class Gitlab:
-    def __init__(self, access_token, base_url, since):
+    def __init__(self, access_token, base_url, since=None):
+        """
+        Initializes the Gitlab class. needs the Gitlab access token, base url
+        and an optional `since` parameter. Since should be the date from which
+        data should be loaded.
+        """
         self.access_token = access_token
         self.base_url = base_url
         self.since = since
 
-        """Project IDs are needed to get the other resources as well."""
+        # Project IDs are needed to get the other resources as well.
         self.projects = self.get_projects_from_api()
 
     def make_request(self, url, method, payload={}):

@@ -1,3 +1,8 @@
+"""
+COLUMN_NAMES_AND_DATA_TYPES is a dictionary with the flattened values and
+belonging data types returned from the Gitlab API
+"""
+
 COLUMN_NAMES_AND_DATA_TYPES = {
     "projects": {
         "id": "int",
@@ -8,7 +13,6 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "path_with_namespace": "object",
         "created_at": "datetime64[ns]",
         "default_branch": "object",
-        "topics": "object",
         "ssh_url_to_repo": "object",
         "http_url_to_repo": "object",
         "web_url": "object",
@@ -121,7 +125,6 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "source_branch": "object",
         "source_project_id": "int",
         "target_project_id": "int",
-        "labels": "object",
         "draft": "boolean",
         "work_in_progress": "boolean",
         "milestone_id": "int",
