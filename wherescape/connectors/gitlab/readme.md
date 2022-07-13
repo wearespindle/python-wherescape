@@ -30,7 +30,7 @@ Attaching the right scripts is all thats needed to get it working; no input
 in the Source tab is needed.
 
 ## Host script
-Create the following new python host script:
+Create the following new python host scripts:
 
 * python_gitlab_create_metadata_smart
 * python_gitlab_load_data_smart
