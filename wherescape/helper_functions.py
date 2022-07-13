@@ -150,7 +150,7 @@ def flatten_json(json_response, name_to_skip=None):
                 else:
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
-        elif type(x) is list and x:
+        elif type(x) is list and len(x) > 0:
             i = 0
             for a in x:
                 flatten(a, name + str(i) + "_")
@@ -174,7 +174,7 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep):
     """
     out = {}
     for key in keys_to_keep:
-        if not key in set(cleaned_json.keys()):
+        if key not in set(cleaned_json.keys()):
             out[key] = None
         else:
             out[key] = cleaned_json[key]
