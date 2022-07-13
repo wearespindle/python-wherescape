@@ -26,8 +26,7 @@ Create a new python host script and add it to the load table. Example code:
 ```
 from wherescape.connectors.jira.python_jira_load_data import jira_load_data_project
 
-if __name__ == "__main__":
-    jira_load_data_project()
+jira_load_data_project()
 ```
 
 Host scripts to create:

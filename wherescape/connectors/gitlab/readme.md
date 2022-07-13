@@ -42,8 +42,7 @@ The scripts should utilize the 4 functions with the same name from the python_ f
 ```
 from wherescape.connectors.gitlab.python_gitlab_create_metadata import gitlab_create_metadata_smart
 
-if __name__ == "__main__":
-    gitlab_create_metadata_smart()
+gitlab_create_metadata_smart()
 ```
 
 # Usage
