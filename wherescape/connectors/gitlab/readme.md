@@ -14,7 +14,7 @@ Add the following parameters to WhereScape:
 * `gitlab_high_water_mark_next`
 
 Fill in the correct gitlab_base_url and gitlab_access_token. The water marks
-will be filled automatically.
+will be filled automatically and take care of the incremental functionality.
 
 ## Load table
 Add 5 load tables: one for each of the object types. For the smart scripts to
@@ -37,7 +37,8 @@ Create the following new python host scripts:
 * python_gitlab_next_high_water_mark
 * python_gitlab_update_high_water_mark
 
-The scripts should utilize the 4 functions with the same name from the python_ files. Example:
+The scripts should utilize the 4 functions with the same name from the python_
+files. Example:
 
 ```
 from wherescape.connectors.gitlab.python_gitlab_create_metadata import gitlab_create_metadata_smart
@@ -49,5 +50,6 @@ gitlab_create_metadata_smart()
 
 First attach the metadata host script to the load table. After creating the
 table, attach the load_data_smart host script to the load table and plan the
-job in the scheduler. The incremental function should be active after the
-first run.
+job in the scheduler. `python_gitlab_next_high_water_mark` should be the first
+function in the job and `python_gitlab_update_high_water_mark` should be the
+last. The incremental function should be active after the first run.

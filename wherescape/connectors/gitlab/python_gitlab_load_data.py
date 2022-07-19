@@ -18,19 +18,19 @@ def gitlab_load_data_smart():
 
     table_name = wherescape_instance.table
     if "project" in table_name:
-        title = "projects"
+        load_type = "projects"
     elif "tag" in table_name:
-        title = "tags"
+        load_type = "tags"
     elif "issue" in table_name:
-        title = "issues"
+        load_type = "issues"
     elif "pipeline" in table_name:
-        title = "pipelines"
+        load_type = "pipelines"
     elif "merge_request" in table_name:
-        title = "merge_requests"
+        load_type = "merge_requests"
     else:
         raise Exception("Could not find the specific Gitlab object type")
 
-    gitlab_load_data(wherescape_instance, title)
+    gitlab_load_data(wherescape_instance, load_type)
 
 
 def gitlab_load_data(wherescape_instance, load_type):
