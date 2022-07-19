@@ -14,6 +14,10 @@ def gitlab_next_high_water_mark():
     """
     wherescape_instance = WhereScape()
     next_high_water_mark = datetime.today().isoformat(timespec="seconds")
+    current_high_water_mark = wherescape_instance.read_parameter(
+        "gitlab_high_water_mark"
+    )
+    logging.info(f"Current high water mark is {current_high_water_mark}")
     logging.info(f"Next high water mark will be {next_high_water_mark}")
     wherescape_instance.main_message = (
         f"Next high water mark will be {next_high_water_mark}"
