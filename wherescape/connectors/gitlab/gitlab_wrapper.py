@@ -39,7 +39,7 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
-    def format_url(self, resource_api, page_variables, simple, order_by, since):
+    def format_url(self, resource_api, page_variables, simple, order_by, since=None):
         """Format URL
 
         Parameters:
@@ -49,7 +49,7 @@ class Gitlab:
             "current_page": string or int
         }
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): ISO formatted datetime string to indicate since which date you want values back
+        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back
 
         Returns:
         Formatted url which can be used to make the request
@@ -120,9 +120,19 @@ class Gitlab:
         return all_resources
 
     def get_projects(self):
+        """Get projects
+
+        Returns:
+        List of tuples with the project values
+        """
         return self.projects
 
     def get_projects_from_api(self):
+        """Get projects from API
+
+        Returns:
+        List of tuples with the project values from the API
+        """
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["projects"].keys()
         resource_api = "projects"
 
@@ -132,7 +142,11 @@ class Gitlab:
         return all_projects
 
     def get_release_tags(self):
+        """Get release tags
 
+        Returns:
+        List of tuples with the tags values from the API
+        """
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["tags"].keys()
 
         all_tags = []
@@ -150,6 +164,11 @@ class Gitlab:
         return all_tags
 
     def get_issues(self):
+        """Get issues
+
+        Returns:
+        List of tuples with the issues values from the API
+        """
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["issues"].keys()
 
         all_issues = []
@@ -166,7 +185,11 @@ class Gitlab:
         return all_issues
 
     def get_pipelines(self):
+        """Get pipelines
 
+        Returns:
+        List of tuples with the pipelines values from the API
+        """
         all_pipelines = []
 
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["pipelines"].keys()
@@ -182,7 +205,11 @@ class Gitlab:
         return all_pipelines
 
     def get_merge_requests(self):
+        """Get merge requests
 
+        Returns:
+        List of tuples with the merge request values from the API
+        """
         all_merge_requests = []
 
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["merge_requests"].keys()
