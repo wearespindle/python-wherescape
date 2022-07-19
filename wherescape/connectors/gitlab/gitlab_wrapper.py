@@ -18,7 +18,7 @@ class Gitlab:
         self.since = since
 
         # Project IDs are needed to get the other resources as well.
-        self.projects = self.get_projects_from_api()
+        self.projects = self.get_projects()
 
     def make_request(self, url, method, payload={}):
         """Make request
@@ -119,7 +119,7 @@ class Gitlab:
 
         return all_resources
 
-    def get_projects(self):
+    def get_projects_loaded(self):
         """Get projects
 
         Returns:
@@ -127,7 +127,7 @@ class Gitlab:
         """
         return self.projects
 
-    def get_projects_from_api(self):
+    def get_projects(self):
         """Get projects from API
 
         Returns:
