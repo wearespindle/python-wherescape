@@ -26,6 +26,7 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "name": "object",
         "message": "object",
         "target": "object",
+        "project_id": "int",
         "commit_id": "object",
         "commit_short_id": "object",
         "commit_created_at": "datetime64[ns]",

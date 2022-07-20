@@ -162,12 +162,13 @@ def flatten_json(json_response, name_to_skip=None):
     return out
 
 
-def fill_out_empty_keys(cleaned_json, keys_to_keep):
+def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
     """
     This function fills out empty keys for empty dicts returned by the API
     Parameters:
     cleaned_json (object): Dict with the flattened and cleaned json response
     keys_to_keep (dict array): A view object with a list of the keys from a dict
+    overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
     Returns:
     out: The dict with all keys, value is None when there was nothing returned from the API
@@ -175,7 +176,10 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep):
     out = {}
     for key in keys_to_keep:
         if key not in set(cleaned_json.keys()):
-            out[key] = None
+            if key in set(overwrite.keys()):
+                out[key] = overwrite[key]
+            else:
+                out[key] = None
         else:
             out[key] = cleaned_json[key]
     return out

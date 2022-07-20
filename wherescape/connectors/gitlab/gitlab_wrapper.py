@@ -63,6 +63,7 @@ class Gitlab:
         resource_api,
         keys_to_keep,
         since=None,
+        overwrite=None,
         per_page=50,
         simple="false",
         order_by="id",
@@ -79,6 +80,7 @@ class Gitlab:
         per_page (int): How many results per page you would like to get
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
         since (string): ISO formatted datetime string to indicate since which date you want values back
+        overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
         Returns:
         List of tuples with the values from the request
@@ -108,7 +110,7 @@ class Gitlab:
 
             for resource_object in json_response:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
-                final_json = fill_out_empty_keys(cleaned_json, keys_to_keep)
+                final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
 
             try:
@@ -153,10 +155,16 @@ class Gitlab:
 
         for project in self.projects:
             project_id = project[0]
+            # tags don't have a project_id in the response so we add it here
+            overwrite = {"project_id": project_id}
 
             resource_api = f"projects/{project_id}/repository/tags"
             tag_in_tuple = self.paginate_through_resource(
-                resource_api, keys_to_keep, order_by="name", since=self.since
+                resource_api,
+                keys_to_keep,
+                order_by="name",
+                since=self.since,
+                overwrite=overwrite,
             )
 
             all_tags.extend(tag_in_tuple)
