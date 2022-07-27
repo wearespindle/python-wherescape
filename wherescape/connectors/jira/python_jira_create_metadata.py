@@ -2,7 +2,6 @@ from datetime import datetime
 import logging
 
 from .jira_wrapper import Jira
-
 from ...wherescape import WhereScape
 from ...helper_functions import (
     prepare_metadata_query,

@@ -1,3 +1,3 @@
 from .wherescape import WhereScape  # noqa: E402
 
-__all__ = ("Wherescape", "initialise_wherescape_logging")
+__all__ = ("Wherescape",)

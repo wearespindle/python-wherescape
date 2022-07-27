@@ -108,6 +108,17 @@ def prepare_metadata_query(
 
 
 def filter_dict(dict_to_filter, keys_to_keep):
+    """
+    This functions filters out keys that are unnecessary to keep.
+    E.g. web url links to images on issues
+
+    Parameters:
+    dict_to_filter (object): The dict with all the keys and values still in it
+    keys_to_keep (dict array): A view object with a list of the keys from a dict
+
+    Returns:
+    dict: The dict with only the key, value pairs you want to keep.
+    """
     return dict(
         [
             (key, dict_to_filter[key])
@@ -117,18 +128,29 @@ def filter_dict(dict_to_filter, keys_to_keep):
     )
 
 
-def flatten_json(json_response, name_to_skip):
+def flatten_json(json_response, name_to_skip=None):
+    """
+    This function flattens the json_response from an API request
+    Nested dicts are flattened
+
+    Parameters:
+    json_response (object): The dict that needs to be flattened
+    name_to_skip (string): key to skip while flattening
+
+    Returns:
+    out: The dict with the flattened key value pairs
+    """
     out = {}
 
     def flatten(x, name=""):
         if type(x) is dict:
             for a in x:
-                if name_to_skip == a:
+                if name_to_skip and name_to_skip == a:
                     new_name = name
                 else:
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
-        elif type(x) is list:
+        elif type(x) is list and len(x) > 0:
             i = 0
             for a in x:
                 flatten(a, name + str(i) + "_")
@@ -137,4 +159,27 @@ def flatten_json(json_response, name_to_skip):
             out[name[:-1]] = x
 
     flatten(json_response)
+    return out
+
+
+def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
+    """
+    This function fills out empty keys for empty dicts returned by the API
+    Parameters:
+    cleaned_json (object): Dict with the flattened and cleaned json response
+    keys_to_keep (dict array): A view object with a list of the keys from a dict
+    overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
+
+    Returns:
+    out: The dict with all keys, value is None when there was nothing returned from the API
+    """
+    out = {}
+    for key in keys_to_keep:
+        if key not in set(cleaned_json.keys()):
+            if key in set(overwrite.keys()):
+                out[key] = overwrite[key]
+            else:
+                out[key] = None
+        else:
+            out[key] = cleaned_json[key]
     return out
