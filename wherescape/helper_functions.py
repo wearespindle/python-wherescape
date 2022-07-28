@@ -176,7 +176,7 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
     out = {}
     for key in keys_to_keep:
         if key not in set(cleaned_json.keys()):
-            if key in set(overwrite.keys()):
+            if overwrite and key in set(overwrite.keys()):
                 out[key] = overwrite[key]
             else:
                 out[key] = None
