@@ -110,7 +110,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
         )
 
     else:
-        logging.warn("No data received from JIRA")
+        logging.info("No object changes received from JIRA")
 
     # Final logging
     end_time = datetime.now()
