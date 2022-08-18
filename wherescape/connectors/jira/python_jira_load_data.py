@@ -1,8 +1,8 @@
 from datetime import datetime
 import logging
+import os
 
 from .jira_wrapper import Jira
-
 from ... import WhereScape
 from ...helper_functions import create_column_names
 
@@ -39,6 +39,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
     """
     start_time = datetime.now()
     # First initialise WhereScape to setup logging
+    logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
     logging.info(
         "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -53,12 +54,10 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
         else:
             logging.info("Using high water mark: %s" % since)
 
-    # Initialise WhereScape and get the relevant WhereScape values.
-    logging.info("Connecting to WhereScape")
-    user = wherescape_instance.read_parameter("jira_user")
-    apikey = wherescape_instance.read_parameter("jira_apikey")
-    wherescape_object_id = wherescape_instance.object_key
-    base_url = wherescape_instance.file_path
+    # Get the relevant values from WhereScape
+    base_url = os.getenv("WSL_SRCCFG_URL")
+    user = os.getenv("WSL_SRCCFG_USER")
+    apikey = os.getenv("WSL_SRCCFG_APIKEY")
     table_name = wherescape_instance.load_full_name
 
     # Request data from Jira.

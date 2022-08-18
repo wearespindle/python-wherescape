@@ -1,0 +1,82 @@
+{
+  "ConnectionProperties": {
+    "connectionPropertiesType": "Source",
+    "whereScapeFieldVisibility": {
+      "administratorUserID": false,
+      "administratorUserPassword": false,
+      "databaseID": false,
+      "databaseType": false,
+      "dbServerHomeDirectory": false,
+      "defaultSchemaForBrowsing": false,
+      "extractUserID": false,
+      "extractUserPassword": false,
+      "odbcDataSourceName": false,
+      "windowsHostName": false,
+      "windowsUser": false,
+      "windowsUserPassword": false,
+      "workDirectory": false
+    }
+  },
+  "uiConfigDescription": "WhereScape Connection Configuration API sources",
+  "uiConfigFields": [
+    {
+      "description": "URL of the API \n For Access Key replacement in scripts use: $WSL_SRCCFG_url$",
+      "displayName": "Url",
+      "documentation": false,
+      "encryption": "none",
+      "group": "API connector",
+      "masked": false,
+      "name": "url",
+      "order": 100,
+      "page": "Properties",
+      "required": true,
+      "setEnvVarForScripts": true,
+      "textBoxSettings": {
+        "default": "",
+        "length": 256,
+        "multiLineEdit": false
+      },
+      "type": "textBox"
+    },
+    {
+      "description": "API key for the connection \n For Access Key replacement in scripts use: $WSL_SRCCFG_apikey$",
+      "displayName": "API Key",
+      "documentation": false,
+      "encryption": "none",
+      "group": "API connector",
+      "masked": true,
+      "name": "apikey",
+      "order": 200,
+      "page": "Properties",
+      "required": true,
+      "setEnvVarForScripts": true,
+      "textBoxSettings": {
+        "default": "",
+        "length": 256,
+        "multiLineEdit": false
+      },
+      "type": "textBox"
+    },
+    {
+      "description": "User for the connection \n For Access Key replacement in scripts use: $WSL_SRCCFG_user$ (not required)",
+      "displayName": "Access Key",
+      "documentation": false,
+      "encryption": "none",
+      "group": "API connector",
+      "masked": false,
+      "name": "user",
+      "order": 300,
+      "page": "Properties",
+      "required": false,
+      "setEnvVarForScripts": true,
+      "textBoxSettings": {
+        "default": "",
+        "length": 256,
+        "multiLineEdit": false
+      },
+      "type": "textBox"
+    }
+  ],
+  "uiConfigName": "API connection",
+  "uiConfigType": "ConnectionProperties"
+}

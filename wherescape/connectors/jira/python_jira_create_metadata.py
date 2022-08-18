@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import os
 
 from .jira_wrapper import Jira
 from ...wherescape import WhereScape
@@ -34,20 +35,20 @@ def jira_create_metadata(title):
     """
     start_time = datetime.now()
     # First initialise WhereScape to setup logging
+    logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
     logging.info(
         "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
-    # Initialise WhereScape and get the relevant WhereScape values.
-    logging.info("Connecting to WhereScape")
-    user = wherescape_instance.read_parameter("jira_user")
-    apikey = wherescape_instance.read_parameter("jira_apikey")
+    # Get the relevant values from WhereScape
+    base_url = os.getenv("WSL_SRCCFG_URL")
+    user = os.getenv("WSL_SRCCFG_USER")
+    apikey = os.getenv("WSL_SRCCFG_APIKEY")
     wherescape_object_id = wherescape_instance.object_key
-    base_url = wherescape_instance.file_path
 
     # Initialise the Jira connector and get the columns.
-    logging.info("Getting the columns data from Jira.")
+    logging.info("Getting the column data from Jira.")
     jira_instance = Jira(user, apikey, base_url)
     if title == "projects":
         columns = jira_instance.project_column_names_and_types()

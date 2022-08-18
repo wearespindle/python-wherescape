@@ -114,8 +114,8 @@ class Gitlab:
                 all_resources.append(list(final_json.values()))
 
             try:
-                total_pages = response.headers["X-Total-Pages"]
-                current_page = response.headers["X-Page"]
+                total_pages = int(response.headers["X-Total-Pages"])
+                current_page = int(response.headers["X-Page"])
             except:
                 current_page = current_page + 1
 

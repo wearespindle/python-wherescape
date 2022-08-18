@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import os
 
 from . import Gitlab
 from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
@@ -43,8 +44,8 @@ def gitlab_load_data(wherescape_instance, load_type):
         "Start time: %s for gitlab_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
 
-    access_token = wherescape_instance.read_parameter("gitlab_access_token")
-    base_url = wherescape_instance.read_parameter("gitlab_base_url")
+    base_url = os.getenv("WSL_SRCCFG_URL")
+    access_token = os.getenv("WSL_SRCCFG_APIKEY")
     table_name = wherescape_instance.load_full_name
 
     since = wherescape_instance.read_parameter("gitlab_high_water_mark")
