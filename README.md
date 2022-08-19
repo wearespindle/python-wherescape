@@ -48,3 +48,5 @@ We will be happy to answer your other questions at opensource@wearespindle.com.
 ## License
 
 Python-wherescape is made available under the MIT license. See the [LICENSE file](LICENSE) for more info.
+
+test
