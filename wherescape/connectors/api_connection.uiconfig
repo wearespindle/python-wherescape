@@ -63,7 +63,7 @@
       "documentation": false,
       "encryption": "none",
       "group": "API connector",
-      "masked": false,
+      "masked": true,
       "name": "user",
       "order": 300,
       "page": "Properties",
