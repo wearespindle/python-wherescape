@@ -96,7 +96,7 @@ def initialise_wherescape_logging(wherescape):
     """
 
     fmt = "[%(levelname)s] %(asctime)s %(filename)s %(funcName)s():%(lineno)i: %(message)s"
-    message_format = logging.Formatter(fmt=fmt, datefmt="%H:%M:%S")
+    message_format = logging.Formatter(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
 
     # Get the root logger
     logger = logging.getLogger()
