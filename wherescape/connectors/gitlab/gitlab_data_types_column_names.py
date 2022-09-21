@@ -141,4 +141,13 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "merge_commit_sha": "object",
         "squash_commit_sha": "object",
     },
+    "commits": {
+        "id": "object",
+        "short_id": "object",
+        "project_id": "int",
+        "title": "object",
+        "committed_date": "datetime64[ns]",
+        "created_at": "datetime64[ns]",
+        "message": "object",
+    }
 }

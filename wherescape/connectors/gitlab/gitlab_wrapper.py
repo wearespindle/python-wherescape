@@ -231,3 +231,25 @@ class Gitlab:
             all_merge_requests.extend(project_merge_requests)
 
         return all_merge_requests
+
+    def get_commits(self, project_ids):
+        """Get commits
+
+        Returns:
+        List of tuples with the commits values from the API
+        """
+        all_commits = []
+
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+        # tags don't have a project_id in the response so we add it here
+
+        # projects is a list of tuples, so the first item in the tuple is the id
+        for project_id in project_ids:
+            overwrite = {"project_id": project_id}
+            resource_api = f"projects/{project_id}/repository/commits"
+            project_merge_requests = self.paginate_through_resource(
+                resource_api, keys_to_keep, since=self.since, order_by="default", overwrite=overwrite
+            )
+            all_commits.extend(project_merge_requests)
+
+        return all_commits
