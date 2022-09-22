@@ -115,6 +115,7 @@ def initialise_wherescape_logging(wherescape):
         f"{wherescape.workdir}python_logging\wherescape.log",
         when="W5",
         atTime=time(23, 59),
+        backupCount=10,
     )
     f_handler.setFormatter(message_format)
     logger.addHandler(f_handler)
