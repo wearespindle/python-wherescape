@@ -65,7 +65,7 @@ def check_fact_dimension_join(output_file_location):
         row["count_of_0_key_records"] = result[0][1]
         rows.append(row)
 
-    keys = ['date', cd ../../'table', 'attribute',
+    keys = ['date', 'table', 'attribute',
             'count_of_all_records', 'count_of_0_key_records']
     if rows:
         # write the results to the file
