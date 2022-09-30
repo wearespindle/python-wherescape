@@ -15,7 +15,7 @@ from wherescape_os.validators.fact_dimension_join import check_fact_dimension_jo
 check_fact_dimension_join(output_file_location=r"C:\Temp")
 ```
 
-When running this host script from the scheduler as, the dummy load table is takes care of setting the target environment variables.
+When running this host script from the scheduler, the dummy load table takes care of setting the target environment variables required by the script.
 
 ## Future
 
