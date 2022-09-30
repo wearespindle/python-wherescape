@@ -5,7 +5,7 @@ Module with function to validate fact-dimension joins
 import csv
 import os
 from datetime import datetime
-from wherescape.wherescape import WhereScape
+from wherescape_os.wherescape import WhereScape
 
 
 def check_fact_dimension_join(output_file_location):
