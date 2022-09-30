@@ -1,6 +1,7 @@
 *.code-workspace
 .vscode/
 wherescape.log
+ws_env.py
 .DS_Store
 *.pyc
 __pycache__
