@@ -17,6 +17,7 @@ def check_fact_dimension_join(output_file_location):
     - all columns with foreign keys to dimensions
 
     Does a count of all references to 0-dimension keys.
+    Does a count of all fact records
 
     Creates a file in  output_file_location
     """
@@ -46,23 +47,25 @@ def check_fact_dimension_join(output_file_location):
         list_of_attributes.append((column_name, fq_table_name))
 
     rows = []
+    date = datetime.now().strftime('%y-%m-%d')
     for column_name, fq_table_name in list_of_attributes:
         row = {}
         sql = f"""
-        select 
+        select
            count(*)                                  as count_of_all_records
-        ,  count(*) filter (where {column_name} = 0) as count_of_0_key_records  
-        from {fq_table_name} 
+        ,  count(*) filter (where {column_name} = 0) as count_of_0_key_records 
+        from {fq_table_name}
         """
         result = wherescape.query_target(
             sql)
+        row["date"] = date
         row["table"] = fq_table_name
         row["attribute"] = column_name
         row["count_of_all_records"] = result[0][0]
         row["count_of_0_key_records"] = result[0][1]
         rows.append(row)
 
-    keys = ['table', 'attribute',
+    keys = ['date', 'table', 'attribute',
             'count_of_all_records', 'count_of_0_key_records']
     if rows:
         # write the results to the file

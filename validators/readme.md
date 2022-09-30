@@ -10,7 +10,7 @@ To run this test from Wherescape, you need to create a dummy (load) table and a 
 
 ```python
 -- host script `python_create_csv_fact_dimension_check` 
-from check_fact_dimension_join import check_fact_dimension_join
+from wherescape_os.validators.fact_dimension_join import check_fact_dimension_join
 
 check_fact_dimension_join(output_file_location=r"C:\Temp")
 ```
