@@ -47,7 +47,7 @@ def check_fact_dimension_join(output_file_location):
         list_of_attributes.append((column_name, fq_table_name))
 
     rows = []
-    date = datetime.now().strftime('%y-%m-%d')
+    date = datetime.now().strftime('%Y-%m-%d')
     for column_name, fq_table_name in list_of_attributes:
         row = {}
         sql = f"""
@@ -65,7 +65,7 @@ def check_fact_dimension_join(output_file_location):
         row["count_of_0_key_records"] = result[0][1]
         rows.append(row)
 
-    keys = ['date', 'table', 'attribute',
+    keys = ['date', cd ../../'table', 'attribute',
             'count_of_all_records', 'count_of_0_key_records']
     if rows:
         # write the results to the file
