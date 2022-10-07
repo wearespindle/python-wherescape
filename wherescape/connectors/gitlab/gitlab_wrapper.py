@@ -39,7 +39,7 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
-    def format_url(self, resource_api, page_variables, simple, order_by, since=None):
+    def format_url(self, resource_api, page_variables, simple, order_by, sort, since=None):
         """Format URL
 
         Parameters:
@@ -55,8 +55,9 @@ class Gitlab:
         Formatted url which can be used to make the request
         """
         updated_since = f"&updated_after={since}" if since else ""
+        sort_string = f"&sort=asc" if sort else ""
         pagination = f"per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
-        return f"{self.base_url}/{resource_api}?order_by={order_by}&sort=asc&simple={simple}&{pagination}{updated_since}"
+        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
 
     def paginate_through_resource(
         self,
@@ -67,6 +68,7 @@ class Gitlab:
         per_page=50,
         simple="false",
         order_by="id",
+        sort=True
     ):
         """Paginate through resources
         Since the Gitlab API has pagination, this helper function will paginate through the resource API.
@@ -93,7 +95,7 @@ class Gitlab:
 
         while current_page < total_pages:
             page_variables = {"per_page": per_page, "current_page": current_page}
-            url = self.format_url(resource_api, page_variables, simple, order_by, since)
+            url = self.format_url(resource_api, page_variables, simple, order_by, since, sort)
 
             response = self.make_request(url, "GET")
 
@@ -247,9 +249,27 @@ class Gitlab:
         for project_id in project_ids:
             overwrite = {"project_id": project_id}
             resource_api = f"projects/{project_id}/repository/commits"
-            project_merge_requests = self.paginate_through_resource(
+            project_commits = self.paginate_through_resource(
                 resource_api, keys_to_keep, since=self.since, order_by="default", overwrite=overwrite
             )
-            all_commits.extend(project_merge_requests)
+            all_commits.extend(project_commits)
 
         return all_commits
+
+    def get_branches(self, project_ids):
+        """Get branches
+
+        Returns:
+        List of tuples with the branches of the specific projects from the API
+        """
+        all_branches = []
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branches"].keys()
+
+        for project_id in project_ids:
+            resource_api = f"projects/{project_id}/repository/branches"
+            project_branches = self.paginate_through_resource(
+                resource_api, keys_to_keep, since=self.since, order_by="default", sort=False
+            )
+            all_branches.extend(project_branches)
+            
+        return all_branches

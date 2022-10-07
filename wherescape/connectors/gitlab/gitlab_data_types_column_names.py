@@ -149,5 +149,25 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "committed_date": "datetime64[ns]",
         "created_at": "datetime64[ns]",
         "message": "object",
-    }
+    },
+    "branches":{
+        "name": "object",
+        "merged": "boolean",
+        "protected": "boolean",
+        "default": "boolean",
+        "developers_can_push": "boolean",
+        "developers_can_merge": "boolean",
+        "can_push": "boolean",
+        "web_url": "object",
+        "commit_author_email": "john@example.com",
+        "commit_author_name": "John Smith",
+        "commit_authored_date": "2012-06-27T05:51:39-07:00",
+        "commit_committed_date": "2012-06-28T03:44:20-07:00",
+        "commit_committer_email": "john@example.com",
+        "commit_committer_name": "John Smith",
+        "commit_id": "7b5c3cc8be40ee161ae89a06bba6229da1032a0c",
+        "commit_short_id": "7b5c3cc",
+        "commit_title": "add projects API",
+        "commit_message": "add projects API", 
+  }
 }
