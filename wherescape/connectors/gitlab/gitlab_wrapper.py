@@ -95,7 +95,7 @@ class Gitlab:
 
         while current_page < total_pages:
             page_variables = {"per_page": per_page, "current_page": current_page}
-            url = self.format_url(resource_api, page_variables, simple, order_by, since, sort)
+            url = self.format_url(resource_api, page_variables, simple, order_by, sort, since)
 
             response = self.make_request(url, "GET")
 
@@ -273,3 +273,4 @@ class Gitlab:
             all_branches.extend(project_branches)
             
         return all_branches
+        
