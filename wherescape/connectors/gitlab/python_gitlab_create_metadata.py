@@ -30,6 +30,10 @@ def gitlab_create_metadata_smart():
         title = "pipelines"
     elif "merge_request" in table_name:
         title = "merge_requests"
+    elif "commmit" in table_name:
+        title = "commits"
+    elif "branch" in table_name:
+        title = "branches"
     else:
         raise Exception("Could not find the specific Gitlab object type")
     columns = COLUMN_NAMES_AND_DATA_TYPES[title]

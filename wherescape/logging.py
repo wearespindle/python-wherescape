@@ -1,4 +1,6 @@
+from datetime import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import sys
 
 
@@ -96,7 +98,7 @@ def initialise_wherescape_logging(wherescape):
     """
 
     fmt = "[%(levelname)s] %(asctime)s %(filename)s %(funcName)s():%(lineno)i: %(message)s"
-    message_format = logging.Formatter(fmt=fmt, datefmt="%H:%M:%S")
+    message_format = logging.Formatter(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
 
     # Get the root logger
     logger = logging.getLogger()
@@ -108,7 +110,13 @@ def initialise_wherescape_logging(wherescape):
     w_handler.setFormatter(message_format)
     logger.addHandler(w_handler)
 
-    f_handler = logging.FileHandler(f"{wherescape.workdir}wherescape.log")
+    # File log rotation will occur Saturday night 23:59
+    f_handler = TimedRotatingFileHandler(
+        f"{wherescape.workdir}python_logging\wherescape.log",
+        when="W5",
+        atTime=time(23, 59),
+        backupCount=10,
+    )
     f_handler.setFormatter(message_format)
     logger.addHandler(f_handler)
     sys.excepthook = handle_exception

@@ -28,6 +28,10 @@ def gitlab_load_data_smart():
         load_type = "pipelines"
     elif "merge_request" in table_name:
         load_type = "merge_requests"
+    elif "commit" in table_name:
+        load_type = "commits"
+    elif "branch" in table_name:
+        load_type = "branches"
     else:
         raise Exception("Could not find the specific Gitlab object type")
 
@@ -51,21 +55,21 @@ def gitlab_load_data(wherescape_instance, load_type):
     since = wherescape_instance.read_parameter("gitlab_high_water_mark")
     gitlab_instance = Gitlab(access_token, base_url, since)
 
+    columns = COLUMN_NAMES_AND_DATA_TYPES[load_type]
     if load_type == "projects":
-        columns = COLUMN_NAMES_AND_DATA_TYPES["projects"]
         values = gitlab_instance.get_projects()
     elif load_type == "pipelines":
-        columns = COLUMN_NAMES_AND_DATA_TYPES["pipelines"]
         values = gitlab_instance.get_pipelines()
     elif load_type == "issues":
-        columns = COLUMN_NAMES_AND_DATA_TYPES["issues"]
         values = gitlab_instance.get_issues()
     elif load_type == "tags":
-        columns = COLUMN_NAMES_AND_DATA_TYPES["tags"]
         values = gitlab_instance.get_release_tags()
     elif load_type == "merge_requests":
-        columns = COLUMN_NAMES_AND_DATA_TYPES["merge_requests"]
         values = gitlab_instance.get_merge_requests()
+    elif load_type == "commits":
+        values = gitlab_instance.get_commits()
+    elif load_type == "branches":
+        values = gitlab_instance.get_branches()
     else:
         raise Exception("Wrong gitlab load type supplied")
 
