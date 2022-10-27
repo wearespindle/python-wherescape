@@ -151,6 +151,7 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "message": "object",
     },
     "branches": {
+        "project_id": "int",
         "name": "object",
         "merged": "boolean",
         "protected": "boolean",
