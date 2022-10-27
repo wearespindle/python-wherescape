@@ -257,7 +257,6 @@ class Gitlab:
             project_commits = self.paginate_through_resource(
                 resource_api,
                 keys_to_keep,
-                since=self.since,
                 order_by="default",
                 overwrite=overwrite,
             )
@@ -276,13 +275,14 @@ class Gitlab:
 
         for project in self.projects:
             project_id = project[0]
+            overwrite = {"project_id": project_id}
             resource_api = f"projects/{project_id}/repository/branches"
             project_branches = self.paginate_through_resource(
                 resource_api,
                 keys_to_keep,
-                since=self.since,
                 order_by="default",
                 sort=False,
+                overwrite=overwrite,
             )
             all_branches.extend(project_branches)
 
