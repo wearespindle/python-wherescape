@@ -39,7 +39,9 @@ class Gitlab:
         response = requests.request(method, url, data=payload, headers=headers)
         return response
 
-    def format_url(self, resource_api, page_variables, simple, order_by, sort, since=None):
+    def format_url(
+        self, resource_api, page_variables, simple, order_by, sort, since=None
+    ):
         """Format URL
 
         Parameters:
@@ -68,7 +70,7 @@ class Gitlab:
         per_page=50,
         simple="false",
         order_by="id",
-        sort=True
+        sort=True,
     ):
         """Paginate through resources
         Since the Gitlab API has pagination, this helper function will paginate through the resource API.
@@ -95,7 +97,9 @@ class Gitlab:
 
         while current_page < total_pages:
             page_variables = {"per_page": per_page, "current_page": current_page}
-            url = self.format_url(resource_api, page_variables, simple, order_by, sort, since)
+            url = self.format_url(
+                resource_api, page_variables, simple, order_by, sort, since
+            )
 
             response = self.make_request(url, "GET")
 
@@ -234,7 +238,7 @@ class Gitlab:
 
         return all_merge_requests
 
-    def get_commits(self, project_ids):
+    def get_commits(self):
         """Get commits
 
         Returns:
@@ -246,31 +250,40 @@ class Gitlab:
         # tags don't have a project_id in the response so we add it here
 
         # projects is a list of tuples, so the first item in the tuple is the id
-        for project_id in project_ids:
+        for project in self.projects:
+            project_id = project[0]
             overwrite = {"project_id": project_id}
             resource_api = f"projects/{project_id}/repository/commits"
             project_commits = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since, order_by="default", overwrite=overwrite
+                resource_api,
+                keys_to_keep,
+                since=self.since,
+                order_by="default",
+                overwrite=overwrite,
             )
             all_commits.extend(project_commits)
 
         return all_commits
 
-    def get_branches(self, project_ids):
+    def get_branches(self):
         """Get branches
 
         Returns:
         List of tuples with the branches of the specific projects from the API
         """
-        all_branches = []
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branches"].keys()
+        all_branches = []
 
-        for project_id in project_ids:
+        for project in self.projects:
+            project_id = project[0]
             resource_api = f"projects/{project_id}/repository/branches"
             project_branches = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since, order_by="default", sort=False
+                resource_api,
+                keys_to_keep,
+                since=self.since,
+                order_by="default",
+                sort=False,
             )
             all_branches.extend(project_branches)
-            
+
         return all_branches
-        
