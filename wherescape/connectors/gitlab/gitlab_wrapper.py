@@ -58,8 +58,8 @@ class Gitlab:
         """
         updated_since = f"&updated_after={since}" if since else ""
         sort_string = f"&sort=asc" if sort else ""
-        pagination = f"per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
-        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
+        pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
+        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}&all=true"
 
     def paginate_through_resource(
         self,
@@ -90,13 +90,12 @@ class Gitlab:
         List of tuples with the values from the request
 
         """
-        total_pages = 1
-        current_page = 0
+        next_page = '1'
 
         all_resources = []
 
-        while current_page < total_pages:
-            page_variables = {"per_page": per_page, "current_page": current_page}
+        while len(next_page) != 0:
+            page_variables = {"per_page": per_page, "next_page": next_page}
             url = self.format_url(
                 resource_api, page_variables, simple, order_by, sort, since
             )
@@ -107,7 +106,6 @@ class Gitlab:
                 logging.info(
                     f"{url}\n Forbidden resource. If you need this resource, please check the user's rights"
                 )
-                current_page = current_page + 1
                 continue
 
             response.raise_for_status()
@@ -118,12 +116,10 @@ class Gitlab:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
-
             try:
-                total_pages = int(response.headers["X-Total-Pages"])
-                current_page = int(response.headers["X-Page"])
-            except:
-                current_page = current_page + 1
+                next_page = response.headers['X-Next-Page']
+            except Exception as e:
+                print(e)
 
         return all_resources
 
