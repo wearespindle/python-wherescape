@@ -119,7 +119,7 @@ class Gitlab:
             try:
                 next_page = response.headers['X-Next-Page']
             except Exception as e:
-                print(e)
+                logging.error(e)
 
         return all_resources
 
