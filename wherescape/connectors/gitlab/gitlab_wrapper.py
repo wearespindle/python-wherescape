@@ -53,6 +53,9 @@ class Gitlab:
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
         since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back
 
+        Example:
+        https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc
+
         Returns:
         Formatted url which can be used to make the request
         """
@@ -86,6 +89,9 @@ class Gitlab:
         since (string): ISO formatted datetime string to indicate since which date you want values back
         overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
+        Example url:
+        https://gitlab.wearespindle.com/api/v4/projects/6/repository/commits?order_by=default&simple=false&per_page=50&page=22&sort=asc
+
         Returns:
         List of tuples with the values from the request
 
@@ -116,10 +122,8 @@ class Gitlab:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
-            try:
-                next_page = response.headers['X-Next-Page']
-            except Exception as e:
-                logging.error(e)
+            
+            next_page = response.headers.get('X-Next-Page')
 
         return all_resources
 
