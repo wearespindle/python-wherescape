@@ -59,7 +59,7 @@ class Gitlab:
         updated_since = f"&updated_after={since}" if since else ""
         sort_string = f"&sort=asc" if sort else ""
         pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
-        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}&all=true"
+        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
 
     def paginate_through_resource(
         self,
@@ -106,7 +106,7 @@ class Gitlab:
                 logging.info(
                     f"{url}\n Forbidden resource. If you need this resource, please check the user's rights"
                 )
-                continue
+                break
 
             response.raise_for_status()
 
