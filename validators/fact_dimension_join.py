@@ -20,18 +20,24 @@ def check_fact_dimension_join(output_file_location=""):
     wherescape = WhereScape()
 
     sql = """
-    -- Get table names and column names from WhereScape repository   
-    --     that contain dimension keys from all fact tables 
-    select dt_schema, ft_table_name, fc_col_name
-      from dbo.ws_fact_col
+    -- Get table names and column names from WhereScape repository
+    --     that contain dimension keys from all fact tables
+    select
+        ws_dbc_target.dt_schema
+        , ws_fact_tab.ft_table_name
+        , ws_fact_col.fc_col_name
+    from
+        dbo.ws_fact_col
         left join dbo.ws_fact_tab on fc_obj_key = ft_obj_key
         left join dbo.ws_obj_object on oo_obj_key = ft_obj_key
         left join dbo.ws_dbc_target on dt_target_key = oo_target_key
-     where
-       -- key_type is also shown in wherescape UI. Alternative would have been
-       --   where fc_col_name like 'dim_%'
-       fc_key_type = '2'
-    order by 1,2
+    where
+        -- key_type is also shown in wherescape UI. 
+        -- key_type 2 corresponds to dimension keys
+        ws_fact_col.fc_key_type = '2'
+    order by
+        ws_dbc_target.dt_schema
+        , ws_fact_tab.ft_table_name;
     """
 
     repository_results = wherescape.query_meta(sql)
