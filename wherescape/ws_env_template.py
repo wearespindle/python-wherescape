@@ -129,6 +129,6 @@ def setup_env(tablename, schema="load", environment="dev1", source="dev1"):
 
 
 if __name__ == "__main__":
-    setup_env("load_hsv_feedback_submissions")
+    setup_env("loadtablename", schema="load", environment="dev1")
 
     print(os.environ["WSL_LOAD_FULLNAME"])
