@@ -54,7 +54,7 @@ class Gitlab:
         since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
 
         Example return:
-        https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc
+        https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc&updated_after=2022-09-20T08:29:21
 
         Returns:
         Formatted url which can be used to make the request
