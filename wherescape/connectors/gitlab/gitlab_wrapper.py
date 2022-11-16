@@ -51,9 +51,9 @@ class Gitlab:
             "current_page": string or int
         }
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back
+        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
 
-        Example:
+        Example return:
         https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc
 
         Returns:
@@ -86,11 +86,8 @@ class Gitlab:
         keys_to_keep (list): List of keys returned by the API you want to keep
         per_page (int): How many results per page you would like to get
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): ISO formatted datetime string to indicate since which date you want values back
+        since (string): ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
         overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
-
-        Example url:
-        https://gitlab.wearespindle.com/api/v4/projects/6/repository/commits?order_by=default&simple=false&per_page=50&page=22&sort=asc
 
         Returns:
         List of tuples with the values from the request
