@@ -51,14 +51,17 @@ class Gitlab:
             "current_page": string or int
         }
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back
+        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
+
+        Example return:
+        https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc&updated_after=2022-09-20T08:29:21
 
         Returns:
         Formatted url which can be used to make the request
         """
         updated_since = f"&updated_after={since}" if since else ""
-        sort_string = f"&sort=asc" if sort else ""
-        pagination = f"per_page={page_variables['per_page']}&page={int(page_variables['current_page'])+1}"
+        sort_string = "&sort=asc" if sort else ""
+        pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
         return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
 
     def paginate_through_resource(
@@ -83,20 +86,19 @@ class Gitlab:
         keys_to_keep (list): List of keys returned by the API you want to keep
         per_page (int): How many results per page you would like to get
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): ISO formatted datetime string to indicate since which date you want values back
+        since (string): ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
         overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
         Returns:
         List of tuples with the values from the request
 
         """
-        total_pages = 1
-        current_page = 0
+        next_page = '1'
 
         all_resources = []
 
-        while current_page < total_pages:
-            page_variables = {"per_page": per_page, "current_page": current_page}
+        while len(next_page) != 0:
+            page_variables = {"per_page": per_page, "next_page": next_page}
             url = self.format_url(
                 resource_api, page_variables, simple, order_by, sort, since
             )
@@ -107,8 +109,7 @@ class Gitlab:
                 logging.info(
                     f"{url}\n Forbidden resource. If you need this resource, please check the user's rights"
                 )
-                current_page = current_page + 1
-                continue
+                break
 
             response.raise_for_status()
 
@@ -118,12 +119,8 @@ class Gitlab:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
-
-            try:
-                total_pages = int(response.headers["X-Total-Pages"])
-                current_page = int(response.headers["X-Page"])
-            except:
-                current_page = current_page + 1
+            
+            next_page = response.headers.get('X-Next-Page')
 
         return all_resources
 
