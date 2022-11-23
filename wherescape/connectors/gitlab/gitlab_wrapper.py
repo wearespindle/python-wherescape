@@ -12,6 +12,8 @@ class Gitlab:
         Initializes the Gitlab class. needs the Gitlab access token, base url
         and an optional `since` parameter. Since should be the date from which
         data should be loaded.
+
+        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
         """
         self.access_token = access_token
         self.base_url = base_url
@@ -40,7 +42,7 @@ class Gitlab:
         return response
 
     def format_url(
-        self, resource_api, page_variables, simple, order_by, sort, since=None
+        self, resource_api, page_variables, simple, order_by, sort
     ):
         """Format URL
 
@@ -51,7 +53,6 @@ class Gitlab:
             "current_page": string or int
         }
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
 
         Example return:
         https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc&updated_after=2022-09-20T08:29:21
@@ -59,7 +60,7 @@ class Gitlab:
         Returns:
         Formatted url which can be used to make the request
         """
-        updated_since = f"&updated_after={since}" if since else ""
+        updated_since = f"&updated_after={self.since}" if self.since else ""
         sort_string = "&sort=asc" if sort else ""
         pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
         return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
@@ -68,7 +69,6 @@ class Gitlab:
         self,
         resource_api,
         keys_to_keep,
-        since=None,
         overwrite=None,
         per_page=50,
         simple="false",
@@ -86,7 +86,6 @@ class Gitlab:
         keys_to_keep (list): List of keys returned by the API you want to keep
         per_page (int): How many results per page you would like to get
         simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
         overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
         Returns:
@@ -100,7 +99,7 @@ class Gitlab:
         while len(next_page) != 0:
             page_variables = {"per_page": per_page, "next_page": next_page}
             url = self.format_url(
-                resource_api, page_variables, simple, order_by, sort, since
+                resource_api, page_variables, simple, order_by, sort
             )
 
             response = self.make_request(url, "GET")
@@ -166,7 +165,6 @@ class Gitlab:
                 resource_api,
                 keys_to_keep,
                 order_by="name",
-                since=self.since,
                 overwrite=overwrite,
             )
 
@@ -189,7 +187,7 @@ class Gitlab:
             resource_api = f"projects/{project_id}/issues"
 
             project_issues = self.paginate_through_resource(
-                resource_api, keys_to_keep, order_by="created_at", since=self.since
+                resource_api, keys_to_keep, order_by="created_at"
             )
             all_issues.extend(project_issues)
 
@@ -209,7 +207,7 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/pipelines"
             project_pipelines = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since
+                resource_api, keys_to_keep
             )
             all_pipelines.extend(project_pipelines)
 
@@ -229,7 +227,7 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/merge_requests"
             project_merge_requests = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since, order_by="title"
+                resource_api, keys_to_keep, order_by="title"
             )
             all_merge_requests.extend(project_merge_requests)
 
