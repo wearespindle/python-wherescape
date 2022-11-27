@@ -60,7 +60,8 @@ class Gitlab:
         Returns:
         Formatted url which can be used to make the request
         """
-        updated_since = f"&updated_after={self.since}" if self.since else ""
+        since_param_name = 'since' if 'commits' in resource_api else 'updated_after'
+        updated_since = f"&{since_param_name}={self.since}" if self.since else ""
         sort_string = "&sort=asc" if sort else ""
         pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
         return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
