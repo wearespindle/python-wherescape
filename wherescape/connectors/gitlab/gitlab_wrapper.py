@@ -20,7 +20,7 @@ class Gitlab:
         # Project IDs are needed to get the other resources as well.
         self.projects = self.get_projects()
 
-    def make_request(self, url, method, payload={}):
+    def make_request(self, url, method, params, payload={}):
         """Make request
 
         Parameters:
@@ -36,44 +36,22 @@ class Gitlab:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.access_token}",
         }
-        response = requests.request(method, url, data=payload, headers=headers)
+        response = requests.request(
+            method,
+            f"{self.base_url}/{url}",
+            params=params,
+            data=payload,
+            headers=headers,
+        )
         return response
-
-    def format_url(
-        self, resource_api, page_variables, simple, order_by, sort, since=None
-    ):
-        """Format URL
-
-        Parameters:
-        resource_api (string): The location of the resource requested
-        page_variables (object): {
-            "per_page": string or int,
-            "current_page": string or int
-        }
-        simple (boolean): If the response of Gitlab should be simplified this needs to be set on True
-        since (string): [OPTIONAL] ISO formatted datetime string to indicate since which date you want values back (e.g. 2022-09-20T08:29:21)
-
-        Example return:
-        https://gitlab.wearespindle.com/api/v4/projects?order_by=id&simple=true&per_page=50&page=1&sort=asc&updated_after=2022-09-20T08:29:21
-
-        Returns:
-        Formatted url which can be used to make the request
-        """
-        updated_since = f"&updated_after={since}" if since else ""
-        sort_string = "&sort=asc" if sort else ""
-        pagination = f"per_page={page_variables['per_page']}&page={page_variables['next_page']}"
-        return f"{self.base_url}/{resource_api}?order_by={order_by}&simple={simple}&{pagination}{sort_string}{updated_since}"
 
     def paginate_through_resource(
         self,
         resource_api,
         keys_to_keep,
-        since=None,
+        params={},
         overwrite=None,
         per_page=50,
-        simple="false",
-        order_by="id",
-        sort=True,
     ):
         """Paginate through resources
         Since the Gitlab API has pagination, this helper function will paginate through the resource API.
@@ -93,21 +71,19 @@ class Gitlab:
         List of tuples with the values from the request
 
         """
-        next_page = '1'
+        next_page = "1"
 
         all_resources = []
 
         while len(next_page) != 0:
-            page_variables = {"per_page": per_page, "next_page": next_page}
-            url = self.format_url(
-                resource_api, page_variables, simple, order_by, sort, since
-            )
+            page_variables = {"per_page": per_page, "page": next_page}
+            params.update(page_variables)
 
-            response = self.make_request(url, "GET")
+            response = self.make_request(resource_api, "GET", params=params)
 
             if response.status_code == 403:
                 logging.info(
-                    f"{url}\n Forbidden resource. If you need this resource, please check the user's rights"
+                    f"{resource_api}\n Forbidden resource. If you need this resource, please check the user's rights"
                 )
                 break
 
@@ -119,8 +95,8 @@ class Gitlab:
                 cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
-            
-            next_page = response.headers.get('X-Next-Page')
+
+            next_page = response.headers.get("X-Next-Page")
 
         return all_resources
 
@@ -141,8 +117,14 @@ class Gitlab:
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["projects"].keys()
         resource_api = "projects"
 
+        params = {
+            "order_by": "id",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
+
         all_projects = self.paginate_through_resource(
-            resource_api, keys_to_keep, simple="true"
+            resource_api, keys_to_keep, params
         )
         return all_projects
 
@@ -156,6 +138,12 @@ class Gitlab:
 
         all_tags = []
 
+        params = {
+            "order_by": "name",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
+
         for project in self.projects:
             project_id = project[0]
             # tags don't have a project_id in the response so we add it here
@@ -165,8 +153,7 @@ class Gitlab:
             tag_in_tuple = self.paginate_through_resource(
                 resource_api,
                 keys_to_keep,
-                order_by="name",
-                since=self.since,
+                params,
                 overwrite=overwrite,
             )
 
@@ -183,13 +170,19 @@ class Gitlab:
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["issues"].keys()
 
         all_issues = []
+
+        params = {
+            "order_by": "created_at",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
         # projects is a list of tuples, so the first item in the tuple is the id
         for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/issues"
 
             project_issues = self.paginate_through_resource(
-                resource_api, keys_to_keep, order_by="created_at", since=self.since
+                resource_api, keys_to_keep, params
             )
             all_issues.extend(project_issues)
 
@@ -203,13 +196,19 @@ class Gitlab:
         """
         all_pipelines = []
 
+        params = {
+            "order_by": "id",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
+
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["pipelines"].keys()
         # projects is a list of tuples, so the first item in the tuple is the id
         for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/pipelines"
             project_pipelines = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since
+                resource_api, keys_to_keep, params
             )
             all_pipelines.extend(project_pipelines)
 
@@ -223,13 +222,19 @@ class Gitlab:
         """
         all_merge_requests = []
 
+        params = {
+            "order_by": "title",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
+
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["merge_requests"].keys()
         # projects is a list of tuples, so the first item in the tuple is the id
         for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/merge_requests"
             project_merge_requests = self.paginate_through_resource(
-                resource_api, keys_to_keep, since=self.since, order_by="title"
+                resource_api, keys_to_keep, params
             )
             all_merge_requests.extend(project_merge_requests)
 
@@ -243,6 +248,12 @@ class Gitlab:
         """
         all_commits = []
 
+        params = {
+            "order": "default",
+            "since": self.since,
+            "sort": "asc",
+        }
+
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
         # tags don't have a project_id in the response so we add it here
 
@@ -254,10 +265,56 @@ class Gitlab:
             project_commits = self.paginate_through_resource(
                 resource_api,
                 keys_to_keep,
-                order_by="default",
+                params,
                 overwrite=overwrite,
             )
             all_commits.extend(project_commits)
+
+        return all_commits
+
+    def get_commits_with_branch_name(self):
+        """Get commits
+
+        Returns:
+        List of tuples with the commits values from the API
+        """
+        all_commits = []
+
+        params = {
+            "order_by": "default",
+            "updated_after": self.since,
+            "sort": "asc",
+        }
+
+        for project in self.projects:
+            project_id = project[0]
+
+            resource_api = f"projects/{project_id}/repository/branches"
+
+            overwrite = {"project_id": project_id}
+            keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branches"].keys()
+            project_branches = self.paginate_through_resource(
+                resource_api,
+                keys_to_keep,
+            )
+
+            for branch in project_branches:
+                branch_name = branch[1]
+                overwrite = {"branch_name": branch_name}
+                keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+                params = {
+                    "order": "default",
+                    "since": self.since,
+                    "ref_name": branch_name,
+                }
+                resource_api = f"projects/{project_id}/repository/commits"
+                project_commits = self.paginate_through_resource(
+                    resource_api,
+                    keys_to_keep,
+                    params,
+                    overwrite=overwrite,
+                )
+                all_commits.extend(project_commits)
 
         return all_commits
 
@@ -277,8 +334,6 @@ class Gitlab:
             project_branches = self.paginate_through_resource(
                 resource_api,
                 keys_to_keep,
-                order_by="default",
-                sort=False,
                 overwrite=overwrite,
             )
             all_branches.extend(project_branches)
