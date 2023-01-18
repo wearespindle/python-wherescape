@@ -96,7 +96,7 @@ class Gitlab:
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
 
-            next_page = response.headers.get("X-Next-Page")
+            next_page = response.headers.get("X-Next-Page", "")
 
         return all_resources
 
