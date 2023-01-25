@@ -68,7 +68,7 @@ def gitlab_load_data(wherescape_instance, load_type):
         values = gitlab_instance.get_release_tags()
     elif load_type == "merge_requests":
         values = gitlab_instance.get_merge_requests()
-    elif load_type == "branch_commit":
+    elif load_type == "branch_commits":
         values = gitlab_instance.get_commits_with_branch_name()
     elif load_type == "commits":
         values = gitlab_instance.get_commits()
