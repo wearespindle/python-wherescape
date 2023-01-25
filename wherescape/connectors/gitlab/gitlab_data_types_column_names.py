@@ -150,6 +150,16 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "created_at": "datetime64[ns]",
         "message": "object",
     },
+    "branch_commits": {
+        "id": "object",
+        "short_id": "object",
+        "project_id": "int",
+        "title": "object",
+        "branch_name": "object",
+        "committed_date": "datetime64[ns]",
+        "created_at": "datetime64[ns]",
+        "message": "object",
+    },
     "branches": {
         "project_id": "int",
         "name": "object",
