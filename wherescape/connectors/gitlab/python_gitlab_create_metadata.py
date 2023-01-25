@@ -32,6 +32,8 @@ def gitlab_create_metadata_smart():
         title = "merge_requests"
     elif "commit" in table_name:
         title = "commits"
+    elif "branch_commit" in table_name:
+        title = "branch_commits"
     elif "branch" in table_name:
         title = "branches"
     else:

@@ -301,7 +301,7 @@ class Gitlab:
             for branch in project_branches:
                 branch_name = branch[1]
                 overwrite = {"branch_name": branch_name}
-                keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+                keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branch_commits"].keys()
                 params = {
                     "order": "default",
                     "since": self.since,
