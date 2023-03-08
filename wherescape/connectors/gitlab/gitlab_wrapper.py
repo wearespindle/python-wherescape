@@ -273,7 +273,11 @@ class Gitlab:
         return all_commits
 
     def get_merge_request_commits(self):
-        """ """
+        """Get merge request commits
+
+        Returns:
+        List of tuples with the commits values from the API
+        """
         all_merge_requests = self.get_merge_requests()
 
         all_commits = []
