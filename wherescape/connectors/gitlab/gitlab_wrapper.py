@@ -293,7 +293,7 @@ class Gitlab:
         for merge_request in all_merge_requests:
             mr_iid = merge_request[1]
             project_id = merge_request[2]
-            overwrite = {"project_id": project_id, "merge_request_iid": mr_iid}
+            overwrite = {"project_id": project_id, "merge_request_id": merge_request[0]}
 
             resource_api = f"projects/{project_id}/merge_requests/{mr_iid}/commits"
             merge_request_commits_commits = self.paginate_through_resource(

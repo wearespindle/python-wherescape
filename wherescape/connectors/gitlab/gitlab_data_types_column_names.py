@@ -154,7 +154,7 @@ COLUMN_NAMES_AND_DATA_TYPES = {
         "id": "object",
         "short_id": "object",
         "project_id": "int",
-        "merge_request_iid": "int",
+        "merge_request_id": "int",
         "title": "object",
         "committed_date": "datetime64[ns]",
         "created_at": "datetime64[ns]",
