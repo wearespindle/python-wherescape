@@ -30,6 +30,8 @@ def gitlab_load_data_smart():
         load_type = "merge_requests"
     elif "branch_commit" in table_name:
         load_type = "branch_commits"
+    elif "merge_request_commit" in table_name:
+        load_type = "merge_request_commit"
     elif "commit" in table_name:
         load_type = "commits"
     elif "branch" in table_name:
@@ -70,6 +72,8 @@ def gitlab_load_data(wherescape_instance, load_type):
         values = gitlab_instance.get_merge_requests()
     elif load_type == "branch_commits":
         values = gitlab_instance.get_commits_with_branch_name()
+    elif load_type == "merge_request_commit":
+        values = gitlab_instance.get_merge_request_commits()
     elif load_type == "commits":
         values = gitlab_instance.get_commits()
     elif load_type == "branches":
