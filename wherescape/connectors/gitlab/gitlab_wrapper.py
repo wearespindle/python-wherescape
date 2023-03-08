@@ -325,7 +325,6 @@ class Gitlab:
 
             resource_api = f"projects/{project_id}/repository/branches"
 
-            overwrite = {"project_id": project_id}
             keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branches"].keys()
             project_branches = self.paginate_through_resource(
                 resource_api,
@@ -334,8 +333,8 @@ class Gitlab:
 
             for branch in project_branches:
                 branch_name = branch[1]
-                overwrite = {"branch_name": branch_name}
-                keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+                overwrite = {"branch_name": branch_name, "project_id": project_id}
+                keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["branch_commits"].keys()
                 params = {
                     "order": "default",
                     "since": self.since,
