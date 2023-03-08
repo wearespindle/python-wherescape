@@ -288,12 +288,12 @@ class Gitlab:
             "sort": "asc",
         }
 
-        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["merge_request_commits"].keys()
 
         for merge_request in all_merge_requests:
             mr_iid = merge_request[1]
             project_id = merge_request[2]
-            overwrite = {"project_id": project_id}
+            overwrite = {"project_id": project_id, "merge_request_iid": mr_iid}
 
             resource_api = f"projects/{project_id}/merge_requests/{mr_iid}/commits"
             merge_request_commits_commits = self.paginate_through_resource(
