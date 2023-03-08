@@ -272,6 +272,36 @@ class Gitlab:
 
         return all_commits
 
+    def get_merge_request_commits(self):
+        """ """
+        all_merge_requests = self.get_merge_requests()
+
+        all_commits = []
+
+        params = {
+            "order": "default",
+            "since": self.since,
+            "sort": "asc",
+        }
+
+        keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["commits"].keys()
+
+        for merge_request in all_merge_requests:
+            mr_iid = merge_request[1]
+            project_id = merge_request[2]
+            overwrite = {"project_id": project_id}
+
+            resource_api = f"projects/{project_id}/merge_requests/{mr_iid}/commits"
+            merge_request_commits_commits = self.paginate_through_resource(
+                resource_api,
+                keys_to_keep,
+                params,
+                overwrite=overwrite,
+            )
+            all_commits.extend(merge_request_commits_commits)
+
+        return all_commits
+
     def get_commits_with_branch_name(self):
         """Get commits
 
