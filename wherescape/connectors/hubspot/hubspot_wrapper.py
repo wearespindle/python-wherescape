@@ -1,7 +1,9 @@
 import logging
 import hubspot
 # import send_data
+from . import send_data
 
+from pprint import pprint
 from hubspot.crm.companies import SimplePublicObjectInput, ApiException
 """
 module to 
@@ -23,7 +25,7 @@ class Hubspot:
         properties = args['properties']
         
         if 'id' in args:
-            id = args['company_id']
+            id = args['id']
         
         # print(properties)
         simple_public_object_input = SimplePublicObjectInput(properties=properties)
@@ -32,6 +34,15 @@ class Hubspot:
             # pprint(api_response)
         except ApiException as e:
             print("Exception when calling basic_api->update: %s\n" % e)
-
     
+    def send_patch(self, **args):
+        inputs = args['inputs']
+        if len(inputs) == 1:
+            id = inputs[0]['id']
+            properties = inputs[0]['properties']
+            send_data.patch_company_on_id(id, properties, self.client)
+        elif len(inputs) > 1:
+            send_data.patch_company_batch(inputs, self.client)
+    
+        
         
