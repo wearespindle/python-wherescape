@@ -48,6 +48,7 @@ KEYS_TO_KEEP_FROM_TICKETS_JSON = {
     "duedate": "datetime64[ns]",
     "resolution": "object",
     "resolutiondate": "datetime64[ns]",
+    "status_in_progress_date": "datetime64[ns]",
 }
 
 KEYS_TO_KEEP_FROM_PROJECTS_JSON = {
@@ -103,9 +104,11 @@ class Jira:
         """
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         auth = HTTPBasicAuth(self.user, self.apikey)
+
         response = requests.request(
             method, url, data=payload, headers=headers, auth=auth
         )
+
         if response.status_code != 200:
             raise Exception(
                 "JIRA connection error %d: %s"
@@ -205,6 +208,7 @@ class Jira:
                     "jql": jql,
                     "maxResults": max_results,
                     "startAt": start_at,
+                    "expand": ["changelog"],
                 }
             )
             response = self.make_request(url, "POST", payload=payload)
@@ -265,6 +269,16 @@ class Jira:
         issues_keys_list = KEYS_TO_KEEP_FROM_TICKETS_JSON.keys()
 
         for issue in issues:
+            history_list = []
+            for history in issue["changelog"]["histories"]:
+                for item in history["items"]:
+                    if item["field"] == "status" and item["toString"] == "In Progress":
+                        history_list.append(history["created"])
+
+            issue["status_in_progress_date"] = (
+                min(history_list) if len(history_list) > 0 else None
+            )
+
             flattend_dict = flatten_json(json_response=issue, name_to_skip="fields")
             data[issue["id"]] = filter_dict(flattend_dict, issues_keys_list)
 
