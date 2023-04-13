@@ -180,7 +180,7 @@ class Jira:
 
     def get_issue_data_per_project(self, project_id, since=None):
         """
-        Get all issue data per project
+        Get all issue data per project, expand on changelog of a ticket
         Pagination to retrieve all issue per project from the API
 
         Parameters:
@@ -255,6 +255,7 @@ class Jira:
 
     def clean_issue_data(self, issues):
         """
+        Takes the changelog history of a ticket in order to retrieve the first date a ticket was put into progress
         Flattens the json response and filters that dictionary for the keys you want to keep
         Will also clean the dataframe transforming the strings into the correct types
 
