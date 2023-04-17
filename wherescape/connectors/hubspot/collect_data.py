@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from wherescape import WhereScape
-from wherescape.connectors.hubspot.hubspot_wrapper import Hubspot
+# from wherescape.connectors.hubspot.hubspot_wrapper import Hubspot
 
 # def wherescape_instance():
 #     start_time = datetime.now()
