@@ -11,6 +11,7 @@ def hubspot_load_data():
     )
     logging.info("post load")
     table_name = wherescape_instance.load_full_name
+    # table_name = wherescape_instance.load_full_name
     logging.info(table_name)
     sql = f"select * from {table_name}"
     result = wherescape_instance.query_target(sql)
