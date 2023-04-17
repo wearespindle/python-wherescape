@@ -10,8 +10,7 @@ def hubspot_load_data():
         "Start time: %s for hubspot_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
     logging.info("post load")
-    table_name = wherescape_instance.load_full_name
-    # table_name = wherescape_instance.load_full_name
+    table_name = wherescape_instance.load_full_name()
     logging.info(table_name)
     sql = f"select * from {table_name}"
     result = wherescape_instance.query_target(sql)
