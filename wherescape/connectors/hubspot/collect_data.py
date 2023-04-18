@@ -19,4 +19,4 @@ def hubspot_load_data():
     if len(result) > 0:
         logging.info(result[0])
     if len(result) > 1:
-        logging.info(result[1].__annotations__)
+        logging.info(result.__annotations__)
