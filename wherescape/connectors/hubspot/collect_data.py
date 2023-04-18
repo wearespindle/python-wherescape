@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
-from wherescape import WhereScape
-from hubspot_wrapper import Hubspot 
+from ...wherescape import WhereScape
+from .hubspot_wrapper import Hubspot 
 
 
 def hubspot_load_data():
