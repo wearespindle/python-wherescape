@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
-from ...wherescape import WhereScape
+from wherescape import WhereScape
+from hubspot_wrapper import Hubspot 
 
 
 def hubspot_load_data():
@@ -16,17 +17,30 @@ def hubspot_load_data():
     logging.info(table_name)
     sql = f"select * from {table_name}"
     result = wherescape_instance.query_target(sql)
+    # result = list
     if len(result) > 0:
         logging.info(result[0])
         logging.info(len(result))
-        logging.info(type(result))
+        
     if len(result) > 1:
         logging.info(result[1])
         # hubspot_process_results(result[1])
 
-# def hubspot_process_results(results):
-# # order: hubspot_company_id, client_id, date, user
-#     results = 
-#     if len(results) == 1:
-#         id = 
+def hubspot_process_results(results):
+# nrorder        0               1       2     3
+# order: hubspot_company_id, client_id, date, user
+    hubspot_instance = Hubspot("pat-na1-f92fe637-d403-470e-a39c-329104cb5d75")
+    results.pop(0)
+    properties = []
+    for result in results:
+        if len(results) > 4:
+            result_dict = {
+                'id': result[0],
+                "properties": {
+                    "users" : result[3]
+                }
+            }
+            properties.append(result_dict)
+    if len(properties) > 0:
+        hubspot_instance.send_company_patch(properties)
     
