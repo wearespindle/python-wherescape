@@ -18,3 +18,5 @@ def hubspot_load_data():
     result = wherescape_instance.query_target(sql)
     if len(result) > 0:
         logging.info(result[0])
+    if len(result) > 1:
+        logging.info(result[1])
