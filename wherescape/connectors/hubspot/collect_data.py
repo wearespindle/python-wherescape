@@ -21,10 +21,8 @@ def hubspot_load_data():
     if len(result) > 0:
         logging.info(result[0])
         logging.info(len(result))
-        
-    if len(result) > 1:
-        logging.info(result[1])
-        # hubspot_process_results(result[1])
+        hubspot_process_results(result)
+        logging.info("hubspot update done")
 
 def hubspot_process_results(results):
 # nrorder        0               1       2     3
