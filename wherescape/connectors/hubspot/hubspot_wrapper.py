@@ -22,23 +22,22 @@ class Hubspot:
     #     pass
 
     # send updates to one Company
+    # def send_company_patch(self, **args):
+    #     properties = args["properties"]
+
+    #     if "id" in args:
+    #         id = args["id"]
+
+    #     simple_public_object_input = SimplePublicObjectInput(properties=properties)
+    #     try:
+    #         api_response = self.client.crm.companies.basic_api.update(
+    #             company_id=id, simple_public_object_input=simple_public_object_input
+    #         )
+
+    #     except ApiException as e:
+    #         print("Exception when calling basic_api->update: %s\n" % e)
+
     def send_company_patch(self, **args):
-        properties = args["properties"]
-
-        if "id" in args:
-            id = args["id"]
-
-        # print(properties)
-        simple_public_object_input = SimplePublicObjectInput(properties=properties)
-        try:
-            api_response = self.client.crm.companies.basic_api.update(
-                company_id=id, simple_public_object_input=simple_public_object_input
-            )
-            # pprint(api_response)
-        except ApiException as e:
-            print("Exception when calling basic_api->update: %s\n" % e)
-
-    def send_patch(self, **args):
         inputs = args["inputs"]
         if len(inputs) == 1:
             id = inputs[0]["id"]

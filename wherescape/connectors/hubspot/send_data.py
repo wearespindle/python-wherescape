@@ -20,10 +20,9 @@ def patch_company_on_id(id, properties, client):
             company_id=id, simple_public_object_input=object_input
         )
         logging.info("sending companypatch to hubspot")
-        logging.debug(api_response)
-        print(api_response)
+        logging.info(api_response)
     except ApiException as e:
-        print("Exception when calling basic_api->update: %s\n" % e)
+        logging.error("Exception when calling basic_api->update: %s\n" % e)
 
 
 def patch_company_batch(inputs, client):
@@ -33,7 +32,6 @@ def patch_company_batch(inputs, client):
             batch_input_simple_public_object_batch_input=batch_input
         )
         logging.info("sending companypatch to hubspot")
-        logging.debug(api_response)
-        print(api_response)
+        logging.info(api_response)
     except ApiException as e:
-        print("Exception when calling batch_api->update: %s\n" % e)
+        logging.error("Exception when calling batch_api->update: %s\n" % e)
