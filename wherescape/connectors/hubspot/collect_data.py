@@ -40,5 +40,5 @@ def hubspot_process_results(results):
             }
             properties.append(result_dict)
     if len(properties) > 0:
-        hubspot_instance.send_company_patch(args = properties)
+        hubspot_instance.send_company_patch(inputs=properties)
     
