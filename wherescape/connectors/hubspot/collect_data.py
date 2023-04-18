@@ -31,14 +31,28 @@ def hubspot_process_results(results):
     results.pop(0)
     properties = []
     for result in results:
-        if len(results) > 4:
-            result_dict = {
-                'id': result[0],
-                "properties": {
-                    "users" : result[3]
-                }
-            }
-            properties.append(result_dict)
+        # Hubspot only accepts 100 items at a time
+        if len(properties) < 100:
+            if len(result > 3):
+                properties.append(set_properties(result))
+        else:
+            hubspot_instance.send_company_patch(inputs=properties)
+            properties.clear()
+            
+            if len(result > 3):
+                properties.append(set_properties(result))
+            
     if len(properties) > 0:
         hubspot_instance.send_company_patch(inputs=properties)
     
+def set_properties(result):
+    '''
+        Method that the results of the provided (singular) row into the right setup
+    '''
+    result_dict = {
+        'id': result[0],
+        "properties": {
+            "users" : result[3]
+        }
+    }
+    return result_dict
