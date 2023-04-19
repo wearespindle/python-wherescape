@@ -3,6 +3,10 @@ from datetime import datetime
 from ...wherescape import WhereScape
 from .hubspot_wrapper import Hubspot
 
+''' 
+this module retreives the data from Wherescape
+'''
+column_names = ["hubspot_company_id", "client_id", "date", "user_amount"]
 
 def hubspot_load_data():
     start_time = datetime.now()
@@ -17,7 +21,7 @@ def hubspot_load_data():
     logging.info(table_name)
     sql = f"select * from {table_name}"
     result = wherescape_instance.query_target(sql)
-    # result = list
+    logging.info(wherescape_instance.get_columns())
     if len(result) > 0:
         logging.info(result[0])
         logging.info(len(result))
@@ -28,15 +32,15 @@ def hubspot_load_data():
 def hubspot_process_results(results):
     # nrorder        0               1       2     3
     # order: hubspot_company_id, client_id, date, user
+    # TODO: find a way to have the access_token obscured. It shouldn't be in the public eye.
     hubspot_instance = Hubspot("pat-na1-f92fe637-d403-470e-a39c-329104cb5d75")
     # column_names = results.pop(0)
     # logging.info(column_names)
-    column_names = ["hubspot_company_id", "client_id", "date", "user_amount"]
     properties = []
     for result in results:
         # Hubspot only accepts 100 items at a time
         if len(properties) < 100:
-            properties.append(process_result(result, column_names))
+            properties.append(process_result(result))
         else:
             """
             send the collected data in patch, empty properties and start with the next results
@@ -44,22 +48,14 @@ def hubspot_process_results(results):
             logging.info("full batch")
             hubspot_instance.send_company_patch(inputs=properties)
             properties.clear()
-            properties.append(process_result(result, column_names))
+            properties.append(process_result(result))
 
     if len(properties) > 0:
         logging.info("final batch")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
-# def process_result(result):
-#     """
-#     Method that the results of the provided (singular) row into the right setup
-#     """
-#     result_dict = {"id": result[0], "properties": {"users": result[3]}}
-#     return result_dict
-
-
-def process_result(result, column_names):
+def process_result(result):
     result_dict = {}
     property_dict = {}
 
@@ -77,7 +73,7 @@ def process_result(result, column_names):
 
 
 # NOTE: This only works from Python version 3.10 and newer
-# def process_result(result, column_names):
+# def process_result(result,):
 #     result_dict = {}
 #     property_dict = {}
 #     for name in column_names:
