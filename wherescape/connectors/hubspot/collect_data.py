@@ -31,7 +31,7 @@ def hubspot_process_results(results):
     hubspot_instance = Hubspot("pat-na1-f92fe637-d403-470e-a39c-329104cb5d75")
     # column_names = results.pop(0)
     # logging.info(column_names)
-    column_names = ["hubspot_company_id", "client_id", "date", "user"]
+    column_names = ["hubspot_company_id", "client_id", "date", "user_amount"]
     properties = []
     for result in results:
         # Hubspot only accepts 100 items at a time
