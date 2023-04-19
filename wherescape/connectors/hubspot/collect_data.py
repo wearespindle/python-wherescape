@@ -52,4 +52,5 @@ def set_properties(result):
     Method that the results of the provided (singular) row into the right setup
     """
     result_dict = {"id": result[0], "properties": {"users": result[3]}}
+    logging.info(result_dict)
     return result_dict
