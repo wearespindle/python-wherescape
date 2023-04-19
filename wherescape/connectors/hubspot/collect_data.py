@@ -49,28 +49,28 @@ def hubspot_process_results(results):
         logging.info("sending final batch to Hubspot")
 
 
-# def set_properties(result):
-#     """
-#     Method that the results of the provided (singular) row into the right setup
-#     """
-#     result_dict = {"id": result[0], "properties": {"users": result[3]}}
-#     # logging.info(result_dict)
-#     return result_dict
-
-
 def process_result(result, column_names):
-    result_dict = {}
-    property_dict = {}
-
-    for name in column_names:
-        if name == "hubspot_company_id":
-            result_dict["id"] = result[column_names.index(name)]
-        elif name == "user_amount":
-            property_dict["users"] = result[column_names.index(name)]
-    result_dict["properties"] = property_dict
+    """
+    Method that the results of the provided (singular) row into the right setup
+    """
+    result_dict = {"id": result[0], "properties": {"users": result[3]}}
     logging.info(type(result_dict["properties"]))
-
     return result_dict
+
+
+# def process_result(result, column_names):
+#     result_dict = {}
+#     property_dict = {}
+
+#     for name in column_names:
+#         if name == "hubspot_company_id":
+#             result_dict["id"] = result[column_names.index(name)]
+#         elif name == "user_amount":
+#             property_dict["users"] = result[column_names.index(name)]
+#     result_dict["properties"] = property_dict
+#     # logging.info(type(result_dict["properties"]))
+
+#     return result_dict
 
 
 # def process_result(result, column_names):
