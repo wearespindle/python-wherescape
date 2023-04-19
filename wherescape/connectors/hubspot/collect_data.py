@@ -68,7 +68,7 @@ def process_result(result, column_names):
         elif name == "user_amount":
             property_dict["users"] = result[column_names.index(name)]
     result_dict["properties"] = property_dict
-    logging.info(result_dict)
+    logging.info(type(result_dict["properties"]))
 
     return result_dict
 
