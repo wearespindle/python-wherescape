@@ -6,7 +6,7 @@ from .hubspot_wrapper import Hubspot
 ''' 
 this module retreives the data from Wherescape
 '''
-column_names = ["hubspot_company_id", "client_id", "date", "user_amount"]
+# column_names = ["hubspot_company_id", "client_id", "date", "user_amount"]
 
 def hubspot_load_data():
     start_time = datetime.now()
@@ -21,15 +21,17 @@ def hubspot_load_data():
     logging.info(table_name)
     sql = f"select * from {table_name}"
     result = wherescape_instance.query_target(sql)
-    logging.info(wherescape_instance.get_columns())
+
+    column_names = wherescape_instance.get_columns()[0]
+
     if len(result) > 0:
         logging.info(result[0])
         logging.info(len(result))
-        hubspot_process_results(result)
+        hubspot_process_results(result, column_names)
         logging.info("hubspot update done")
 
 
-def hubspot_process_results(results):
+def hubspot_process_results(results, column_names):
     # nrorder        0               1       2     3
     # order: hubspot_company_id, client_id, date, user
     # TODO: find a way to have the access_token obscured. It shouldn't be in the public eye.
@@ -40,7 +42,7 @@ def hubspot_process_results(results):
     for result in results:
         # Hubspot only accepts 100 items at a time
         if len(properties) < 100:
-            properties.append(process_result(result))
+            properties.append(process_result(result, column_names))
         else:
             """
             send the collected data in patch, empty properties and start with the next results
@@ -48,14 +50,14 @@ def hubspot_process_results(results):
             logging.info("full batch")
             hubspot_instance.send_company_patch(inputs=properties)
             properties.clear()
-            properties.append(process_result(result))
+            properties.append(process_result(result, column_names))
 
     if len(properties) > 0:
         logging.info("final batch")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
-def process_result(result):
+def process_result(result, column_names):
     result_dict = {}
     property_dict = {}
 
