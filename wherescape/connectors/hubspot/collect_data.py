@@ -41,13 +41,13 @@ def hubspot_process_results(results):
             """
             send the collected data in patch, empty properties and start with the next results
             """
-            logging.info("sending full batch to Hubspot")
+            logging.info("full batch")
             hubspot_instance.send_company_patch(inputs=properties)
             properties.clear()
             properties.append(process_result(result, column_names))
 
     if len(properties) > 0:
-        logging.info("sending final batch to Hubspot")
+        logging.info("final batch")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
