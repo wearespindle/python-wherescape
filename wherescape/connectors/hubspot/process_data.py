@@ -19,7 +19,7 @@ def hubspot_process_results(results, column_names):
     for result in results:
         # Hubspot only accepts 100 items at a time
         if len(properties) < 100:
-            properties.append(result_to_dict(result, column_names))
+            properties.append(string_to_dict(result, column_names))
         else:
             """
             send the collected data in patch, empty properties and start with the next results
@@ -27,14 +27,14 @@ def hubspot_process_results(results, column_names):
             logging.info("full batch")
             hubspot_instance.send_company_patch(inputs=properties)
             properties.clear()
-            properties.append(result_to_dict(result, column_names))
+            properties.append(string_to_dict(result, column_names))
 
     if len(properties) > 0:
         logging.info("final batch")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
-def result_to_dict(result, column_names):
+def string_to_dict(result, column_names):
     result_dict = {}
     property_dict = {}
 
