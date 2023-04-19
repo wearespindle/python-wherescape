@@ -69,7 +69,7 @@ def process_result(result, column_names):
             property_dict["users"] = result[column_names.index(name)]
     
     result_dict.update({"properties" : property_dict})
-    # logging.info(result_dict)
+    logging.info(result_dict)
 
     return result_dict
 
