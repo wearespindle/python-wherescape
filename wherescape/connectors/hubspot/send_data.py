@@ -1,6 +1,4 @@
-import hubspot
 import logging
-import wherescape
 
 from hubspot.crm.companies import (
     SimplePublicObjectInput,
@@ -14,6 +12,9 @@ Module that sends data to Hubspot
 
 
 def patch_company_on_id(id, properties, client):
+    """
+    method to send singular data for Company object to Hubspot
+    """
     object_input = SimplePublicObjectInput(properties=properties)
     try:
         api_response = client.crm.companies.basic_api.update(
@@ -26,6 +27,9 @@ def patch_company_on_id(id, properties, client):
 
 
 def patch_company_batch(inputs, client):
+    """
+    method to send batch data for Company object to Hubspot
+    """
     batch_input = BatchInputSimplePublicObjectBatchInput(inputs=inputs)
     try:
         api_response = client.crm.companies.batch_api.update(
