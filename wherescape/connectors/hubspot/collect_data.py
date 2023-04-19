@@ -67,7 +67,7 @@ def process_result(result, column_names):
             result_dict["id"] = result[column_names.index(name)]
         elif name == "user_amount":
             property_dict["users"] = result[column_names.index(name)]
-    result_dict["properties":property_dict]
+    result_dict["properties"] = property_dict
 
     return result_dict
 
