@@ -30,6 +30,7 @@ def hubspot_process_results(results):
     # order: hubspot_company_id, client_id, date, user
     hubspot_instance = Hubspot("pat-na1-f92fe637-d403-470e-a39c-329104cb5d75")
     column_names = results.pop(0)
+    logging.info(column_names)
     properties = []
     for result in results:
         # Hubspot only accepts 100 items at a time
@@ -63,7 +64,7 @@ def process_result(result, column_names):
     property_dict = {}
 
     for name in column_names:
-        logging.info(name)
+        # logging.info(name)
         if name == "hubspot_company_id":
             result_dict["id"] = result[column_names.index(name)]
         elif name == "user_amount":
