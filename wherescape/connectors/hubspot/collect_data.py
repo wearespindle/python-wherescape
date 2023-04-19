@@ -63,13 +63,13 @@ def process_result(result, column_names):
     property_dict = {}
 
     for name in column_names:
+        logging.info("name")
         if name == "hubspot_company_id":
             result_dict["id"] = result[column_names.index(name)]
         elif name == "user_amount":
-            logging.info(result[column_names.index(name)])
             property_dict["users"] = result[column_names.index(name)]
-    
-    result_dict.update({"properties" : property_dict})
+
+    result_dict.update({"properties": property_dict})
     # logging.info(result_dict)
 
     return result_dict
