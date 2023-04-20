@@ -240,6 +240,7 @@ class Jira:
         """
         # Only have one type that is empty: None
         dataframe = dataframe.where(dataframe.notnull(), None)
+
         for key, value in properties_to_transform.items():
             # to make it a little bit more faster, let's skip object, since it is already an object (string)
             if "object" == value:
