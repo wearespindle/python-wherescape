@@ -240,12 +240,18 @@ class Jira:
         """
         # Only have one type that is empty: None
         dataframe = dataframe.where(dataframe.notnull(), None)
+
         for key, value in properties_to_transform.items():
             # to make it a little bit more faster, let's skip object, since it is already an object (string)
             if "object" == value:
                 continue
             try:
-                dataframe[key] = dataframe[key].astype(value, errors="ignore")
+
+                # When working with dates, we want to keep None values None and not NaT. Otherwise we get a 00:00:00 date in wherescape
+                if value == "datetime64[ns]" and dataframe[key].loc[dataframe.index[0]] is None:
+                    dataframe[key].loc[dataframe.index[0]] = None
+                else:
+                    dataframe[key] = dataframe[key].astype(value, errors="ignore")
             except KeyError:
                 logging.info(
                     key + " key not in dataframe, skipping transforming datatype"
