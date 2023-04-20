@@ -24,17 +24,21 @@ def hubspot_process_results(results, column_names):
             """
             send the collected data in patch, empty properties and start with the next results
             """
-            logging.info("full batch")
+            logging.info("full batch ready")
             hubspot_instance.send_company_patch(inputs=properties)
             properties.clear()
             properties.append(string_to_dict(result, column_names))
 
     if len(properties) > 0:
-        logging.info("final batch")
+        logging.error("final batch ready")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
 def string_to_dict(result, column_names):
+    """
+    Method to process a result list to a dict of keys id and properties.
+    All elements besides hubspot_company_id are stored in a dict under properties
+    """
     result_dict = {}
     property_dict = {}
 
@@ -47,21 +51,3 @@ def string_to_dict(result, column_names):
     result_dict.update({"properties": property_dict})
 
     return result_dict
-
-
-# NOTE: This only works from Python version 3.10 and newer
-# def to_dict(result, column_names):
-#     result_dict = {}
-#     property_dict = {}
-#     for name in column_names:
-#         # hubspot_company_id,client_id, date, user_amount
-#         # possible from 3.10
-#         match name:
-#             case "hubspot_company_id":
-#                 result_dict['id'] = result[column_names.index(name)]
-#             case "user_amount":
-#                 property_dict['users'] = result[column_names.index(name)]
-#             case _:     # Default
-#                 pass
-#     result_dict['properties': property_dict]
-#     return result_dict
