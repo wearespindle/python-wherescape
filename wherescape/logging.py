@@ -1,6 +1,7 @@
 from datetime import time
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import os
 import sys
 
 
@@ -111,8 +112,10 @@ def initialise_wherescape_logging(wherescape):
     logger.addHandler(w_handler)
 
     # File log rotation will occur Saturday night 23:59
+    if not os.path.exists(f"{wherescape.workdir}python_logging\\"):
+        os.makedirs(f"{wherescape.workdir}python_logging\\")
     f_handler = TimedRotatingFileHandler(
-        f"{wherescape.workdir}python_logging\wherescape.log",
+        f"{wherescape.workdir}python_logging\\wherescape.log",
         when="W5",
         atTime=time(23, 59),
         backupCount=10,
