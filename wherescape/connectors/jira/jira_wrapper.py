@@ -245,7 +245,12 @@ class Jira:
             if "object" == value:
                 continue
             try:
-                dataframe[key] = dataframe[key].astype(value, errors="ignore")
+
+                # When working with dates, we want to keep None values None and not NaT. Otherwise we get a 00:00:00 date in wherescape
+                if value == "datetime64[ns]" and dataframe[key].loc[dataframe.index[0]] is None:
+                    continue
+                else:
+                    dataframe[key] = dataframe[key].astype(value, errors="ignore")
             except KeyError:
                 logging.info(
                     key + " key not in dataframe, skipping transforming datatype"
