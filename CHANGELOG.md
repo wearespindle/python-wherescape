@@ -17,8 +17,3 @@
 | 2023-01-25  | Add function to retrieve commits on a branch, Gitlab wrapper, Add commits on branch in load script of Gitlab wrapper |
 | 2023-03-08  | Add merge request commits to the Gitlab wrapper |
 | 2023-04-13  | Add date of when ticket was put into progress to Jira wrapper |
-
-
-
-
-
