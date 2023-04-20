@@ -30,6 +30,8 @@ class WhereScape:
         file_path, file_name        - Taken from the lt_file_path, lt_file_name of the Wherescape object context
         """
         self.workdir = os.getenv("WSL_WORKDIR")
+        if self.workdir is None:
+            self.workdir = "C:\\temp\\"
         initialise_wherescape_logging(self)
 
         wsl_meta_dns = os.getenv("WSL_META_DSN")
@@ -49,6 +51,8 @@ class WhereScape:
         self.sequence = os.getenv("WSL_SEQUENCE")
         self.job_key = os.getenv("WSL_JOB_KEY")
         self.job_name = os.getenv("WSL_JOB_NAME")
+        if self.job_name is None:
+            self.job_name = "job"
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
 
