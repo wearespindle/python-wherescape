@@ -249,7 +249,7 @@ class Jira:
 
                 # When working with dates, we want to keep None values None and not NaT. Otherwise we get a 00:00:00 date in wherescape
                 if value == "datetime64[ns]" and dataframe[key].loc[dataframe.index[0]] is None:
-                    dataframe[key].loc[dataframe.index[0]] = None
+                    continue
                 else:
                     dataframe[key] = dataframe[key].astype(value, errors="ignore")
             except KeyError:
