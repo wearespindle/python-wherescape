@@ -30,7 +30,7 @@ def hubspot_process_results(results, column_names):
             properties.append(string_to_dict(result, column_names))
 
     if len(properties) > 0:
-        logging.error("final batch ready")
+        logging.info("final batch ready")
         hubspot_instance.send_company_patch(inputs=properties)
 
 
