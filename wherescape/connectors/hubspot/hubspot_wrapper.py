@@ -1,11 +1,11 @@
-import logging
+# import logging
 import hubspot
 
 # import send_data
 from . import send_data
 
-from pprint import pprint
-from hubspot.crm.companies import SimplePublicObjectInput, ApiException
+# from pprint import pprint
+# from hubspot.crm.companies import SimplePublicObjectInput, ApiException
 
 """
 module to 
