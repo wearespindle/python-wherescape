@@ -38,4 +38,4 @@ def patch_company_batch(inputs, client):
         logging.info("sending company batch patch to hubspot")
         logging.debug(api_response)
     except ApiException as e:
-        logging.error("Exception when calling batch_api->update: %s\n" % e)
+        logging.info("Exception when calling batch_api->update: %s\n" % e)
