@@ -38,6 +38,7 @@ def string_to_dict(result, column_names):
     """
     Method to process a result list to a dict of keys id and properties.
     All elements besides hubspot_company_id are stored in a dict under properties
+    The assumption is that the data per row is in the same order as the column names
     """
     result_dict = {}
     property_dict = {}
@@ -47,6 +48,8 @@ def string_to_dict(result, column_names):
             result_dict["id"] = result[column_names.index(name)]
         elif name == "user_amount":
             property_dict["users"] = result[column_names.index(name)]
+        elif name == "user_change":
+            property_dict["daily_user_change"] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
 
