@@ -52,5 +52,6 @@ def string_to_dict(result, column_names):
             property_dict["daily_user_change"] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
+    logging.info(type(property_dict["daily_user_change"]))
 
     return result_dict
