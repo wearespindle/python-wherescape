@@ -49,9 +49,11 @@ def string_to_dict(result, column_names):
         elif name == "user_amount":
             property_dict["users"] = result[column_names.index(name)]
         elif name == "user_change":
+            logging.info(column_names.index(name))
+            logging.info(result[column_names.index(name)])
             property_dict["daily_user_change"] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
-    logging.info(type(property_dict["daily_user_change"]))
+    # logging.info(type(property_dict["daily_user_change"]))
 
     return result_dict
