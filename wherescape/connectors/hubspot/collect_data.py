@@ -6,6 +6,7 @@ from .process_data import hubspot_process_results
 """ 
 this module retrieves the data from Wherescape
 """
+api_key = "pat-na1-f92fe637-d403-470e-a39c-329104cb5d75"
 
 
 def hubspot_load_data():
@@ -27,5 +28,5 @@ def hubspot_load_data():
     if len(result) > 0:
         logging.info(result[0])
         logging.info(len(result))
-        hubspot_process_results(result, column_names)
+        hubspot_process_results(api_key, result, column_names)
         logging.info("hubspot update done")

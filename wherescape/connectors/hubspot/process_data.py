@@ -5,16 +5,15 @@ from .hubspot_wrapper import Hubspot
 This module processes the collected data so it can be send to the Hubspot Module
 """
 
-
-# TODO: check posibilities to separate sending it to hubspot
 # TODO: find a way to have the access_token obscured. It shouldn't be in the public eye.
+# NOTE: separating on hubspot objects could possibly be done using the table names
 
 
-def hubspot_process_results(results, column_names):
+def hubspot_process_results(api_key, results, column_names):
     """
     method to process results to Hubspot
     """
-    hubspot_instance = Hubspot("pat-na1-f92fe637-d403-470e-a39c-329104cb5d75")
+    hubspot_instance = Hubspot(api_key)
     properties = []
     for result in results:
         # Hubspot only accepts 100 items at a time
