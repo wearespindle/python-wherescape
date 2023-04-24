@@ -6,10 +6,6 @@ from hubspot.crm.companies import (
     ApiException,
 )
 
-"""
-Module that sends data to Hubspot
-"""
-
 
 def patch_company_on_id(id, properties, client):
     """
