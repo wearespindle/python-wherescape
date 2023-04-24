@@ -30,7 +30,7 @@ def hubspot_process_results(api_key, results, column_names):
 
     if len(properties) > 0:
         logging.info("final batch ready")
-        send_data("patch", "companie", properties, hubspot_instance)
+        send_data("company", "patch", properties, hubspot_instance)
 
 
 def string_to_dict(result, column_names):
@@ -70,6 +70,7 @@ def send_data(
     """
     if object_type.lower() == "companies" or object_type.lower() == "company":
         if change_type.lower() == "patch":
+            logging.info("company patch")
             hubspot_instance.send_company_patch(inputs=properties)
     if object_type.lower() == "contacts" or object_type.lower() == "contact":
         if change_type.lower() == "patch":
