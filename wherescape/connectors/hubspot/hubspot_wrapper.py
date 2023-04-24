@@ -2,7 +2,7 @@
 import hubspot
 
 # import send_data
-from .send_data import send_data
+# from .send_data import send_data
 from .send_data import (
     send_company_object,
     send_contact_object,
