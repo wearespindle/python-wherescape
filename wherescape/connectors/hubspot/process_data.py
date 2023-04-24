@@ -49,7 +49,7 @@ def string_to_dict(result, column_names):
             property_dict["users"] = result[column_names.index(name)]
         # elif name == "user_change":
         #     property_dict["daily_user_change"] = result[column_names.index(name)]
-        elif name == "user_addition" and column_names.contains("user_subtraction"):
+        elif name == "user_addition" and ("user_subtraction" in column_names):
             property_dict["daily_user_change"] = (
                 result[column_names.index(name)]
                 + result[column_names.index("user_subtraction")]
