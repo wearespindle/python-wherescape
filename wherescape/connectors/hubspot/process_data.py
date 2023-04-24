@@ -24,13 +24,13 @@ def hubspot_process_results(api_key, results, column_names):
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            hubspot_instance.send_company_patch(inputs=properties)
+            send_data("patch", "companie", properties, hubspot_instance)
             properties.clear()
             properties.append(string_to_dict(result, column_names))
 
     if len(properties) > 0:
         logging.info("final batch ready")
-        hubspot_instance.send_company_patch(inputs=properties)
+        send_data("patch", "companie", properties, hubspot_instance)
 
 
 def string_to_dict(result, column_names):
@@ -47,9 +47,33 @@ def string_to_dict(result, column_names):
             result_dict["id"] = result[column_names.index(name)]
         elif name == "user_amount":
             property_dict["users"] = result[column_names.index(name)]
-        elif name == "user_change":
-            property_dict["daily_user_change"] = result[column_names.index(name)]
+        # elif name == "user_change":
+        #     property_dict["daily_user_change"] = result[column_names.index(name)]
+        elif name == "user_addition" and column_names.contains("user_subtraction"):
+            property_dict["daily_user_change"] = (
+                result[column_names.index(name)]
+                + result[column_names.index("user_subtraction")]
+            )
 
     result_dict.update({"properties": property_dict})
 
     return result_dict
+
+
+def send_data(
+    object_type: str, change_type: str, properties, hubspot_instance: Hubspot
+):
+    """
+    Method to send data in the correct direction for
+    object_type (company, contact, deals) and
+    change_type (patch)
+    """
+    if object_type.lower() == "companies" or object_type.lower() == "company":
+        if change_type.lower() == "patch":
+            hubspot_instance.send_company_patch(inputs=properties)
+    if object_type.lower() == "contacts" or object_type.lower() == "contact":
+        if change_type.lower() == "patch":
+            hubspot_instance.send_contact_patch(inputs=properties)
+    if object_type.lower() == "deals" or object_type.lower() == "deals":
+        if change_type.lower() == "patch":
+            hubspot_instance.send_deal_patch(inputs=properties)
