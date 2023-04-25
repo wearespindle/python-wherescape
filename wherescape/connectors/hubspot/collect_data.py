@@ -6,10 +6,9 @@ from .process_data import hubspot_process_results
 """ 
 this module retrieves the data from Wherescape
 """
-api_key = "pat-na1-f92fe637-d403-470e-a39c-329104cb5d75"
 
 
-def hubspot_load_data():
+def hubspot_load_data(api_key: str):
     start_time = datetime.now()
     logging.info("connecting to WhereScape")
     wherescape_instance = WhereScape()
