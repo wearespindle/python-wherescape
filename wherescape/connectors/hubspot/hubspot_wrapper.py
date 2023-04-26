@@ -24,14 +24,16 @@ class Hubspot:
     def get_company_properties(self):
         property_names = []
         try:
-            results = self.client.crm.properties.core_api.get_all(
+            api_response = self.client.crm.properties.core_api.get_all(
                 object_type="companies", archived=False
             )
 
+            results = api_response.results()
+
             logging.info(type(results))
 
-            for property in results:
-                property_names.append(results["property"].name)
+            # for property in results:
+            #     property_names.append(results["property"].name)
 
             return property_names
 
