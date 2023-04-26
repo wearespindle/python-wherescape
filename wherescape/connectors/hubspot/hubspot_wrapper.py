@@ -26,9 +26,12 @@ class Hubspot:
         try:
             api_response = self.client.crm.properties.core_api.get_all(
                 object_type="companies", archived=False
-            ).results()
+            )
 
-            logging.info(type(api_response))
+            for item in api_response:
+                pass
+
+            # logging.info(type(api_response))
 
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
