@@ -26,7 +26,7 @@ class Hubspot:
         try:
             api_response = self.client.crm.properties.core_api.get_all(
                 object_type="companies", archived=False
-            )
+            ).results()
 
             logging.info(type(api_response))
 
