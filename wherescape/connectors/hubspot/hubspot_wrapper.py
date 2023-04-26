@@ -22,25 +22,7 @@ class Hubspot:
         self.client = hubspot.Client.create(access_token=access_token)
 
     def get_company_properties(self):
-        property_names = []
-        try:
-            api_response = self.client.crm.properties.core_api.get_all(
-                object_type="companies", archived=False
-            )
-            logging.info(type(api_response))
-            # results || paging
-            api_results = api_response.to_dict()
-
-            # logging.info(type(api_results))
-            # logging.info(len(api_results["results"]))
-            # logging.info(api_results["results"][1])
-
-            for result in api_results["results"]:
-                property_names.append(result["name"])
-
-            logging.info(property_names)
-        except ApiException as e:
-            logging.error("Exception when calling core_api->get_all: %s\n" % e)
+        return self.get_object_properties("companies")
 
     def get_deal_properties(self):
         return self.get_object_properties("deals")
@@ -90,19 +72,16 @@ class Hubspot:
     def get_object_properties(self, object_name: str):
         property_names = []
         try:
-            results = self.client.crm.properties.core_api.get_all(
-                object_type=object_name, archived=False
+            api_response = self.client.crm.properties.core_api.get_all(
+                object_type="companies", archived=False
             )
+            logging.info(type(api_response))
+            # results || paging
+            api_results = api_response.to_dict()
 
-            logging.info(type(results))
-            i = 0
-
-            print(results.size())
-
-            for property in results:
-                property_names.append(results["property"].name)
+            for result in api_results["results"]:
+                property_names.append(result["name"])
 
             return property_names
-
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
