@@ -28,7 +28,9 @@ class Hubspot:
                 object_type="companies", archived=False
             )
 
-            logging.info(api_response)
+            api_response.results()
+
+            # logging.info(api_response)
 
             # logging.info(type(api_response))
 
