@@ -1,8 +1,7 @@
-# import logging
+import logging
 import hubspot
 
-# import send_data
-# from .send_data import send_data
+from hubspot.crm.properties import ApiException
 from .send_data import (
     send_company_object,
     send_contact_object,
@@ -21,6 +20,21 @@ class Hubspot:
     def __init__(self, access_token):
         self.access_token = access_token
         self.client = hubspot.Client.create(access_token=access_token)
+
+    def get_company_properties(self):
+        property_names = []
+        try:
+            results = self.client.crm.properties.core_api.get_all(
+                object_type="companies", archived=False
+            )
+
+            for property in results:
+                property_names.append(property["name"])
+
+            return property_names
+
+        except ApiException as e:
+            logging.error("Exception when calling core_api->get_all: %s\n" % e)
 
     def send_company_patch(self, **args):
         """
