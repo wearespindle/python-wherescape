@@ -7,6 +7,9 @@ from .send_data import (
     send_contact_object,
     send_deal_object,
 )
+from hubspot.crm.properties.models.collection_response_property_no_paging import (
+    CollectionResponsePropertyNoPaging,
+)
 
 # from pprint import pprint
 # from hubspot.crm.companies import SimplePublicObjectInput, ApiException
@@ -29,11 +32,9 @@ class Hubspot:
             )
             logging.info(type(api_response))
 
-            # api_results = api_response.results()
+            api_results = api_response.to_dict()
 
-            # logging.info(type(api_results))
-
-            logging.info(api_response[0])
+            logging.info(type(api_results))
 
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
