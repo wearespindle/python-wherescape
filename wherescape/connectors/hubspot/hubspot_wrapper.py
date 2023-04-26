@@ -32,7 +32,8 @@ class Hubspot:
 
             for key in results.keys():
                 if type(results) == dict:
-                    property_names.append(results[key]["name"])
+                    logging.info(results[key])
+                    # property_names.append(results[key]["name"])
 
             return property_names
 
