@@ -28,19 +28,17 @@ class Hubspot:
                 object_type="companies", archived=False
             )
             logging.info(type(api_response))
-
+            # results || paging
             api_results = api_response.to_dict()
 
-            logging.info(type(api_results))
-            logging.info(len(api_results["results"]))  # results || paging
-            logging.info(api_results["results"][1])  # results || paging
+            # logging.info(type(api_results))
+            # logging.info(len(api_results["results"]))
+            # logging.info(api_results["results"][1])
 
-            for key in api_results.keys():
-                logging.info(type(api_results[key]))
-                # list
-                # dict
-                # nonetype
+            for result in api_results["results"]:
+                property_names.append(result["name"])
 
+            logging.info(property_names)
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
 
