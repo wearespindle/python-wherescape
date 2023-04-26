@@ -9,13 +9,14 @@ This module processes the collected data so it can be send to the Hubspot Module
 # NOTE: separating on hubspot objects could possibly be done using the table names
 
 
-def hubspot_process_results(api_key, results, column_names):
+def hubspot_process_results(api_key: str, results, column_names: list):
     """
     method to process results to Hubspot
     """
     hubspot_instance = Hubspot(api_key)
     properties = []
     property_names = hubspot_instance.get_company_properties()
+    compare_propery_column_names(column_names, property_names)
     for result in results:
         # Hubspot only accepts 100 items at a time
         if len(properties) < 100:
@@ -32,6 +33,26 @@ def hubspot_process_results(api_key, results, column_names):
     if len(properties) > 0:
         logging.info("final batch ready")
         send_data("company", "patch", properties, hubspot_instance)
+
+
+def send_data(
+    object_type: str, change_type: str, properties, hubspot_instance: Hubspot
+):
+    """
+    Method to send data in the correct direction for
+    object_type (company, contact, deals) and
+    change_type (patch)
+    """
+    if object_type.lower() == "companies" or object_type.lower() == "company":
+        if change_type.lower() == "patch":
+            logging.info("company patch")
+            hubspot_instance.send_company_patch(inputs=properties)
+    if object_type.lower() == "contacts" or object_type.lower() == "contact":
+        if change_type.lower() == "patch":
+            hubspot_instance.send_contact_patch(inputs=properties)
+    if object_type.lower() == "deals" or object_type.lower() == "deals":
+        if change_type.lower() == "patch":
+            hubspot_instance.send_deal_patch(inputs=properties)
 
 
 def string_to_dict(result, column_names):
@@ -76,21 +97,9 @@ def string_to_dict(result, column_names):
     return result_dict
 
 
-def send_data(
-    object_type: str, change_type: str, properties, hubspot_instance: Hubspot
-):
-    """
-    Method to send data in the correct direction for
-    object_type (company, contact, deals) and
-    change_type (patch)
-    """
-    if object_type.lower() == "companies" or object_type.lower() == "company":
-        if change_type.lower() == "patch":
-            logging.info("company patch")
-            hubspot_instance.send_company_patch(inputs=properties)
-    if object_type.lower() == "contacts" or object_type.lower() == "contact":
-        if change_type.lower() == "patch":
-            hubspot_instance.send_contact_patch(inputs=properties)
-    if object_type.lower() == "deals" or object_type.lower() == "deals":
-        if change_type.lower() == "patch":
-            hubspot_instance.send_deal_patch(inputs=properties)
+def compare_propery_column_names(column_names: list, property_names: list):
+    for name in column_names:
+        if name not in property_names:
+            logging.warning(
+                "Column name: %s does not exist as a property with the same name" % name
+            )
