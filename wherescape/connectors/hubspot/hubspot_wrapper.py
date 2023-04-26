@@ -7,9 +7,6 @@ from .send_data import (
     send_contact_object,
     send_deal_object,
 )
-from hubspot.crm.properties.models.collection_response_property_no_paging import (
-    CollectionResponsePropertyNoPaging,
-)
 
 # from pprint import pprint
 # from hubspot.crm.companies import SimplePublicObjectInput, ApiException
