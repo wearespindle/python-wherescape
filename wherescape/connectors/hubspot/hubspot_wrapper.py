@@ -29,10 +29,10 @@ class Hubspot:
             )
 
             results = api_response.to_dict()
-            logging.info(results)
 
             for key in results.keys():
-                logging.info(results[key])
+                if type(results=dict):
+                    property_names.append(results[key]["name"])
 
             return property_names
 
