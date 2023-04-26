@@ -29,11 +29,11 @@ class Hubspot:
             )
             logging.info(type(api_response))
 
-            api_results = api_response.results()
+            # api_results = api_response.results()
 
-            logging.info(type(api_results))
+            # logging.info(type(api_results))
 
-            # logging.info(type(api_response))
+            logging.info(api_response[0])
 
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
