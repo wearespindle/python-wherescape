@@ -76,6 +76,8 @@ class Hubspot:
                 object_type=object_name, archived=False
             )
 
+            logging.info(type(results))
+
             for property in results:
                 property_names.append(property["name"])
 
