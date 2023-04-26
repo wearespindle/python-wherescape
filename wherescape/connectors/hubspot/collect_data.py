@@ -8,10 +8,14 @@ this module retrieves the data from Wherescape
 """
 
 
-def hubspot_load_data(api_key: str):
+def hubspot_load_data():
+    """
+    This method collects all the data from a table and sends it to be processed.
+    """
     start_time = datetime.now()
     logging.info("connecting to WhereScape")
     wherescape_instance = WhereScape()
+    api_key = wherescape_instance.read_parameter("hubspot_api_test_environment")
     logging.info(
         "Start time: %s for hubspot_load_data"
         % start_time.strftime("%Y-%m-%d %H:%M:%S")

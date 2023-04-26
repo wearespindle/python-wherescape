@@ -15,7 +15,7 @@ def hubspot_process_results(api_key, results, column_names):
     """
     hubspot_instance = Hubspot(api_key)
     properties = []
-    property_names = hubspot_instance.get_company_properties()
+    # property_names = hubspot_instance.get_company_properties()
     for result in results:
         # Hubspot only accepts 100 items at a time
         if len(properties) < 100:
