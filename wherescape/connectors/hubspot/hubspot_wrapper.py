@@ -28,7 +28,7 @@ class Hubspot:
                 object_type="companies", archived=False
             )
 
-            results = api_response.results()
+            results = api_response.to_dict()
 
             logging.info(type(results))
 
