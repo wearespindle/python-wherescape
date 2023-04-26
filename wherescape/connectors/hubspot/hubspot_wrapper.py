@@ -22,19 +22,13 @@ class Hubspot:
         self.client = hubspot.Client.create(access_token=access_token)
 
     def get_company_properties(self):
-        property_names = []
-        try:
-            results = self.client.crm.properties.core_api.get_all(
-                object_type="companies", archived=False
-            )
+        return self.get_object_properties("companies")
 
-            for property in results:
-                property_names.append(property["name"])
+    def get_deal_properties(self):
+        return self.get_object_properties("deals")
 
-            return property_names
-
-        except ApiException as e:
-            logging.error("Exception when calling core_api->get_all: %s\n" % e)
+    def get_contact_properties(self):
+        return self.get_object_properties("contacts")
 
     def send_company_patch(self, **args):
         """
@@ -74,3 +68,18 @@ class Hubspot:
             send_deal_object.patch_company_on_id(id, properties, self.client)
         elif len(inputs) > 1:
             send_deal_object.patch_company_batch(inputs, self.client)
+
+    def get_object_properties(self, object_name: str):
+        property_names = []
+        try:
+            results = self.client.crm.properties.core_api.get_all(
+                object_type=object_name, archived=False
+            )
+
+            for property in results:
+                property_names.append(property["name"])
+
+            return property_names
+
+        except ApiException as e:
+            logging.error("Exception when calling core_api->get_all: %s\n" % e)
