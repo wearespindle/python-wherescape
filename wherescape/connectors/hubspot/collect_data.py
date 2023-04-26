@@ -21,7 +21,6 @@ def hubspot_load_data():
     )
     logging.info("post load")
     table_name = f"{wherescape_instance.schema}.{wherescape_instance.table}"
-    logging.info(table_name)
     sql = f"select * from {table_name}"
 
     result = wherescape_instance.query_target(sql)
@@ -29,7 +28,5 @@ def hubspot_load_data():
     column_names = wherescape_instance.get_columns()[0]
 
     if len(result) > 0:
-        logging.info(result[0])
-        logging.info(len(result))
         hubspot_process_results(api_key, result, column_names)
         logging.info("hubspot update done")
