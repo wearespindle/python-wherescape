@@ -32,8 +32,8 @@ class Hubspot:
 
             logging.info(type(results))
 
-            # for property in results:
-            #     property_names.append(results["property"].name)
+            for property in results:
+                property_names.append(results["property"].name)
 
             return property_names
 
