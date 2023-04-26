@@ -79,11 +79,10 @@ class Hubspot:
             logging.info(type(results))
             i = 0
 
-            while len(results) > i:
-                property_names.append(results.get(i)["name"])
-                i += 1
-            # for property in results:
-            #     property_names.append(results["property"]["name"])
+            print(results.size())
+
+            for property in results:
+                property_names.append(results["property"].name)
 
             return property_names
 
