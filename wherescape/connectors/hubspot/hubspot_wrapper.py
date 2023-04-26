@@ -32,9 +32,13 @@ class Hubspot:
             api_results = api_response.to_dict()
 
             logging.info(type(api_results))
+            logging.info(len(api_results["results"]))  # results || paging
 
             for key in api_results.keys():
                 logging.info(type(api_results[key]))
+                # list
+                # dict
+                # nonetype
 
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
