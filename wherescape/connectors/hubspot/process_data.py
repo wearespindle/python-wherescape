@@ -43,6 +43,7 @@ def string_to_dict(result, column_names):
     result_dict = {}
     property_dict = {}
 
+    # TODO: dit kan vast beter!!!
     for name in column_names:
         if name == "hubspot_company_id":
             result_dict["id"] = result[column_names.index(name)]
@@ -51,10 +52,24 @@ def string_to_dict(result, column_names):
         # elif name == "user_change":
         #     property_dict["daily_user_change"] = result[column_names.index(name)]
         elif name == "user_addition" and ("user_subtraction" in column_names):
-            property_dict["daily_user_change"] = (
-                result[column_names.index(name)]
-                + result[column_names.index("user_subtraction")]
-            )
+            if (
+                type(result[column_names.index(name)]) == None
+                and result[column_names.index("user_subtraction")] == None
+            ) or (
+                type(result[column_names.index(name)]) != None
+                and result[column_names.index("user_subtraction")] == None
+            ):
+                property_dict["daily_user_change"] = result[column_names.index(name)]
+            elif (
+                type(result[column_names.index(name)]) == None
+                and result[column_names.index("user_subtraction")] != None
+            ):
+                property_dict["daily_user_change"] = result[column_names.index(name)]
+            else:
+                property_dict["daily_user_change"] = (
+                    result[column_names.index(name)]
+                    + result[column_names.index("user_subtraction")]
+                )
 
     result_dict.update({"properties": property_dict})
 
