@@ -28,13 +28,7 @@ class Hubspot:
                 object_type="companies", archived=False
             )
 
-            results = api_response.to_dict()
-            logging.info("results into dict")
-
-            for key in results.keys():
-                logging.info(key)
-
-            return property_names
+            logging.info(type(api_response))
 
         except ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
