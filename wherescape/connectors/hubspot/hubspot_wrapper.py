@@ -32,9 +32,7 @@ class Hubspot:
             logging.info(results)
 
             for key in results.keys():
-                # logging.info(property)
-                logging.info(type(property))
-                # property_names.append(results[key])
+                logging.info(results[key])
 
             return property_names
 
