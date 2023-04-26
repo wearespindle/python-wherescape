@@ -29,6 +29,7 @@ class Hubspot:
             )
 
             results = api_response.to_dict()
+            logging.info("results into dict")
 
             for key in results.keys():
                 logging.info(key)
