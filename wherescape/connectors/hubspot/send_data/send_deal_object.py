@@ -6,6 +6,11 @@ from hubspot.crm.deals import (
     ApiException,
 )
 
+"""
+Module where data is send to the deals object in Hubspot
+required scopes: crm.objects.deals.write
+"""
+
 
 def patch_on_id(id, properties, client):
     """
@@ -13,7 +18,7 @@ def patch_on_id(id, properties, client):
     """
     object_input = SimplePublicObjectInput(properties=properties)
     try:
-        api_response = client.crm.companies.basic_api.update(
+        api_response = client.crm.deals.basic_api.update(
             company_id=id, simple_public_object_input=object_input
         )
         logging.info("sending company patch to hubspot")
@@ -28,7 +33,7 @@ def patch_batch(inputs, client):
     """
     batch_input = BatchInputSimplePublicObjectBatchInput(inputs=inputs)
     try:
-        api_response = client.crm.companies.batch_api.update(
+        api_response = client.crm.deals.batch_api.update(
             batch_input_simple_public_object_batch_input=batch_input
         )
         logging.info("sending company batch patch to hubspot")

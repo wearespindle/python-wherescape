@@ -1,14 +1,14 @@
 import logging
 
-from hubspot.crm.contacts import (
+from hubspot.crm.OBJECT_NAME import (
     SimplePublicObjectInput,
     BatchInputSimplePublicObjectBatchInput,
     ApiException,
 )
 
 """
-Module where data is send to the contacts object in Hubspot
-required scopes: crm.objects.companies.write
+This module is a template for the Hubspot object calling.
+Replace the name OBJECT_NAME with the name of the object from hubspot (for example, deals) and it should work
 """
 
 
@@ -18,7 +18,7 @@ def patch_on_id(id, properties, client):
     """
     object_input = SimplePublicObjectInput(properties=properties)
     try:
-        api_response = client.crm.contacts.basic_api.update(
+        api_response = client.crm.OBJECT_NAME.basic_api.update(
             company_id=id, simple_public_object_input=object_input
         )
         logging.info("sending company patch to hubspot")
@@ -33,7 +33,7 @@ def patch_batch(inputs, client):
     """
     batch_input = BatchInputSimplePublicObjectBatchInput(inputs=inputs)
     try:
-        api_response = client.crm.contacts.batch_api.update(
+        api_response = client.crm.OBJECT_NAME.batch_api.update(
             batch_input_simple_public_object_batch_input=batch_input
         )
         logging.info("sending company batch patch to hubspot")

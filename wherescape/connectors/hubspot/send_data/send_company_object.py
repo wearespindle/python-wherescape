@@ -6,6 +6,12 @@ from hubspot.crm.companies import (
     ApiException,
 )
 
+"""
+required scopes: crm.objects.companies.write | crm.objects.companies.read
+
+
+"""
+
 
 def patch_company_on_id(id, properties, client):
     """
