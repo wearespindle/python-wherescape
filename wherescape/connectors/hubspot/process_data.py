@@ -149,5 +149,19 @@ def get_http_request_type(table_name: str):
         # TODO: remove return statement when tablename correct
         return "patch"
         raise Exception("Could not find the specific http request in table name")
+
+
+def get_property_names(object_name: str, hubspot_instance: Hubspot):
+    """
+    This function will return a list of propertynames of the selected object to compare to
+    """
+    if object_name == "companies":
+        return hubspot_instance.get_companies_properties()
+    elif object_name == "contacts":
+        return hubspot_instance.get_contacts_properties()
+    elif object_name == "deals":
+        return hubspot_instance.get_deals_properties()
     else:
-        raise Exception("Coild not find the specific http request in table name")
+        # TODO: remove return when table names are set up properly
+        return hubspot_instance.get_companies_properties()
+        info.error("unknown what Hubspot Object to send content to")
