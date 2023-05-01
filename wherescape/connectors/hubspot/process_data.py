@@ -7,14 +7,12 @@ from .hubspot_wrapper import Hubspot
 This module processes the collected data so it can be send to the Hubspot Module
 """
 
-# TODO: find a way to have the access_token obscured. It shouldn't be in the public eye.
-# NOTE: separating on hubspot objects could possibly be done using the table names
 
 def hubspot_process_results(
     api_key: str, results: list, column_names: list, table_name: str
 ):
     """
-    function to process results to Hubspot
+    function that handles the processing of the results for it to be send to Hubspot
     """
     hubspot_instance = Hubspot(api_key)
     properties = []
@@ -64,7 +62,7 @@ def send_data(
             hubspot_instance.send_deal_patch(inputs=properties)
 
 
-def create_data_dict(result, column_names: list, known_names: list):
+def create_data_dict(result: list, column_names: list, known_names: list):
     """
     Method to process a result list to a dict of keys id and properties.
     All elements besides hubspot_company_id are stored in a dict under properties
@@ -105,7 +103,9 @@ def compare_names(source_names: list, destination_names: list):
     This function compares source names with destiny names for one to one data transfer.
     It will give a warning for source names that do not appear in the list of destiny names
     """
+
     known_destination_names = []
+
     for name in source_names:
         if name not in destination_names:
             logging.warning("source name: %s does not exist in the dest" % name)
@@ -116,6 +116,9 @@ def compare_names(source_names: list, destination_names: list):
 
 
 def get_object_name(table_name: str):
+    """
+    This function willreturn the name of the object the data will be send to
+    """
     if "companies" in table_name:
         return "companies"
     elif "contacts" in table_name:

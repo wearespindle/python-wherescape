@@ -22,12 +22,15 @@ class Hubspot:
         self.client = hubspot.Client.create(access_token=access_token)
 
     def get_company_properties(self):
+        logging.info("getting properties of companies")
         return self.get_object_properties("companies")
 
-    def get_deal_properties(self):
+    def get_deals_properties(self):
+        logging.info("getting properties of deals")
         return self.get_object_properties("deals")
 
-    def get_contact_properties(self):
+    def get_contacts_properties(self):
+        logging.info("getting properties of contacts")
         return self.get_object_properties("contacts")
 
     def send_company_patch(self, **args):
