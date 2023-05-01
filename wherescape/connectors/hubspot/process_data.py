@@ -10,15 +10,20 @@ This module processes the collected data so it can be send to the Hubspot Module
 # TODO: find a way to have the access_token obscured. It shouldn't be in the public eye.
 # NOTE: separating on hubspot objects could possibly be done using the table names
 
-
-def hubspot_process_results(api_key: str, results, column_names: list):
+def hubspot_process_results(
+    api_key: str, results: list, column_names: list, table_name: str
+):
     """
     function to process results to Hubspot
     """
     hubspot_instance = Hubspot(api_key)
     properties = []
+
+    object_name = get_object_name(table_name)
+    request_type = get_http_request_type(table_name)
     property_names = hubspot_instance.get_company_properties()
     known_names = compare_names(column_names, property_names)
+
     for result in results:
         """Hubspot only accepts 100 items per call"""
         if len(properties) < 100:
@@ -28,7 +33,7 @@ def hubspot_process_results(api_key: str, results, column_names: list):
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            send_data("patch", "companie", properties, hubspot_instance)
+            send_data(request_type, object_name, properties, hubspot_instance)
             properties.clear()
             properties.append(create_data_dict(result, column_names, known_names))
 
@@ -120,17 +125,26 @@ def get_object_name(table_name: str):
     elif "tickets" in table_name:
         return "tickets"
     else:
+        # TODO: remove return statement when table name is correct
+        return "companies"
         raise Exception("Could not find the specific hubspot object type in table name")
 
 
-def get_http_request_name(table_name: str):
+def get_http_request_type(table_name: str):
+    """
+    This function will return the request_type based on the table name
+    """
     if "patch" in table_name:
         return "patch"
-    elif "post" in table_name:
-        return "post"
-    elif "get" in table_name:
-        return "get"
-    elif "delete" in table_name:
-        return "delete"
+    # elif "post" in table_name:
+    #     return "post"
+    # elif "get" in table_name:
+    #     return "get"
+    # elif "delete" in table_name:
+    #     return "delete"
+    else:
+        # TODO: remove return statement when tablename correct
+        return "patch"
+        raise Exception("Could not find the specific http request in table name")
     else:
         raise Exception("Coild not find the specific http request in table name")

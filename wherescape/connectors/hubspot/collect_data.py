@@ -27,8 +27,6 @@ def hubspot_load_data():
     api_key = wherescape_instance.read_parameter("hubspot_api_test_environment")
     column_names = wherescape_instance.get_columns()[0]
 
-    logging.info(type(result))
-
     if len(result) > 0:
-        hubspot_process_results(api_key, result, column_names)
+        hubspot_process_results(api_key, result, column_names, table_name)
         logging.info("hubspot update done")
