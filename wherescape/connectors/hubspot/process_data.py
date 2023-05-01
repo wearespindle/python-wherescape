@@ -81,7 +81,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             else:
                 property_dict["users"] = result[column_names.index(name)]
         else:
-            # TODO: find more abstract way of doing this
+            # TODO: remove later when not needed
             if name == "user_addition" and ("user_subtraction" in column_names):
                 addition = result[column_names.index(name)]
                 subtraction = result[column_names.index("user_subtraction")]
@@ -92,6 +92,30 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                     property_dict["daily_user_change"] = (
                         subtraction if subtraction != None else addition
                     )
+            elif name == "hubspot_company_id":
+                result_dict["id"] = result[column_names.index(name)]
+            elif name == "user_amount":
+                property_dict["users"] = result[column_names.index(name)]
+            # elif name == "user_change":
+            #     property_dict["daily_user_change"] = result[column_names.index(name)]
+            elif name == "user_addition" and ("user_subtraction" in column_names):
+                if (
+                    type(result[column_names.index(name)]) == None
+                    and result[column_names.index("user_subtraction")] == None
+                ) or (
+                    type(result[column_names.index(name)]) != None
+                    and result[column_names.index("user_subtraction")] == None
+                ):
+                    property_dict["daily_user_change"] = result[
+                        column_names.index(name)
+                    ]
+                elif (
+                    type(result[column_names.index(name)]) == None
+                    and result[column_names.index("user_subtraction")] != None
+                ):
+                    property_dict["daily_user_change"] = result[
+                        column_names.index(name)
+                    ]
 
     result_dict.update({"properties": property_dict})
 
@@ -125,8 +149,6 @@ def get_object_name(table_name: str):
         return "contacts"
     elif "deals" in table_name:
         return "deals"
-    elif "tickets" in table_name:
-        return "tickets"
     else:
         # TODO: remove return statement when table name is correct
         return "companies"

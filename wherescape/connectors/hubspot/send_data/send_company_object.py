@@ -7,9 +7,8 @@ from hubspot.crm.companies import (
 )
 
 """
-required scopes: crm.objects.companies.write | crm.objects.companies.read
-
-
+Module where data is send to the companies object in Hubspot
+required scopes: crm.objects.companies.write
 """
 
 

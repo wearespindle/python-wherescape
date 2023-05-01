@@ -8,7 +8,7 @@ from hubspot.crm.contacts import (
 
 """
 Module where data is send to the contacts object in Hubspot
-required scopes: crm.objects.companies.write
+required scopes: crm.objects.contacts.write
 """
 
 
