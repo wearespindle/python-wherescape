@@ -76,7 +76,7 @@ class Hubspot:
                 object_type="companies", archived=False
             )
             logging.info(type(api_response))
-            # results || paging
+            # keys: results || paging
             api_results = api_response.to_dict()
 
             for result in api_results["results"]:
