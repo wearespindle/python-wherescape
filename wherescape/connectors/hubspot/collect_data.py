@@ -39,7 +39,7 @@ def hubspot_load_data():
 def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     parameter_name = "hubspot_access_token_test_environment"
     table_split = table_name.split("_")
-    table_words = table_split[[5, len(table_split)]]
+    table_words = table_split[5, len(table_split)]
     logging.info(table_words)
 
     for word in table_words:
