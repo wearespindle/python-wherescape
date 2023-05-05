@@ -47,5 +47,3 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
         if access_token:
             return access_token
     return wherescape_instance.read_parameter(parameter_name)
-
-    pass
