@@ -28,9 +28,7 @@ def hubspot_load_data():
     sql = f"select * from {table_name}"
 
     result = wherescape_instance.query_target(sql)
-    access_token = wherescape_instance.read_parameter(
-        "hubspot_access_token_test_environment"
-    )
+    access_token = hubspot_get_token(wherescape_instance, table_name)
     column_names = wherescape_instance.get_columns()[0]
 
     if len(result) > 0:
