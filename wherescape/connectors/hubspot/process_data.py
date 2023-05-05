@@ -9,12 +9,12 @@ This module processes the collected data so it can be send to the Hubspot Module
 
 
 def hubspot_process_results(
-    api_key: str, results: list, column_names: list, table_name: str
+    access_token: str, results: list, column_names: list, table_name: str
 ):
     """
     function that handles the processing of the results for it to be send to Hubspot
     """
-    hubspot_instance = Hubspot(api_key)
+    hubspot_instance = Hubspot(access_token)
     properties = []
 
     object_name = get_object_name(table_name)
@@ -32,6 +32,7 @@ def hubspot_process_results(
             """
             logging.info("full batch ready")
             send_data(request_type, object_name, properties, hubspot_instance)
+
             properties.clear()
             properties.append(create_data_dict(result, column_names, known_names))
 
@@ -76,6 +77,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             """
             For 1-to-1 column_names and property_names
             """
+            # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
             if name == "id":
                 result_dict[name] = result[column_names.index(name)]
             else:
