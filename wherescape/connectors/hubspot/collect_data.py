@@ -37,6 +37,13 @@ def hubspot_load_data():
 
 
 def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
+    """
+    This method allows for different access tokens based on the environment mentioned
+    in the table name. If no environment is found this way. It will use the basic
+    parameter name to retrieve the token
+    """
+    # TODO: rename:
+    # parameter_name = "hubspot_acces_token"
     parameter_name = "hubspot_access_token_test_environment"
     table_split = table_name.split("_")
     table_words = table_split[5:]
@@ -44,7 +51,8 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
         access_token = wherescape_instance.read_parameter(environment_parameter)
-        logging.info(access_token)
+
         if access_token:
             return access_token
+
     return wherescape_instance.read_parameter(parameter_name)
