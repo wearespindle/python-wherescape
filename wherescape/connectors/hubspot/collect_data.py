@@ -36,3 +36,17 @@ def hubspot_load_data():
     if len(result) > 0:
         hubspot_process_results(access_token, result, column_names, table_name)
         logging.info("hubspot update done")
+
+
+def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
+    parameter_name = "hubspot_access_token_test_environment"
+    table_words = table_name.split("_")
+    for word in table_words:
+        environment_parameter = parameter_name + "_" + word
+        logging.info(environment_parameter)
+        access_token = wherescape_instance.read_parameter(environment_parameter)
+        if access_token:
+            return access_token
+    return wherescape_instance.read_parameter(parameter_name)
+
+    pass
