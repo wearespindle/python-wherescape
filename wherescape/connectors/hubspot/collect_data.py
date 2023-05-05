@@ -41,7 +41,7 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     table_split = table_name.split("_")
     table_words = table_split[5:]
 
-    logging.info(type(table_words))
+    logging.info(table_words)
 
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
