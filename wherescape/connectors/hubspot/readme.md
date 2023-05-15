@@ -37,7 +37,7 @@ To distinguish between multiple environments with different access tokens, a one
 for example; if the environmentname would be "voys", the parameter would be called `hubspot_access_token_voys`
 
 # Usage
-<!-- copy pasted for now -->
+<!-- to be updated -->
 After creating the table, attach the host script to the table. 
 
 If multiple environments are used, make sure the name used to refer to the environment is the same in both table name and the parameter `hubspot_access_token`
