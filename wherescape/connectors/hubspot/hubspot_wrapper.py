@@ -22,14 +22,23 @@ class Hubspot:
         self.client = hubspot.Client.create(access_token=access_token)
 
     def get_company_properties(self):
+        """
+        this method returns all information of company properties
+        """
         logging.info("getting properties of companies")
         return self.get_object_properties("companies")
 
-    def get_deals_properties(self):
+    def get_deal_properties(self):
+        """
+        this method returns all information of deal properties
+        """
         logging.info("getting properties of deals")
         return self.get_object_properties("deals")
 
-    def get_contacts_properties(self):
+    def get_contact_properties(self):
+        """
+        this method returns all information of contact properties
+        """
         logging.info("getting properties of contacts")
         return self.get_object_properties("contacts")
 
@@ -73,6 +82,9 @@ class Hubspot:
             send_deal_object.patch_company_batch(inputs, self.client)
 
     def get_object_properties(self, object_name: str):
+        """
+        This method returns a list of all the properties that fall under an object
+        """
         property_names = []
         try:
             api_response = self.client.crm.properties.core_api.get_all(

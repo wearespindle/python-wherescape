@@ -7,10 +7,6 @@ from .process_data import hubspot_process_results
 this module retrieves the data from Wherescape
 """
 
-"""
-this is a list of all environments in HubSpot in case someone uses multople
-"""
-
 
 def hubspot_load_data():
     """
