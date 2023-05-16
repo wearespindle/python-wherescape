@@ -135,7 +135,10 @@ def compare_names(source_names: list, destination_names: list):
 
     for name in source_names:
         if name not in destination_names:
-            logging.warning("source name: %s does not exist in the destination" % name)
+            logging.warning(
+                "source name: %s does not exist in the destination. please check its existence and spelling"
+                % name
+            )
         else:
             known_destination_names.append(name)
 

@@ -54,4 +54,5 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
             logging.info("retreived access token for %s environment" % word)
             return access_token
 
+    logging.info("retrieving access token from parameter %s" % parameter_name)
     return wherescape_instance.read_parameter(parameter_name)
