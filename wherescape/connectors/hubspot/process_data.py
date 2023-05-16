@@ -77,8 +77,10 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             """
             For 1-to-1 column_names and property_names
             """
+
             # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
             if name == "id":
+                logging.info(name)
                 result_dict[name] = result[column_names.index(name)]
             else:
                 property_dict["users"] = result[column_names.index(name)]
@@ -98,26 +100,26 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 result_dict["id"] = result[column_names.index(name)]
             elif name == "user_amount":
                 property_dict["users"] = result[column_names.index(name)]
-            # elif name == "user_change":
-            #     property_dict["daily_user_change"] = result[column_names.index(name)]
-            # elif name == "user_addition" and ("user_subtraction" in column_names):
-            #     if (
-            #         type(result[column_names.index(name)]) == None
-            #         and result[column_names.index("user_subtraction")] == None
-            #     ) or (
-            #         type(result[column_names.index(name)]) != None
-            #         and result[column_names.index("user_subtraction")] == None
-            #     ):
-            #         property_dict["daily_user_change"] = result[
-            #             column_names.index(name)
-            #         ]
-            #     elif (
-            #         type(result[column_names.index(name)]) == None
-            #         and result[column_names.index("user_subtraction")] != None
-            #     ):
-            #         property_dict["daily_user_change"] = result[
-            #             column_names.index(name)
-            #         ]
+            elif name == "user_change":
+                property_dict["daily_user_change"] = result[column_names.index(name)]
+            elif name == "user_addition" and ("user_subtraction" in column_names):
+                if (
+                    type(result[column_names.index(name)]) == None
+                    and result[column_names.index("user_subtraction")] == None
+                ) or (
+                    type(result[column_names.index(name)]) != None
+                    and result[column_names.index("user_subtraction")] == None
+                ):
+                    property_dict["daily_user_change"] = result[
+                        column_names.index(name)
+                    ]
+                elif (
+                    type(result[column_names.index(name)]) == None
+                    and result[column_names.index("user_subtraction")] != None
+                ):
+                    property_dict["daily_user_change"] = result[
+                        column_names.index(name)
+                    ]
 
     result_dict.update({"properties": property_dict})
 
