@@ -31,6 +31,7 @@ def hubspot_process_results(
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
+            logging.info(properties[0])
             send_data(object_name, request_type, properties, hubspot_instance)
 
             properties.clear()
@@ -49,8 +50,8 @@ def send_data(
     object_type (company, contact, deals) and
     change_type (patch)
     """
-    logging.info("%s : This should be companies" % object_type)
-    logging.info("%s : this should be patch" % change_type)
+    # logging.info("%s : This should be companies" % object_type)
+    # logging.info("%s : this should be patch" % change_type)
 
     if object_type == "companies":
         if change_type == "patch":
@@ -82,17 +83,12 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             """
 
             # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
-            if name == "id" or name == "record_id":
-                logging.info(name)
+            if name == "id" or name == "hs_object_id":
                 result_dict["id"] = result[column_names.index(name)]
             else:
                 property_dict[name] = result[column_names.index(name)]
-        elif name == "id" or name == "record_id":
-            logging.info(name)
-            result_dict["id"] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
-
     return result_dict
 
 
