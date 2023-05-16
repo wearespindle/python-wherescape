@@ -49,10 +49,12 @@ class Hubspot:
         inputs = args["inputs"]
 
         if len(inputs) == 1:
+            logging.info("sending one item patch")
             id = inputs[0]["id"]
             properties = inputs[0]["properties"]
             send_company_object.patch_company_on_id(id, properties, self.client)
         elif len(inputs) > 1:
+            logging.info("sending plural item patch")
             send_company_object.patch_company_batch(inputs, self.client)
 
     def send_contact_patch(self, **args):

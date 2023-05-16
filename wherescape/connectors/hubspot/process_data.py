@@ -49,6 +49,7 @@ def send_data(
     object_type (company, contact, deals) and
     change_type (patch)
     """
+    logging.info(object_type)
     if object_type == "companies":
         if change_type == "patch":
             logging.info("companies patch")
