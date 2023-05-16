@@ -18,10 +18,9 @@ def patch_company_on_id(id, properties, client):
     """
     object_input = SimplePublicObjectInput(properties=properties)
     try:
-        api_response = client.crm.companies.basic_api.update(
+        client.crm.companies.basic_api.update(
             company_id=id, simple_public_object_input=object_input
         )
-        logging.info(api_response)
         logging.info("sending company patch to hubspot")
     except ApiException as e:
         logging.error("Exception when calling basic_api->update: %s\n" % e)
@@ -38,4 +37,4 @@ def patch_company_batch(inputs, client):
         )
         logging.info("sending company batch patch to hubspot")
     except ApiException as e:
-        logging.info("Exception when calling batch_api->update: %s\n" % e)
+        logging.error("Exception when calling batch_api->update: %s\n" % e)
