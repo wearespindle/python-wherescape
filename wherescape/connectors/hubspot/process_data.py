@@ -78,12 +78,12 @@ def create_data_dict(result: list, column_names: list, known_names: list):
     property_dict = {}
 
     for name in column_names:
+        data_item = result[column_names.index(name)]
+        logging.info(type(data_item))
         if name in known_names:
             """
             For 1-to-1 column_names and property_names
             """
-
-            data_item = result[column_names.index(name)]
 
             # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
             if name == "id" or name == "hs_object_id":
