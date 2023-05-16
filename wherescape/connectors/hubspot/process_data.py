@@ -25,7 +25,7 @@ def hubspot_process_results(
 
     for result in results:
         """Hubspot only accepts 100 items per call"""
-        if len(properties) < 100:
+        if len(properties) < 200:
             properties.append(create_data_dict(result, column_names, known_names))
         else:
             """
@@ -85,7 +85,6 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             For 1-to-1 column_names and property_names
             """
 
-            # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
             if name == "id" or name == "hs_object_id":
                 result_dict["id"] = data_item
             else:
