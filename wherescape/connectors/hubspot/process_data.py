@@ -83,7 +83,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 
             # TODO: if id is empty, there's no need in pushing it since it won't be used on Hubspot's end
             if name == "id" or name == "record_id":
-                # logging.info(name)
+                logging.info(name)
                 result_dict["id"] = result[column_names.index(name)]
             else:
                 property_dict[name] = result[column_names.index(name)]
