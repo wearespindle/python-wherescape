@@ -49,8 +49,9 @@ def send_data(
     object_type (company, contact, deals) and
     change_type (patch)
     """
-    logging.info(object_type)
-    logging.info(change_type)
+    logging.info("%s : This should be companies" % object_type)
+    logging.info("%s : this should be patch" % change_type)
+
     if object_type == "companies":
         if change_type == "patch":
             logging.info("companies patch")
@@ -137,7 +138,7 @@ def compare_names(source_names: list, destination_names: list):
     known_destination_names = []
 
     for name in source_names:
-        if name not in destination_names and name is not "record_id":
+        if name not in destination_names and name != "record_id":
             logging.warning(
                 "source name: %s does not exist in the destination. please check its existence and spelling"
                 % name
