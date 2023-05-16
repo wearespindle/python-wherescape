@@ -31,7 +31,7 @@ def hubspot_process_results(
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            logging.info(properties[0])
+            # logging.info(properties[0])
             send_data(object_name, request_type, properties, hubspot_instance)
 
             properties.clear()
@@ -86,6 +86,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             if name == "id" or name == "hs_object_id":
                 result_dict["id"] = result[column_names.index(name)]
             else:
+                logging.info(type(result[column_names.index(name)]))
                 property_dict[name] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
