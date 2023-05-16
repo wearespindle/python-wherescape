@@ -94,30 +94,31 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                     property_dict["daily_user_change"] = (
                         subtraction if subtraction != None else addition
                     )
-            elif name == "hubspot_company_id":
+            elif name == "hubspot_company_id" or name == "record_id":
                 result_dict["id"] = result[column_names.index(name)]
+                result_dict["record_id"] = result[column_names.index(name)]
             elif name == "user_amount":
                 property_dict["users"] = result[column_names.index(name)]
             # elif name == "user_change":
             #     property_dict["daily_user_change"] = result[column_names.index(name)]
-            elif name == "user_addition" and ("user_subtraction" in column_names):
-                if (
-                    type(result[column_names.index(name)]) == None
-                    and result[column_names.index("user_subtraction")] == None
-                ) or (
-                    type(result[column_names.index(name)]) != None
-                    and result[column_names.index("user_subtraction")] == None
-                ):
-                    property_dict["daily_user_change"] = result[
-                        column_names.index(name)
-                    ]
-                elif (
-                    type(result[column_names.index(name)]) == None
-                    and result[column_names.index("user_subtraction")] != None
-                ):
-                    property_dict["daily_user_change"] = result[
-                        column_names.index(name)
-                    ]
+            # elif name == "user_addition" and ("user_subtraction" in column_names):
+            #     if (
+            #         type(result[column_names.index(name)]) == None
+            #         and result[column_names.index("user_subtraction")] == None
+            #     ) or (
+            #         type(result[column_names.index(name)]) != None
+            #         and result[column_names.index("user_subtraction")] == None
+            #     ):
+            #         property_dict["daily_user_change"] = result[
+            #             column_names.index(name)
+            #         ]
+            #     elif (
+            #         type(result[column_names.index(name)]) == None
+            #         and result[column_names.index("user_subtraction")] != None
+            #     ):
+            #         property_dict["daily_user_change"] = result[
+            #             column_names.index(name)
+            #         ]
 
     result_dict.update({"properties": property_dict})
 
@@ -134,7 +135,7 @@ def compare_names(source_names: list, destination_names: list):
 
     for name in source_names:
         if name not in destination_names:
-            logging.warning("source name: %s does not exist in the dest" % name)
+            logging.warning("source name: %s does not exist in the destination" % name)
         else:
             known_destination_names.append(name)
 
@@ -145,16 +146,14 @@ def get_object_name(table_name: str):
     """
     This function willreturn the name of the object the data will be send to
     """
-    if "companies" in table_name:
+    if "companies" in table_name or "company" in table_name:
         return "companies"
-    elif "contacts" in table_name:
+    elif "contacts" in table_name or "contact" in table_name:
         return "contacts"
-    elif "deals" in table_name:
+    elif "deals" in table_name or "deal" in table_name:
         return "deals"
     else:
-        # TODO: remove return statement when table name is correct
-        return "companies"
-        raise Exception("Could not find the specific hubspot object type in table name")
+        logging.error("Could not find the specific hubspot object type in table name")
 
 
 def get_http_request_type(table_name: str):
@@ -186,6 +185,4 @@ def get_property_names(object_name: str, hubspot_instance: Hubspot):
     elif object_name == "deals":
         return hubspot_instance.get_deals_properties()
     else:
-        # TODO: remove return when table names are set up properly
-        return hubspot_instance.get_companies_properties()
-        info.error("unknown what Hubspot Object to send content to")
+        logging.error("Could not find destination HubSpot object")
