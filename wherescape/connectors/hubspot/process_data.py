@@ -54,15 +54,12 @@ def send_data(
 
     if object_type == "companies":
         if change_type == "patch":
-            logging.info("companies patch")
             hubspot_instance.send_company_patch(inputs=properties)
     if object_type == "contacts":
         if change_type == "patch":
-            logging.info("contacts patch")
             hubspot_instance.send_contact_patch(inputs=properties)
     if object_type == "deals":
         if change_type == "patch":
-            logging.info("deals patch")
             hubspot_instance.send_deal_patch(inputs=properties)
 
 
@@ -125,25 +122,22 @@ def get_object_name(table_name: str):
     elif "deals" in table_name or "deal" in table_name:
         return "deals"
     else:
-        logging.error("Could not find the specific hubspot object type in table name")
+        logging.error(
+            "Could not identify the specific hubspot object type from the table name"
+        )
 
 
 def get_http_request_type(table_name: str):
     """
-    This function will return the request_type based on the table name
+    This function will return the request_type based on the table name.
+    Currently, only
     """
     if "patch" in table_name:
         return "patch"
-    # elif "post" in table_name:
-    #     return "post"
-    # elif "get" in table_name:
-    #     return "get"
-    # elif "delete" in table_name:
-    #     return "delete"
     else:
-        # TODO: remove return statement when tablename correct
-        return "patch"
-        raise Exception("Could not find the specific http request in table name")
+        logging.error(
+            "Could not identify the specified API request desired from the table name"
+        )
 
 
 def get_property_names(object_name: str, hubspot_instance: Hubspot):
