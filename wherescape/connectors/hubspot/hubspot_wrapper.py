@@ -90,8 +90,6 @@ class Hubspot:
             api_response = self.client.crm.properties.core_api.get_all(
                 object_type="companies", archived=False
             )
-            logging.info(type(api_response))
-            # keys: results || paging
             api_results = api_response.to_dict()
 
             for result in api_results["results"]:

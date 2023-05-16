@@ -96,7 +96,6 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                     )
             elif name == "hubspot_company_id" or name == "record_id":
                 result_dict["id"] = result[column_names.index(name)]
-                result_dict["record_id"] = result[column_names.index(name)]
             elif name == "user_amount":
                 property_dict["users"] = result[column_names.index(name)]
             # elif name == "user_change":
