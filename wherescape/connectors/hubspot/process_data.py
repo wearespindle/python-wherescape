@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from .hubspot_wrapper import Hubspot
 
 # from helper_functions import compare_names
@@ -86,8 +87,10 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             if name == "id" or name == "hs_object_id":
                 result_dict["id"] = result[column_names.index(name)]
             else:
-                logging.info(type(result[column_names.index(name)]))
-                property_dict[name] = result[column_names.index(name)]
+                data_item = result[column_names.index(name)]
+                if isinstance(data_item, Decimal):
+                    data_item = float(data_item)
+                property_dict[name] = result[data_item]
 
     result_dict.update({"properties": property_dict})
     return result_dict
