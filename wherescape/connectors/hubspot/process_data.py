@@ -26,7 +26,7 @@ def hubspot_process_results(
 
     for result in results:
         """Hubspot only accepts 100 items per call"""
-        if len(properties) < 101:
+        if len(properties) < 100:
             properties.append(create_data_dict(result, column_names, known_names))
         else:
             """
