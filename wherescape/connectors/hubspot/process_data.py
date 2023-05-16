@@ -79,7 +79,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             For 1-to-1 column_names and property_names
             """
 
-            if name == "id" or name == "hs_object_id":
+            if name == "hs_object_id":
                 result_dict["id"] = data_item
             else:
                 if isinstance(data_item, Decimal):
