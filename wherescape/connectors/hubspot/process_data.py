@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from datetime import datetime
 from .hubspot_wrapper import Hubspot
 
 # from helper_functions import compare_names
@@ -25,14 +26,13 @@ def hubspot_process_results(
 
     for result in results:
         """Hubspot only accepts 100 items per call"""
-        if len(properties) < 200:
+        if len(properties) < 101:
             properties.append(create_data_dict(result, column_names, known_names))
         else:
             """
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            # logging.info(properties[0])
             send_data(object_name, request_type, properties, hubspot_instance)
 
             properties.clear()
@@ -51,8 +51,6 @@ def send_data(
     object_type (company, contact, deals) and
     change_type (patch)
     """
-    # logging.info("%s : This should be companies" % object_type)
-    # logging.info("%s : this should be patch" % change_type)
 
     if object_type == "companies":
         if change_type == "patch":
@@ -79,7 +77,6 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 
     for name in column_names:
         data_item = result[column_names.index(name)]
-        logging.info(type(data_item))
         if name in known_names:
             """
             For 1-to-1 column_names and property_names
