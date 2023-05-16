@@ -50,6 +50,7 @@ def send_data(
     change_type (patch)
     """
     logging.info(object_type)
+    logging.info(change_type)
     if object_type == "companies":
         if change_type == "patch":
             logging.info("companies patch")
