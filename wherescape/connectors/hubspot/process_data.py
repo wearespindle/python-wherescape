@@ -135,7 +135,7 @@ def compare_names(source_names: list, destination_names: list):
     known_destination_names = []
 
     for name in source_names:
-        if name not in destination_names:
+        if name not in destination_names and name is not "record_id":
             logging.warning(
                 "source name: %s does not exist in the destination. please check its existence and spelling"
                 % name
