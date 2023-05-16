@@ -86,7 +86,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 # logging.info(name)
                 result_dict["id"] = result[column_names.index(name)]
             else:
-                property_dict["users"] = result[column_names.index(name)]
+                property_dict[name] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
 
