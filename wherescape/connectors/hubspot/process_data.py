@@ -87,6 +87,9 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 result_dict["id"] = result[column_names.index(name)]
             else:
                 property_dict[name] = result[column_names.index(name)]
+        elif name == "id" or name == "record_id":
+            logging.info(name)
+            result_dict["id"] = result[column_names.index(name)]
 
     result_dict.update({"properties": property_dict})
 
