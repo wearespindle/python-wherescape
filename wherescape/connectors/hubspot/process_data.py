@@ -90,7 +90,8 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 data_item = result[column_names.index(name)]
                 if isinstance(data_item, Decimal):
                     data_item = float(data_item)
-                property_dict[name] = result[data_item]
+
+                property_dict[name] = data_item
 
     result_dict.update({"properties": property_dict})
     return result_dict
