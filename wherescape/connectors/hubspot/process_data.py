@@ -82,10 +82,10 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             if name == "hs_object_id":
                 result_dict["id"] = data_item
             else:
-                logging.info(type(data_item))
                 if isinstance(data_item, Decimal):
                     logging.info("Its a decimal and will be a float")
                     data_item = float(data_item)
+                    logging.info(type(data_item))
 
                 property_dict[name] = data_item
 
