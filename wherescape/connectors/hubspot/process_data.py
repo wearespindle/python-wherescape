@@ -74,6 +74,7 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 
     for name in column_names:
         data_item = result[column_names.index(name)]
+        logging.info(name)
         logging.info(type(data_item))
         if name in known_names:
             """
