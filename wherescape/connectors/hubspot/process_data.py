@@ -81,11 +81,11 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 
             if name == "hs_object_id":
                 """hs_object_id has to be an int"""
-                data_item = int(data_item)
-                result_dict["id"] = data_item
+                result_dict["id"] = int(data_item)
             else:
                 if isinstance(data_item, Decimal):
                     data_item = float(data_item)
+
                 property_dict[name] = data_item
 
     result_dict.update({"properties": property_dict})
