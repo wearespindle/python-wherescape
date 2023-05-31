@@ -85,8 +85,8 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 if isinstance(data_item, Decimal):
                     logging.info("Its a decimal and will be a float")
                     data_item = float(data_item)
-                    logging.info(type(data_item))
 
+                logging.info(type(data_item))
                 property_dict[name] = data_item
 
     result_dict.update({"properties": property_dict})
