@@ -18,6 +18,10 @@ def check_fact_dimension_join(output_file_location=""):
     Creates a file in output_file_location (WSL_WORKDIR by default)
     """
     wherescape = WhereScape()
+    logging.info(
+        "Start time: %s for check_fact_dimension_join" % start_time.strftime(
+            "%Y-%m-%d %H:%M:%S")
+    )
 
     sql = """
     -- Get table names and column names from WhereScape repository
@@ -49,6 +53,7 @@ def check_fact_dimension_join(output_file_location=""):
         # store attribute, tablename in list_of_attributes
         list_of_attributes.append((column_name, qualified_table_name))
 
+    logging.info(f"Checking {len(list_of_attributes)} dimension keys")
     rows = []
     date = datetime.now().strftime("%Y-%m-%d")
     for column_name, qualified_table_name in list_of_attributes:
@@ -80,6 +85,8 @@ def check_fact_dimension_join(output_file_location=""):
         # write the results to the file
         if output_file_location == "":
             output_file_location = wherescape.workdir
+        logging.info(
+            f"Writing output file {filename} to {output_file_location}")
         filename = f"{wherescape.job_key}_fact_dimension_check_result_{datetime.now().strftime('%y%m%d')}.csv"
         filename = os.path.join(output_file_location, filename)
 
