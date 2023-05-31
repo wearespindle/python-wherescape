@@ -78,12 +78,14 @@ def create_data_dict(result: list, column_names: list, known_names: list):
             """
             For 1-to-1 column_names and property_names
             """
-            if isinstance(data_item, Decimal):
-                data_item = float(data_item)
 
             if name == "hs_object_id":
+                if isinstance(data_item, Decimal):
+                    data_item = int(data_item)
                 result_dict["id"] = data_item
             else:
+                if isinstance(data_item, Decimal):
+                    data_item = float(data_item)
                 property_dict[name] = data_item
 
     result_dict.update({"properties": property_dict})
