@@ -17,19 +17,21 @@ crm.objects.deals.read
 crm.objects.deals.write
 
 ## WhereScape Parameters
-Add the following paramters to WhereScape
+Add the following paramter to WhereScape
 
 * `hubspot_access_token`
 
 Fill in the correct access token referring to the private app created in HubSpot
 
-## load table
+## load or stage table
 Create a load table for each HubSpot object where data will be send to. 
 The table name needs to contain the following information:
 * hubspot object name (singlular)
 * type of api_call
 
 if environment needs to be specified, add this as well to the table name.
+
+The table also requires
 
 ## Host script
 Create a new python host script and add it to the load table. Example code:
