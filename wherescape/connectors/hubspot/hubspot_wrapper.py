@@ -8,11 +8,9 @@ from .send_data import (
     send_deal_object,
 )
 
-# from pprint import pprint
-# from hubspot.crm.companies import SimplePublicObjectInput, ApiException
-
 """
-module to 
+module that makes sure the data is prepared correctly depending on where and how it will be send.
+Also provides the properties depending on the object.
 """
 
 

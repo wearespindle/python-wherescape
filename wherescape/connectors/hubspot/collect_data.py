@@ -42,7 +42,6 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     # parameter_name = "hubspot_acces_token"
     parameter_name = "hubspot_access_token_test_environment"
     table_words = table_name.split("_")
-    # table_words = table_words[5:]
 
     logging.info("retrieving access_token")
 
