@@ -38,9 +38,7 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     in the table name. If no environment is found this way. It will use the basic
     parameter name to retrieve the token
     """
-    # TODO: rename:
-    # parameter_name = "hubspot_acces_token"
-    parameter_name = "hubspot_access_token_test_environment"
+    parameter_name = "hubspot_acces_token"
     table_words = table_name.split("_")
 
     logging.info("retrieving access_token")
