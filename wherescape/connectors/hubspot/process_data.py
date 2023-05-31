@@ -74,8 +74,6 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 
     for name in column_names:
         data_item = result[column_names.index(name)]
-        logging.info(name)
-        logging.info(type(data_item))
         if name in known_names:
             """
             For 1-to-1 column_names and property_names
@@ -84,7 +82,6 @@ def create_data_dict(result: list, column_names: list, known_names: list):
                 data_item = float(data_item)
 
             if name == "hs_object_id":
-                logging.info(type(data_item))
                 result_dict["id"] = data_item
             else:
                 property_dict[name] = data_item
