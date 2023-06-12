@@ -19,3 +19,4 @@
 | 2023-04-13  | Add date of when ticket was put into progress to Jira wrapper |
 | 2023-04-20  | Improved loggging when not run via scheduler |
 | 2023-04-20  | In the Jira wrapper, when a date is None it will not get converted to a datetime |
+| 2023-05-32  | Added logging to fact_dimension_join |
