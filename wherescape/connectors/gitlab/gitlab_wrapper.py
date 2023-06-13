@@ -118,9 +118,7 @@ class Gitlab:
         resource_api = "projects"
 
         params = {
-            "order_by": "id",
-            "updated_after": self.since,
-            "sort": "asc",
+            "order_by": "id"
         }
 
         all_projects = self.paginate_through_resource(
