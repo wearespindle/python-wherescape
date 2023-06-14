@@ -1,5 +1,6 @@
 """Module with function to validate fact-dimension joins."""
 import csv
+import logging
 import os
 from datetime import datetime
 from wherescape_os.wherescape import WhereScape
