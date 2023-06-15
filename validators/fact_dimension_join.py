@@ -89,9 +89,9 @@ def check_fact_dimension_join(output_file_location=""):
         # write the results to the file
         if output_file_location == "":
             output_file_location = wherescape.workdir
+        filename = f"{wherescape.job_key}_fact_dimension_check_result_{datetime.now().strftime('%y%m%d')}.csv"
         logging.info(
             f"Writing output file {filename} to {output_file_location}")
-        filename = f"{wherescape.job_key}_fact_dimension_check_result_{datetime.now().strftime('%y%m%d')}.csv"
         filename = os.path.join(output_file_location, filename)
 
         with open(filename, "w", newline="") as output_file:
