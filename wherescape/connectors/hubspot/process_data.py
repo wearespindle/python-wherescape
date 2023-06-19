@@ -15,52 +15,67 @@ def hubspot_process_results(
 ):
     """
     function that handles the processing of the results for it to be send to Hubspot
+    Function to process the results to be send to hubspot
+
+    Parameters:
+    - access_token (string): token connecting to the private app allowing access to hubspot
+    - results (list): content that will be send to hubspot
+    - column_names (list): names related to the data to know what data goes in which hubspot property
+    - table_name (string): name of the table containing info about the desired process and destination
     """
     hubspot_instance = Hubspot(access_token)
     properties = []
 
     object_name = get_object_name(table_name)
     request_type = get_http_request_type(table_name)
-    property_names = hubspot_instance.get_company_properties()
-    known_names = compare_names(column_names, property_names)
+    property_names = hubspot_instance.get_properties(object_name)
+    overlapping_names = compare_names(column_names, property_names)
 
     for result in results:
-        """Hubspot only accepts 100 items per call"""
+        """hubspot only accepts 100 items per call"""
         if len(properties) < 100:
-            properties.append(create_data_dict(result, column_names, known_names))
+            properties.append(create_data_dict(result, column_names, overlapping_names))
         else:
             """
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            send_data(object_name, request_type, properties, hubspot_instance)
+            send_data_to_hubspot(
+                object_name, request_type, properties, hubspot_instance
+            )
 
             properties.clear()
-            properties.append(create_data_dict(result, column_names, known_names))
+            properties.append(create_data_dict(result, column_names, overlapping_names))
 
     if len(properties) > 0:
         logging.info("final batch ready")
-        send_data(object_name, request_type, properties, hubspot_instance)
+        send_data_to_hubspot(object_name, request_type, properties, hubspot_instance)
 
 
-def send_data(
-    object_type: str, change_type: str, properties: list, hubspot_instance: Hubspot
+def send_data_to_hubspot(
+    object_type: str, request_type: str, properties: list, hubspot_instance: Hubspot
 ):
     """
-    Method to send data in the correct direction for
-    object_type (company, contact, deals) and
-    change_type (patch)
+    Function to send data in the correct direction
+
+    Parameters:
+    - object_type (string): refers to hubspot objects
+    - request_type (string): refers to the type of request being send
+    - properties (list): list of properties that will be updated
+    - hubspot_instance (Hubspot): HubSpot environment data will be send to
     """
 
+    # hubspot_instance.send_patch(properties, object_type)
+
     if object_type == "companies":
-        if change_type == "patch":
-            hubspot_instance.send_company_patch(inputs=properties)
+        if request_type == "patch":
+            hubspot_instance.send_patch(properties, object_type)
     if object_type == "contacts":
-        if change_type == "patch":
-            hubspot_instance.send_contact_patch(inputs=properties)
+        if request_type == "patch":
+            hubspot_instance.send_contact_patch(properties, object_type)
     if object_type == "deals":
-        if change_type == "patch":
-            hubspot_instance.send_deal_patch(inputs=properties)
+        if request_type == "patch":
+            hubspot_instance.send_deal_patch(properties, object_type)
 
 
 def create_data_dict(result: list, column_names: list, known_names: list):
@@ -124,7 +139,7 @@ def get_object_name(table_name: str):
         return "deals"
     else:
         logging.error(
-            "Could not identify the specific hubspot object type from the table name"
+            "Could not identify the specific hubspot object type based of the table name."
         )
 
 
@@ -145,11 +160,4 @@ def get_property_names(object_name: str, hubspot_instance: Hubspot):
     """
     This function will return a list of propertynames of the selected object to compare to
     """
-    if object_name == "companies":
-        return hubspot_instance.get_companies_properties()
-    elif object_name == "contacts":
-        return hubspot_instance.get_contacts_properties()
-    elif object_name == "deals":
-        return hubspot_instance.get_deals_properties()
-    else:
-        logging.error("Could not find destination HubSpot object")
+    return hubspot_instance.get_properties()

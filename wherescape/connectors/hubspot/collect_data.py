@@ -10,7 +10,7 @@ this module retrieves the data from Wherescape
 
 def hubspot_load_data():
     """
-    This method collects all the data from a table and sends it to be processed.
+    Function to load data from table and send to be processed
     """
     start_time = datetime.now()
     logging.info("connecting to WhereScape")
@@ -34,9 +34,14 @@ def hubspot_load_data():
 
 def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     """
-    This method allows for different access tokens based on the environment mentioned
-    in the table name. If no environment is found this way. It will use the basic
-    parameter name to retrieve the token
+    Function to get the hubspot access token form the table
+
+    Parameters:
+    - wherescape_instance (WhereScape): the wherescape database instance to connect to.
+    - table_name (string): name of the wherescape table data is send from
+
+    Returns
+    - access_token (string): the token to be able to connect to hubspot.
     """
     parameter_name = "hubspot_acces_token"
     table_words = table_name.split("_")
@@ -51,5 +56,6 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
             logging.info("retreived access token for %s environment" % word)
             return access_token
 
+    logging.warn("no specified environment found")
     logging.info("retrieving access token from parameter %s" % parameter_name)
     return wherescape_instance.read_parameter(parameter_name)
