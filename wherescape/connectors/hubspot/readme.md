@@ -24,7 +24,7 @@ Add the following paramter to WhereScape
 Fill in the correct access token referring to the private app created in HubSpot
 
 ## load or stage table
-Create a load table for each HubSpot object where data will be send to. 
+Create a load table for each HubSpot object where data will be sent to. 
 The table name needs to contain the following information:
 * hubspot object name (singlular)
 * type of api_call

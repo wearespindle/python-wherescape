@@ -19,7 +19,7 @@ def hubspot_process_results(
 
     Parameters:
     - access_token (string): token connecting to the private app allowing access to hubspot
-    - results (list): content that will be send to hubspot
+    - results (list): content that will be sent to hubspot
     - column_names (list): names related to the data to know what data goes in which hubspot property
     - table_name (string): name of the table containing info about the desired process and destination
     """
@@ -66,7 +66,7 @@ def send_data_to_hubspot(
     - object_type (string): refers to hubspot objects
     - request_type (string): refers to the type of request being send
     - properties (list): list of properties that will be updated
-    - hubspot_instance (Hubspot): HubSpot environment data will be send to
+    - hubspot_instance (Hubspot): HubSpot environment data will be sent to
     """
 
     # hubspot_instance.send_patch(properties, object_type)
@@ -133,7 +133,7 @@ def compare_names(source_names: list, destination_names: list):
 
 def get_object_name(table_name: str):
     """
-    This function willreturn the name of the object the data will be send to
+    This function willreturn the name of the object the data will be sent to
     """
     if "companies" in table_name or "company" in table_name:
         return "companies"

@@ -1,13 +1,20 @@
 import logging
 import hubspot
-
-from hubspot.crm.properties import ApiException
-from . import send_to_hubspot
+import logging
+from hubspot.crm import companies, contacts, deals, properties
 
 """
-module that makes sure the data is prepared correctly depending on where and how it will be send.
-Also provides the properties depending on the object.
+Module that takes care of HubSpot connection and API calls to HubSpot
+
+global parameters:
+- batch_input_map (map) map of the batch_inputs referring to the differen classes designed for the different HubSpot classes
 """
+
+batch_input_map = {
+    "companies": companies.BatchInputSimplePublicObjectBatchInput,
+    "contacts": contacts.BatchInputSimplePublicObjectBatchInput,
+    "deals": deals.BatchInputSimplePublicObjectBatchInput,
+}
 
 
 class Hubspot:
@@ -20,13 +27,25 @@ class Hubspot:
 
     def send_patch(self, properties: list, hs_object: str):
         """
-        Function that sends to patch.
+        Function that .
 
         Parameters:
         - properties: data to be send
-        - hs_object (string): hubspot object data will be send to
+        - hs_object (string): hubspot object data will be sent to
         """
-        send_to_hubspot.patch(properties, self.client, hs_object)
+
+        logging.info("sending %s batch patch to hubspot" % hs_object)
+
+        batch_input_class = batch_input_map.get(hs_object)
+        if not batch_input_class:
+            logging.error("Invalid hs_object: %s" % hs_object)
+
+        batch_input = batch_input_class(inputs=properties)
+        try:
+            batch_api = getattr(self.client.crm, hs_object).batch_api
+            batch_api.update(batch_input_simple_public_object_batch_input=batch_input)
+        except Exception as e:
+            logging.error("Exception when calling batch_api->update: %s\n" % e)
 
     def get_properties(self, object_name: str):
         """
@@ -49,5 +68,5 @@ class Hubspot:
                 property_names.append(result["name"])
 
             return property_names
-        except ApiException as e:
+        except properties.ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
