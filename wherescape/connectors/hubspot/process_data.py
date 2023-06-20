@@ -160,8 +160,8 @@ def get_http_request_type(table_name: str):
         )
 
 
-def get_property_names(object_name: str, hubspot_instance: Hubspot):
-    """
-    This function will return a list of propertynames of the selected object to compare to
-    """
-    return hubspot_instance.get_properties()
+# def get_property_names(hubspot_instance: Hubspot):
+#     """
+#     This function will return a list of propertynames of the selected object to compare to
+#     """
+#     return hubspot_instance.get_properties()
