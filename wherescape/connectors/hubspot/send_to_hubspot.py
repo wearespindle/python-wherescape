@@ -1,5 +1,6 @@
 import logging
 from hubspot.crm import companies, contacts, deals
+from hubspot.client import Client
 
 """
 This module takes care of the API calls.
@@ -15,7 +16,7 @@ batch_input_map = {
 }
 
 
-def patch(inputs, client, hs_object: str):
+def patch(inputs: list, client: Client, hs_object: str):
     """
     Function to send a batch of patches
 

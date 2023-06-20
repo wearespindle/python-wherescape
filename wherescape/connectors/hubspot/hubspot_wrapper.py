@@ -11,7 +11,7 @@ Also provides the properties depending on the object.
 
 
 class Hubspot:
-    def __init__(self, access_token):
+    def __init__(self, access_token: str):
         self.access_token = access_token
         self.client = hubspot.Client.create(access_token=access_token)
         """
