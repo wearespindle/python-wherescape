@@ -158,10 +158,3 @@ def get_http_request_type(table_name: str):
         logging.error(
             "Could not identify the specified API request desired from the table name"
         )
-
-
-# def get_property_names(hubspot_instance: Hubspot):
-#     """
-#     This function will return a list of propertynames of the selected object to compare to
-#     """
-#     return hubspot_instance.get_properties()
