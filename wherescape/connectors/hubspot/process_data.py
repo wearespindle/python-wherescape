@@ -31,6 +31,10 @@ def hubspot_process_results(
     property_names = hubspot_instance.get_properties(object_name)
     overlapping_names = compare_names(column_names, property_names)
 
+    """
+    Loops through results. Per row, the data is put into a dict after which this dict is added to the properties list.
+    Once the lists reaches 100 items (limit set by HubSpot's API), those get send as batch and the list is emptied for a new batch.
+    """
     for result in results:
         """hubspot only accepts 100 items per call"""
         if len(properties) < 100:
