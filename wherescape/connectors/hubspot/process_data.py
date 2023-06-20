@@ -1,9 +1,6 @@
 import logging
 from decimal import Decimal
-from datetime import datetime
 from .hubspot_wrapper import Hubspot
-
-# from helper_functions import compare_names
 
 """
 This module processes the collected data so it can be send to the Hubspot Module
