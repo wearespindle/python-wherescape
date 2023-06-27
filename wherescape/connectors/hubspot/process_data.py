@@ -24,7 +24,6 @@ def hubspot_process_results(
     properties = []
 
     object_name = get_object_name(table_name)
-    request_type = get_http_request_type(table_name)
     property_names = hubspot_instance.get_properties(object_name)
     overlapping_names = compare_names(column_names, property_names)
 
@@ -41,42 +40,27 @@ def hubspot_process_results(
             send the collected data in patch, empty properties and start with the next results
             """
             logging.info("full batch ready")
-            send_data_to_hubspot(
-                object_name, request_type, properties, hubspot_instance
-            )
+            send_data_to_hubspot(object_name, properties, hubspot_instance)
 
             properties.clear()
             properties.append(create_data_dict(result, column_names, overlapping_names))
 
     if len(properties) > 0:
         logging.info("final batch ready")
-        send_data_to_hubspot(object_name, request_type, properties, hubspot_instance)
+        send_data_to_hubspot(object_name, properties, hubspot_instance)
 
 
-def send_data_to_hubspot(
-    object_type: str, request_type: str, properties: list, hubspot_instance: Hubspot
-):
+def send_data_to_hubspot(object_type: str, properties: list, hubspot_instance: Hubspot):
     """
-    Function to send data in the correct direction
+    Function to send data as the correct request. Currently only as Patch so no checks are done
 
     Parameters:
     - object_type (string): refers to hubspot objects
-    - request_type (string): refers to the type of request being send
     - properties (list): list of properties that will be updated
     - hubspot_instance (Hubspot): HubSpot environment data will be sent to
     """
 
-    # hubspot_instance.send_patch(properties, object_type)
-
-    if object_type == "companies":
-        if request_type == "patch":
-            hubspot_instance.send_patch(properties, object_type)
-    if object_type == "contacts":
-        if request_type == "patch":
-            hubspot_instance.send_contact_patch(properties, object_type)
-    if object_type == "deals":
-        if request_type == "patch":
-            hubspot_instance.send_deal_patch(properties, object_type)
+    hubspot_instance.send_patch(properties, object_type)
 
 
 def create_data_dict(result: list, column_names: list, known_names: list):
