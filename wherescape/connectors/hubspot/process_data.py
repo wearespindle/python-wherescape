@@ -65,9 +65,16 @@ def send_data_to_hubspot(object_type: str, properties: list, hubspot_instance: H
 
 def create_data_dict(result: list, column_names: list, known_names: list):
     """
-    Method to process a result list to a dict of keys id and properties.
-    All elements besides hubspot_company_id are stored in a dict under properties
-    The assumption is that the data per row is in the same order as the column names
+    This Function processes a list of results into a dict to fit the needs and expectations
+    from HubSpot
+
+    Parameters:
+    - result (list) : list data from the WhereScape being table used
+    - column_names (list) : list of the column_names from the WhereScape table being used
+    - known_names (list) : list of column_names that also exist as property in the HubSpot object the data will go to
+
+    Returns:
+    - result_dict (dict) : dict with the data containing all the properties with its data organised using the hs_object_id's
     """
     result_dict = {}
     property_dict = {}
@@ -96,6 +103,14 @@ def compare_names(source_names: list, destination_names: list):
     """
     This function compares source names with destiny names for one to one data transfer.
     It will give a warning for source names that do not appear in the list of destiny names
+
+    Parameters:
+    - source_names (list) : list of column_names from the source table being used
+    - destination_names (list): lsit of all property names of the HubSpot object the data will go to
+
+    Returns:
+    - known_destination_names (list) : list of property names that also exist as column names in the source table being used
+
     """
 
     known_destination_names = []
@@ -114,7 +129,13 @@ def compare_names(source_names: list, destination_names: list):
 
 def get_object_name(table_name: str):
     """
-    This function willreturn the name of the object the data will be sent to
+    This function will return the name of the object the data will be sent to.
+
+    Parameters:
+    - table_name (string) : name of the source table
+
+    Returns:
+    - (string): name used to refer to the destination hubspot object
     """
     if "companies" in table_name or "company" in table_name:
         return "companies"
@@ -125,17 +146,4 @@ def get_object_name(table_name: str):
     else:
         logging.error(
             "Could not identify the specific hubspot object type based of the table name."
-        )
-
-
-def get_http_request_type(table_name: str):
-    """
-    This function will return the request_type based on the table name.
-    Currently, only
-    """
-    if "patch" in table_name:
-        return "patch"
-    else:
-        logging.error(
-            "Could not identify the specified API request desired from the table name"
         )
