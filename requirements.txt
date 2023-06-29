@@ -7,3 +7,4 @@ requests
 gspread
 psycopg2
 strconv
+oauth2client
