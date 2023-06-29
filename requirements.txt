@@ -3,3 +3,7 @@ pandas
 pyodbc
 python-slugify
 requests
+
+gspread
+psycopg2
+strconv
