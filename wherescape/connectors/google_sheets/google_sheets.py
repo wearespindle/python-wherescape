@@ -742,3 +742,21 @@ def open_sheet(workbook, args):
             logging.error("Error while opening first sheet")
     logging.info("Opened worksheet")
     return worksheet
+
+
+def determine_start_cell_header(args):
+    """
+    Method to determine Startcel for the header
+    Parameters:
+    - args: args object with spreadsheet details
+
+    Returns:
+    - (string) location of header / start cell
+    """
+    logging.info("Determing starter header")
+    if args.header_range:
+        return args.header_range  # startcell given
+    elif args.range:
+        return args.range  # first in range
+    else:
+        return "A1:1"  # default
