@@ -3,3 +3,4 @@ pandas
 pyodbc
 python-slugify
 requests
+zeep
