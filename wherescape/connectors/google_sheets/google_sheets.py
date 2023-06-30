@@ -169,20 +169,21 @@ def create_metadata():
     first_column = a1_range_to_grid_range(start_cell_header).get("startColumnIndex")
 
     # determine first row of values
-    if args.range and args.no_header:
-        # when there's no header, first row of values will be start row of args.range
-        first_row = a1_range_to_grid_range(args.range).get("startRowIndex")
-    elif args.range and args.header_range:
-        # when the header range is explicity given given,
-        #   the first row of values will be start row of args.range
-        first_row = a1_range_to_grid_range(args.range).get("startRowIndex")
-    elif args.range:
-        # neither no_header nor header_range explcitly given,  first row of values will be start row of args.range + 1
-        first_row = a1_range_to_grid_range(start_cell_header).get("startRowIndex") + 1
-    elif args.no_header:
-        first_row = 0
-    else:
-        first_row = 1
+    first_row = first_row(start_cell_header, args)
+    # if args.range and args.no_header:
+    #     # when there's no header, first row of values will be start row of args.range
+    #     first_row = a1_range_to_grid_range(args.range).get("startRowIndex")
+    # elif args.range and args.header_range:
+    #     # when the header range is explicity given given,
+    #     #   the first row of values will be start row of args.range
+    #     first_row = a1_range_to_grid_range(args.range).get("startRowIndex")
+    # elif args.range:
+    #     # neither no_header nor header_range explcitly given,  first row of values will be start row of args.range + 1
+    #     first_row = a1_range_to_grid_range(start_cell_header).get("startRowIndex") + 1
+    # elif args.no_header:
+    #     first_row = 0
+    # else:
+    #     first_row = 1
 
     # Add columns with worksheet name and load date
     column_names.append("dss_record_source")
