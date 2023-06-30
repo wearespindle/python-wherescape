@@ -141,15 +141,16 @@ def create_metadata():
     # !!--------------- Deterimine Column Names
     # get the column names
     first_line = worksheet.get(start_cell_header)[0]
-    if args.no_header:
-        # make up column names if no_header
-        column_names = ["column_" + str(i + 1) for i in range(len(first_line))]
-    else:
-        # fill empty_column headers
-        column_names = [
-            "column_" + str(i + 1) if value == "" else value
-            for i, value in enumerate(first_line)
-        ]
+    # if args.no_header:
+    #     # make up column names if no_header
+    #     column_names = ["column_" + str(i + 1) for i in range(len(first_line))]
+    # else:
+    #     # fill empty_column headers
+    #     column_names = [
+    #         "column_" + str(i + 1) if value == "" else value
+    #         for i, value in enumerate(first_line)
+    #     ]
+    column_names = get_column_names(first_line, args)
     logging.info(
         f"Retrieved {len(column_names)} columns of worksheet: {worksheet.title}"
     )
@@ -760,3 +761,25 @@ def determine_start_cell_header(args):
         return args.range  # first in range
     else:
         return "A1:1"  # default
+
+
+def get_column_names(first_line, args):
+    """
+    Method to determine column_names:
+    Parameters:
+    - worksheet
+    - args: args object with spreadsheet details
+
+    Returns
+    - List with column names
+    """
+    # first_line = worksheet.get(starter_cell)[0]
+    if args.no_header:
+        # make up column names if no_header
+        return ["column_" + str(i + 1) for i in range(len(first_line))]
+    else:
+        # fill empty_column headers
+        return [
+            "column_" + str(i + 1) if value == "" else value
+            for i, value in enumerate(first_line)
+        ]
