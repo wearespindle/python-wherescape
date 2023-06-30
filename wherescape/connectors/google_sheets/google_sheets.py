@@ -783,3 +783,28 @@ def get_column_names(first_line, args):
             "column_" + str(i + 1) if value == "" else value
             for i, value in enumerate(first_line)
         ]
+
+
+def first_row(start_cell_header, args):
+    """
+    This method determines what the first row is
+    Paremeters:
+    - start_cell_header
+    - args
+
+    Returns:
+    - first row
+    """
+
+    if args.range and (args.no_header or args.header_range):
+        # when there's no header or header range is explicity given given,
+        # the first row of values will be start row of args.range
+        return a1_range_to_grid_range(args.range).get("startRowIndex")
+    elif args.range:
+        # neither no_header nor header_range explcitly given,
+        # first row of values will be start row of args.range + 1
+        return a1_range_to_grid_range(start_cell_header).get("startRowIndex") + 1
+    elif args.no_header:
+        return 0
+    else:
+        return 1
