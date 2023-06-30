@@ -1,32 +1,24 @@
 try:
     import csv
+    import os
+    import sys
+    import psycopg2
+    import strconv
+    import logging
+
     from datetime import datetime
     from google_sheet_wrapper import (
         a1_range_to_grid_range,
         create_gsheet_client,
         parse_gspread_arguments,
     )
-    from itertools import groupby
-    import os
     from odbc_helper import odbc_dsn_2_psyopg2dsn
-    import psycopg2
-    import sys
-    import strconv
-    from wherescape import WhereScape
-    from wherescape_error_handling import (
-        print_log,
-        exit_on_error,
-        exit_with_log,
-        get_stack_trace_str,
-    )
     from time import sleep
+    from ws_env import setup_env
+    from wherescape import WhereScape
 
 except:
-    print(-3)
-    print("-- Unexpected Error during import")
-    print(get_stack_trace_str("Unexpected Error during import"))
-    exit()
-
+    logging.error("-- Unexpected Error during import. ")
 
 def create_metadata():
     """
@@ -59,13 +51,10 @@ def create_metadata():
     # ---------------------------------
     # Initialize (error) messages
     # ---------------------------------
-    error_messages = []
-    messages = []
 
     # start logging
     start_time = datetime.now()
-    messages.append("Start time: %s" %
-                    start_time.strftime("%Y-%m-%d %H:%M:%S"))
+    logging.info("Start time: %s" % start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
     # --------------------------------------------------------
     # Initialise gspread client
@@ -76,11 +65,6 @@ def create_metadata():
     # Initialise Wherescape Object
     # --------------------------------------------------------
     wherescape = WhereScape()
-    if len(wherescape.error_messages) != 0:
-        # At least log error messages, you can also decide to break
-        error_messages.extend(wherescape.error_messages)
-        print_log(messages, error_messages)
-        exit()
 
     # --------------------------------------------------------
     # retrieve gsheet details from wherescape and open gsheet
@@ -95,52 +79,41 @@ def create_metadata():
         [load_table_name],
     )[0][0]
 
-    messages.append(f"Metadata. URL: {url} ; Details : {workbook_details}")
+    logging.info(f"Metadata. URL: {url} ; Details : {workbook_details}")
 
     # parse workbook_details into argument list
-    try:
-        args, messages = parse_gspread_arguments(workbook_details, messages)
-    except Exception as e:
-        error_messages.append("ERROR : " + str(e))
-        exit_with_log(messages, error_messages)
-    except:
-        error_messages.append(f"Unexpected error: {sys.exc_info()[0]}")
-        exit_with_log(messages, error_messages)
+    args = parse_gspread_arguments(workbook_details)
 
     # Find a workbook by name or url
     if len(url) > 0:
         try:
             workbook = gsheetclient.open_by_url(url)
             workbook_name = workbook.title
-            messages.append(f"Opened workbook: {workbook_name}")
+            logging.info(f"Opened workbook: {workbook_name}")
         except:
-            error_messages.append("Invalid URL")
-            exit_with_log(messages, error_messages)
+            logging.error("Invalid URL")
     elif len(args.workbook_name) > 0:
         try:
             workbook_name = args.workbook_name
             workbook = gsheetclient.open(workbook_name)
-            messages.append(f"Opened workbook: {workbook_name}")
+            logging.info(f"Opened workbook: {workbook_name}")
         except:
-            error_messages.append("Invalid workbook_name")
-            exit_with_log(messages, error_messages)
+            logging.error("Invalid workbook_name")
     else:
-        error_messages.append("Enter a valid workbook URL or workbook name")
-        exit_with_log(messages, error_messages)
+        logging.error("Enter a valid workbook URL or workbook name")
 
     # Open the correct sheet
     if args.sheet:
         try:
             worksheet = workbook.worksheet(args.sheet)
         except:
-            error_messages.append("Invalid worksheet name in --sheet")
-            exit_with_log(messages, error_messages)
+            logging.error("Invalid worksheet name in --sheet")
     else:
         # if no sheet was specified, open the first sheet
         try:
             worksheet = workbook.get_worksheet(0)
         except:
-            exit_with_log(messages, error_messages)
+            logging.error("Error while opening first sheet")
 
     # determine the start cell for the header
     if args.header_range:
@@ -152,7 +125,7 @@ def create_metadata():
     else:
         # default A1:1
         start_cell_header = "A1:1"
-    messages.append(f"start_cell_header: {start_cell_header}")
+    logging.info(f"start_cell_header: {start_cell_header}")
 
     # get the column names
     first_line = worksheet.get(start_cell_header)[0]
@@ -165,10 +138,10 @@ def create_metadata():
             "column_" + str(i + 1) if value == "" else value
             for i, value in enumerate(first_line)
         ]
-    messages.append(
+    logging.info(
         f"Retrieved {len(column_names)} columns of worksheet: {worksheet.title}"
     )
-    messages.append(f"column_names: {column_names}")
+    logging.info(f"column_names: {column_names}")
 
     # ------------------------------------------------------------------------
     # For each column determine the type
@@ -225,16 +198,13 @@ def create_metadata():
                 column_values.append("")
 
             if args.debug:
-                print(-2)
-                print("Debug Mode on --> do not use in production")
-                print(
-                    f"enum {column_enum} index {column_index} name {column_name} values {column_values}"
-                )
-                error_messages.append(
-                    f"Debug Mode on --> do not use in production")
-                messages.append(
-                    f"enum {column_enum} index {column_index} name {column_name} values {column_values}"
-                )
+                # print(-2)
+                # print("Debug Mode on --> do not use in production")
+                # print(
+                #     f"enum {column_enum} index {column_index} name {column_name} values {column_values}"
+                # )
+                logging.warn(f"Debug Mode on --> do not use in production")
+                logging.info(f"enum {column_enum} index {column_index} name {column_name} values {column_values}")
 
             # make list of value types
             typed_column_values, typed_column_types = zip(
@@ -378,7 +348,7 @@ def create_metadata():
             + "')"
         )
 
-    messages.append(f"Stored details for {len(column_names)} columns")
+    logging.info(f"Stored details for {len(column_names)} columns")
 
     # Create the actual sql
     sql = f"""
@@ -393,27 +363,27 @@ def create_metadata():
 
     # Execute the sql
     wherescape.push_to_meta(sql)
-    if len(wherescape.error_messages) != 0:
-        # Check for errors after calling a method on the Wherescape object
-        # At least log error messages, you can also decide to break or do sonething else
-        error_messages.extend(wherescape.error_messages)
-        error_messages.append(sql)
-        print_log(messages, error_messages)
-        exit()
+    # if len(wherescape.error_messages) != 0:
+    #     # Check for errors after calling a method on the Wherescape object
+    #     # At least log error messages, you can also decide to break or do sonething else
+    #     # error_messages.extend(wherescape.error_messages)
+    #     # error_messages.append(sql)
+    #     # print_log(messages, error_messages)
+    #     # exit()
+    #     logging.error("error on updating Metadata %s" % wherescape.error_messages)
 
-    messages.append("--> Metadata updated. Table can be created.")
+    logging.info("--> Metadata updated. Table can be created.")
 
     # ------------------------------------ THE END ----------------------------------------#
 
-    error_messages.extend(wherescape.error_messages)
-
+    # error_messages.extend(wherescape.error_messages)
+        
     end_time = datetime.now()
-    messages.append("End time: %s" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
-    messages.append("Time elapsed: %s seconds" %
-                    (end_time - start_time).seconds)
-    messages.append("")
+    logging.info("End time: %s" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
+    logging.info("Time elapsed: %s seconds" % (end_time - start_time).seconds)
+    logging.info("")
 
-    print_log(messages, error_messages)
+    # print_log(messages, error_messages)
 
 
 def google_sheet_load_data():
@@ -439,31 +409,26 @@ def google_sheet_load_data():
     # messages and error messages are lists of log messages.
     # --------------------------------------------------------
     try:
-        error_messages = []
-        messages = []
         success_message = (
             "Python Script for loading google data Completed Successfully."
         )
 
         # start logging
         start_time = datetime.now()
-        messages.append("Start time: %s" %
+        logging.info("Start time: %s" %
                         start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         # --------------------------------------------------------
         # Initialise Wherescape Object
         # --------------------------------------------------------
-        wherescape = WhereScape()
-        exit_on_error(wherescape, messages, error_messages)
+        # exit_on_error(wherescape, messages, error_messages)
 
         # Initialise gspread client
         try:
+            wherescape = WhereScape()
             gsheetclient = create_gsheet_client()
-        except:
-            exit_with_log(
-                messages, error_messages.append(
-                    "Failed to create gspread client.")
-            )
+        except Exception as e:
+            logging.error(str(e))
 
         # --------------------------------------------------------
         # retrieve gsheet details from wherescape and open gsheet
@@ -474,58 +439,60 @@ def google_sheet_load_data():
             "select lt_file_path from ws_load_tab where lt_table_name = ?",
             [load_table_name],
         )[0][0]
-        exit_on_error(wherescape, messages, error_messages)
+        # exit_on_error(wherescape, messages, error_messages)
 
         workbook_details = wherescape.query_meta(
             "select lt_file_name from ws_load_tab where lt_table_name = ?",
             [load_table_name],
         )[0][0]
-        exit_on_error(wherescape, messages, error_messages)
+        # exit_on_error(wherescape, messages, error_messages)
 
-        messages.append(f"Metadata. URL: {url} ; Details : {workbook_details}")
+        logging.info(f"Metadata. URL: {url} ; Details : {workbook_details}")
 
         # parse workbook_details into argument list
         try:
-            args, messages = parse_gspread_arguments(
-                workbook_details, messages)
+            args = parse_gspread_arguments(workbook_details)
         except:
-            exit_with_log(messages, error_messages)
+            logging.error("an error occured while parsing workbook details")
+            # exit_with_log(messages, error_messages)
 
         # Find a workbook by name or url
         if len(url) > 0:
             try:
                 workbook = gsheetclient.open_by_url(url)
                 workbook_name = workbook.title
-                messages.append(f"Opened workbook: {workbook_name}")
+                logging.info(f"Opened workbook: {workbook_name}")
             except:
-                error_messages.append("Invalid URL")
-                exit_with_log(messages, error_messages)
+                logging.error("Invalid URL")
+                # error_messages.append("Invalid URL")
+                # exit_with_log(messages, error_messages)
         elif len(args.workbook_name) > 0:
             try:
                 workbook_name = args.workbook_name
                 workbook = gsheetclient.open(workbook_name)
-                messages.append(f"Opened workbook: {workbook_name}")
+                logging.info(f"Opened workbook: {workbook_name}")
             except:
-                error_messages.append("Invalid workbook_name")
-                exit_with_log(messages, error_messages)
+                logging.error("Invalid workbook_name")
+                # error_messages.append("Invalid workbook_name")
+                # exit_with_log(messages, error_messages)
         else:
-            error_messages.append(
-                "Enter a valid workbook URL or workbook name")
-            exit_with_log(messages, error_messages)
+            logging.error("Enter a valid workbook URL or workbook name")
+            # exit_with_log(messages, error_messages)
 
         # Open the correct sheet
         if args.sheet:
             try:
                 worksheet = workbook.worksheet(args.sheet)
             except:
-                error_messages.append("Invalid worksheet name in --sheet")
-                exit_with_log(messages, error_messages)
+                logging.error("Invalid worksheet name in --sheet")
+                # exit_with_log(messages, error_messages)
         else:
             # if no sheet was specified, open the first sheet
             try:
                 worksheet = workbook.get_worksheet(0)
             except:
-                exit_with_log(messages, error_messages)
+                logging.info("no sheet specified. Opening first sheet")
+                # exit_with_log(messages, error_messages)
 
         # --------------------------------------------------------
         # get header to determine number of columns
@@ -537,7 +504,7 @@ def google_sheet_load_data():
             start_cell_header = args.range
         else:
             start_cell_header = "A1:1"
-        messages.append(f"start_cell_header: {start_cell_header}")
+        logging.info(f"start_cell_header: {start_cell_header}")
 
         # get the column names
         first_line = worksheet.get(start_cell_header)[0]
@@ -552,7 +519,7 @@ def google_sheet_load_data():
 
         number_of_rows = len(all_records)
         number_of_columns = len(all_records[0])
-        messages.append(
+        logging.info(
             f"Worksheet has {number_of_columns} columns and {number_of_rows} value rows"
         )
 
@@ -561,12 +528,11 @@ def google_sheet_load_data():
             column for column in wherescape.column_names if not column.startswith("dss")
         ]
         if number_of_columns > len(non_dss_columns):
-            error_messages.append(
-                f"Expected only {len(non_dss_columns)} columns")
-            error_messages.append(
-                f"Expected header [{'|'.join(non_dss_columns)}]")
-            error_messages.append(f"first row [{'|'.join(all_records[0])}]")
-            print_log(messages, error_messages)
+            
+            logging.warn(f"Expected only {len(non_dss_columns)} columns")
+            logging.warn(f"Expected header [{'|'.join(non_dss_columns)}]")
+            logging.warn(f"first row [{'|'.join(all_records[0])}]")
+            # print_log(messages, error_messages)
             exit()
 
         # TODO: convert column types
@@ -604,7 +570,7 @@ def google_sheet_load_data():
             "select lt_file_delimiter from ws_load_tab where lt_table_name = ?",
             [load_table_name],
         )[0][0]
-        exit_on_error(wherescape, messages, error_messages)
+        # exit_on_error(wherescape, messages, error_messages)
         if delimiter == "":
             delimiter = ","
 
@@ -614,9 +580,9 @@ def google_sheet_load_data():
                 writer = csv.writer(output_file, delimiter=delimiter)
                 writer.writerows(all_records)
         except Exception as err:
-            error_messages.append(
+            logging.error(
                 f"Unexpected error writing {filename} is {repr(err)}")
-            exit_with_log(messages, error_messages)
+            # exit_with_log(messages, error_messages)
 
         table_name = wherescape.load_full_name
 
@@ -642,37 +608,40 @@ def google_sheet_load_data():
 
             connection.close()
         except Exception as err:
-            error_messages.append(f"Exception TYPE: {type(err)}")
-            error_messages.append(repr(err))
-            exit_with_log(messages, error_messages)
+            logging.error(repr(err))
+            # error_messages.append(f"Exception TYPE: {type(err)}")
+            # error_messages.append(repr(err))
+            # exit_with_log(messages, error_messages)
         else:
             rows_added = len(all_records) + 1
-            messages.append("Number of rows added: %d, " % (rows_added))
+            logging.info("Number of rows added: %d, " % (rows_added))
             success_message = f"Python Script for loading google data Completed Successfully. Added rows: {rows_added}"
 
         # ----------------------------------------------------------------
         #  Wrap up and Close
         # ----------------------------------------------------------------
 
-        error_messages.extend(wherescape.error_messages)
+        # error_messages.extend(wherescape.error_messages)
 
         end_time = datetime.now()
-        messages.append("End time: %s" %
+        logging.info("End time: %s" %
                         end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        messages.append("Time elapsed: %s seconds" %
+        logging.info("Time elapsed: %s seconds" %
                         (end_time - start_time).seconds)
 
-        print_log(messages, error_messages, first_message=success_message)
+        # print_log(messages, error_messages, first_message=success_message)
+        logging.info(success_message)
 
-    except:
-        print(-3)
-        print("-->Unexpected Error in google_sheet_load_data()")
-        print(get_stack_trace_str("Unexpected Error in google_sheet_load_data()"))
+    except Exception as e:
+        logging.error(e)
+        # print(-3)
+        # print("-->Unexpected Error in google_sheet_load_data()")
+        # print(get_stack_trace_str("Unexpected Error in google_sheet_load_data()"))
 
 
 if __name__ == "__main__":
     # This module is not available on prod
-    from ws_env import setup_env
+    # from ws_env import setup_env
 
     # This main routine can be used to test the module
 
@@ -697,13 +666,11 @@ if __name__ == "__main__":
     # , @p_status_code     integer       OUTPUT
     # , @p_result          integer       OUTPUT
 
-    # truncate table
-    error_messages = []
-    messages = []
-    wherescape = WhereScape()
-    exit_on_error(wherescape, messages, error_messages)
-    wherescape.push_to_target("truncate load.load_google_test_default")
-    exit_on_error(wherescape, messages, error_messages)
+    try:
+        wherescape = WhereScape()
+        wherescape.push_to_target("truncate load.load_google_test_default")
+    except Exception as e:
+        logging.error(str(e))
 
     # load data
     google_sheet_load_data()

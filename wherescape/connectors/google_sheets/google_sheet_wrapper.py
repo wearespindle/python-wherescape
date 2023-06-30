@@ -1,10 +1,12 @@
 import argparse
 import gspread
-from gspread.utils import a1_range_to_grid_range
 import os
-from oauth2client.service_account import ServiceAccountCredentials
 import re
 import sys
+import logging
+
+from gspread.utils import a1_range_to_grid_range
+from oauth2client.service_account import ServiceAccountCredentials
 
 def split_arg_string(string):
     """Given an argument string this attempts to split it into small parts."""
@@ -61,7 +63,7 @@ def create_gsheet_client():
     )
     return gspread.authorize(creds)
 
-def parse_gspread_arguments(argument_string, messages=[]):
+def parse_gspread_arguments(argument_string):
     """
     Converts an argument string into args object
 
@@ -84,7 +86,8 @@ def parse_gspread_arguments(argument_string, messages=[]):
     try:
        args = parser.parse_args(argument_list)
     except SystemExit as ex:
-       raise Exception(ex)
+        # raise Exception(ex)
+        logging.error(ex)
 
     # apply capitals to ranges
     if args.range:
@@ -92,22 +95,23 @@ def parse_gspread_arguments(argument_string, messages=[]):
     if args.header_range:
         args.header_range = args.header_range.upper()
 
-    messages.append(f"workbook_name: {args.workbook_name}, sheet: {args.sheet}, range: {args.range},  hr: {args.header_range}, no_header: {str(args.no_header)}, debug: {args.debug}" )
+    logging.info(f"workbook_name: {args.workbook_name}, sheet: {args.sheet}, range: {args.range},  hr: {args.header_range}, no_header: {str(args.no_header)}, debug: {args.debug}" )
 
     # You cannot specify both a header_range and --no_header in the object source File Name 
     if args.header_range and args.no_header:
-        #error_messages.append("You cannot specify both a --header_range and --no_header in the object source File Name"
-        raise Exception("You cannot specify both a header_range and --no_header in the object source File Name")
-    
-    if args.header_range and not args.range:
-        raise Exception("A --header_range can not be specified without specifying a --range")
+        logging.error("You cannot specify both a --header_range and --no_header in the object source File Name")
+        # raise Exception("You cannot specify both a header_range and --no_header in the object source File Name")
+
+    elif args.header_range and not args.range:
+        # raise Exception("A --header_range can not be specified without specifying a --range")
+        logging.error("A --header_range can not be specified without specifying a --range")
     
     # If both a range and a header_range are specified, they can not overlap
     if args.header_range and args.range:
         row_index_header_range  = a1_range_to_grid_range(args.header_range).get('startRowIndex')
         row_index_range         = a1_range_to_grid_range(args.range).get('startRowIndex')
         if row_index_header_range == row_index_range:
-            #error_messages.append("If both a range and a header_range are specified, they can not overlap")
-            raise Exception("If both a range and a header_range are specified, they can not overlap")
+            logging.error("If both a range and a header_range are specified, they can not overlap")
+            # raise Exception("If both a range and a header_range are specified, they can not overlap")
 
-    return args, messages
+    return args

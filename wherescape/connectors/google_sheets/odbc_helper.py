@@ -1,4 +1,3 @@
-import os
 from winreg import (
     ConnectRegistry,
     HKEY_LOCAL_MACHINE,
