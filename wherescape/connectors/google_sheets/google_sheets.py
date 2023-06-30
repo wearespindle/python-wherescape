@@ -1,7 +1,8 @@
 try:
     import csv
     import os
-    import sys
+
+    # import sys
     import psycopg2
     import strconv
     import logging
@@ -19,6 +20,7 @@ try:
 
 except:
     logging.error("-- Unexpected Error during import. ")
+
 
 def create_metadata():
     """
@@ -47,7 +49,7 @@ def create_metadata():
     - support unicode chars as column names
 
     """
-
+    # --------------- Initialization
     # ---------------------------------
     # Initialize (error) messages
     # ---------------------------------
@@ -65,7 +67,8 @@ def create_metadata():
     # Initialise Wherescape Object
     # --------------------------------------------------------
     wherescape = WhereScape()
-
+    # !!---------------
+    # !!--------------- Obtaining gsheet details & open sheet
     # --------------------------------------------------------
     # retrieve gsheet details from wherescape and open gsheet
     # ---------------------------------------------------------
@@ -83,25 +86,30 @@ def create_metadata():
 
     # parse workbook_details into argument list
     args = parse_gspread_arguments(workbook_details)
+    workbook = open_workbook(url, args, gsheetclient)
 
+    # !!---------------
+    # !!---------------Find correct workbook
     # Find a workbook by name or url
-    if len(url) > 0:
-        try:
-            workbook = gsheetclient.open_by_url(url)
-            workbook_name = workbook.title
-            logging.info(f"Opened workbook: {workbook_name}")
-        except:
-            logging.error("Invalid URL")
-    elif len(args.workbook_name) > 0:
-        try:
-            workbook_name = args.workbook_name
-            workbook = gsheetclient.open(workbook_name)
-            logging.info(f"Opened workbook: {workbook_name}")
-        except:
-            logging.error("Invalid workbook_name")
-    else:
-        logging.error("Enter a valid workbook URL or workbook name")
+    # if len(url) > 0:
+    #     try:
+    #         workbook = gsheetclient.open_by_url(url)
+    #         workbook_name = workbook.title
+    #         logging.info(f"Opened workbook: {workbook_name}")
+    #     except:
+    #         logging.error("Invalid URL")
+    # elif len(args.workbook_name) > 0:
+    #     try:
+    #         workbook_name = args.workbook_name
+    #         workbook = gsheetclient.open(workbook_name)
+    #         logging.info(f"Opened workbook: {workbook_name}")
+    #     except:
+    #         logging.error("Invalid workbook_name")
+    # else:
+    #     logging.error("Enter a valid workbook URL or workbook name")
 
+    # !!---------------
+    # !!--------------- Open sheet
     # Open the correct sheet
     if args.sheet:
         try:
@@ -114,7 +122,8 @@ def create_metadata():
             worksheet = workbook.get_worksheet(0)
         except:
             logging.error("Error while opening first sheet")
-
+    # !!---------------
+    # !!--------------- Determine startcel / header
     # determine the start cell for the header
     if args.header_range:
         # simple, start_cell is given
@@ -126,7 +135,8 @@ def create_metadata():
         # default A1:1
         start_cell_header = "A1:1"
     logging.info(f"start_cell_header: {start_cell_header}")
-
+    # !!---------------
+    # !!--------------- Deterimine Column Names
     # get the column names
     first_line = worksheet.get(start_cell_header)[0]
     if args.no_header:
@@ -142,7 +152,8 @@ def create_metadata():
         f"Retrieved {len(column_names)} columns of worksheet: {worksheet.title}"
     )
     logging.info(f"column_names: {column_names}")
-
+    # !!---------------
+    # !!--------------- determine column type
     # ------------------------------------------------------------------------
     # For each column determine the type
     # ------------------------------------------------------------------------
@@ -152,8 +163,7 @@ def create_metadata():
     #   and as value the inferred PostgreSQL type of the columns values
     column_types = {}
     # worksheet.col_values counts columns 1-based
-    first_column = a1_range_to_grid_range(
-        start_cell_header).get("startColumnIndex")
+    first_column = a1_range_to_grid_range(start_cell_header).get("startColumnIndex")
 
     # determine first row of values
     if args.range and args.no_header:
@@ -165,8 +175,7 @@ def create_metadata():
         first_row = a1_range_to_grid_range(args.range).get("startRowIndex")
     elif args.range:
         # neither no_header nor header_range explcitly given,  first row of values will be start row of args.range + 1
-        first_row = a1_range_to_grid_range(
-            start_cell_header).get("startRowIndex") + 1
+        first_row = a1_range_to_grid_range(start_cell_header).get("startRowIndex") + 1
     elif args.no_header:
         first_row = 0
     else:
@@ -178,14 +187,12 @@ def create_metadata():
 
     # Now retrieve the column values and check the types
     for column_enum, column_name in enumerate(column_names):
-
         # Skip type inference for the dss columns
         if column_name == "dss_record_source":
             column_types[column_enum + 1] = "varchar(256)"
         elif column_name == "dss_load_date":
             column_types[column_enum + 1] = "timestamp"
         else:  # Start type inference
-
             # get column contents (stripping header)
             # worksheet.col_values counts columns 1-based
             column_index = first_column + column_enum + 1
@@ -204,7 +211,9 @@ def create_metadata():
                 #     f"enum {column_enum} index {column_index} name {column_name} values {column_values}"
                 # )
                 logging.warn(f"Debug Mode on --> do not use in production")
-                logging.info(f"enum {column_enum} index {column_index} name {column_name} values {column_values}")
+                logging.info(
+                    f"enum {column_enum} index {column_index} name {column_name} values {column_values}"
+                )
 
             # make list of value types
             typed_column_values, typed_column_types = zip(
@@ -239,6 +248,8 @@ def create_metadata():
                 else:
                     column_type = distinct_types_in_column[0]
                 column_types[column_enum + 1] = column_type
+    # !!---------------
+    # !!--------------- construct SQL for creating wherescape table
 
     # now construct the SQL statement for creating the table in Wherescape
     meta_values = ""
@@ -276,7 +287,7 @@ def create_metadata():
             ")": "_",
             "'": "_",
             "%": "_",
-            ".": "_"
+            ".": "_",
         }
 
         for match_char, replace_char in replace_dict.items():
@@ -373,11 +384,11 @@ def create_metadata():
     #     logging.error("error on updating Metadata %s" % wherescape.error_messages)
 
     logging.info("--> Metadata updated. Table can be created.")
-
+    # ---------------
     # ------------------------------------ THE END ----------------------------------------#
 
     # error_messages.extend(wherescape.error_messages)
-        
+
     end_time = datetime.now()
     logging.info("End time: %s" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
     logging.info("Time elapsed: %s seconds" % (end_time - start_time).seconds)
@@ -415,8 +426,7 @@ def google_sheet_load_data():
 
         # start logging
         start_time = datetime.now()
-        logging.info("Start time: %s" %
-                        start_time.strftime("%Y-%m-%d %H:%M:%S"))
+        logging.info("Start time: %s" % start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         # --------------------------------------------------------
         # Initialise Wherescape Object
@@ -528,7 +538,6 @@ def google_sheet_load_data():
             column for column in wherescape.column_names if not column.startswith("dss")
         ]
         if number_of_columns > len(non_dss_columns):
-            
             logging.warn(f"Expected only {len(non_dss_columns)} columns")
             logging.warn(f"Expected header [{'|'.join(non_dss_columns)}]")
             logging.warn(f"first row [{'|'.join(all_records[0])}]")
@@ -580,8 +589,7 @@ def google_sheet_load_data():
                 writer = csv.writer(output_file, delimiter=delimiter)
                 writer.writerows(all_records)
         except Exception as err:
-            logging.error(
-                f"Unexpected error writing {filename} is {repr(err)}")
+            logging.error(f"Unexpected error writing {filename} is {repr(err)}")
             # exit_with_log(messages, error_messages)
 
         table_name = wherescape.load_full_name
@@ -602,8 +610,7 @@ def google_sheet_load_data():
             with connection:
                 with connection.cursor() as cursor:
                     f = open(filename, "r", encoding="utf-8")
-                    cursor.copy_from(f, f"{table_name}",
-                                     sep=delimiter, null="")
+                    cursor.copy_from(f, f"{table_name}", sep=delimiter, null="")
                     f.close()
 
             connection.close()
@@ -624,10 +631,8 @@ def google_sheet_load_data():
         # error_messages.extend(wherescape.error_messages)
 
         end_time = datetime.now()
-        logging.info("End time: %s" %
-                        end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        logging.info("Time elapsed: %s seconds" %
-                        (end_time - start_time).seconds)
+        logging.info("End time: %s" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        logging.info("Time elapsed: %s seconds" % (end_time - start_time).seconds)
 
         # print_log(messages, error_messages, first_message=success_message)
         logging.info(success_message)
@@ -674,3 +679,36 @@ if __name__ == "__main__":
 
     # load data
     google_sheet_load_data()
+
+"""
+    Newly added code for improvement added below this line 
+    this can contain code already existing above if old code has not been replaced yet
+"""
+
+
+def open_workbook(url: str, spreadsheet_args, gsheetclient):
+    """
+    This method opens the workbook based on url or workbook name
+    Parameters:
+    - url (str):  URL of a spreadsheet as it appears in a browser
+    - spreadsheet_args: args object with spreadsheet details
+    - gsheetclient (Client): gheet client
+
+    Returns:
+    - workbook
+    """
+    if len(url) > 0:
+        try:
+            workbook = gsheetclient.open_by_url(url)
+        except:
+            logging.error("Invalid URL")
+    elif len(spreadsheet_args.workbook_name) > 0:
+        try:
+            workbook = gsheetclient.open(spreadsheet_args.workbook_name)
+        except:
+            logging.error("Invalid workbook_name")
+    else:
+        logging.error("Enter valid workbook URL or workbook name")
+
+    logging.info("Opened workbook %s" % workbook.title)
+    return workbook
