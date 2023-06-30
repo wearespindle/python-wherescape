@@ -126,16 +126,17 @@ def create_metadata():
     # !!---------------
     # !!--------------- Determine startcel / header
     # determine the start cell for the header
-    if args.header_range:
-        # simple, start_cell is given
-        start_cell_header = args.header_range
-    elif args.range:
-        # header range was not given, header could be first line of range
-        start_cell_header = args.range
-    else:
-        # default A1:1
-        start_cell_header = "A1:1"
-    logging.info(f"start_cell_header: {start_cell_header}")
+    # if args.header_range:
+    #     # simple, start_cell is given
+    #     start_cell_header = args.header_range
+    # elif args.range:
+    #     # header range was not given, header could be first line of range
+    #     start_cell_header = args.range
+    # else:
+    #     # default A1:1
+    #     start_cell_header = "A1:1"
+    start_cell_header = determine_start_cell_header(args)
+    logging.info("start_cell_header: %s" % start_cell_header)
     # !!---------------
     # !!--------------- Deterimine Column Names
     # get the column names
@@ -753,7 +754,6 @@ def determine_start_cell_header(args):
     Returns:
     - (string) location of header / start cell
     """
-    logging.info("Determing starter header")
     if args.header_range:
         return args.header_range  # startcell given
     elif args.range:
