@@ -111,17 +111,18 @@ def create_metadata():
     # !!---------------
     # !!--------------- Open sheet
     # Open the correct sheet
-    if args.sheet:
-        try:
-            worksheet = workbook.worksheet(args.sheet)
-        except:
-            logging.error("Invalid worksheet name in --sheet")
-    else:
-        # if no sheet was specified, open the first sheet
-        try:
-            worksheet = workbook.get_worksheet(0)
-        except:
-            logging.error("Error while opening first sheet")
+    # if args.sheet:
+    #     try:
+    #         worksheet = workbook.worksheet(args.sheet)
+    #     except:
+    #         logging.error("Invalid worksheet name in --sheet")
+    # else:
+    #     # if no sheet was specified, open the first sheet
+    #     try:
+    #         worksheet = workbook.get_worksheet(0)
+    #     except:
+    #         logging.error("Error while opening first sheet")
+    worksheet = open_sheet(workbook, args)
     # !!---------------
     # !!--------------- Determine startcel / header
     # determine the start cell for the header
@@ -681,8 +682,11 @@ if __name__ == "__main__":
     google_sheet_load_data()
 
 """
+_________________________________________________________________________________________________
+
     Newly added code for improvement added below this line 
     this can contain code already existing above if old code has not been replaced yet
+_________________________________________________________________________________________________
 """
 
 
@@ -712,3 +716,29 @@ def open_workbook(url: str, spreadsheet_args, gsheetclient):
 
     logging.info("Opened workbook %s" % workbook.title)
     return workbook
+
+
+def open_sheet(workbook, args):
+    """
+    Method to open the worksheet
+
+    Parameters:
+    - workbook : workbook containing worksheet
+    - args: args object with spreadsheet details
+
+    Returns:
+    - worksheet
+    """
+    if args.sheet:
+        try:
+            worksheet = workbook.worksheet(args.sheet)
+        except:
+            logging.error("Invalid worksheet name in --sheet")
+    else:
+        # if no sheet was specified, open the first sheet
+        try:
+            worksheet = workbook.get_worksheet(0)
+        except:
+            logging.error("Error while opening first sheet")
+    logging.info("Opened worksheet")
+    return worksheet
