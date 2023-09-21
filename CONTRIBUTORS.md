@@ -11,3 +11,4 @@ Keep the list in alfabetical order please.
 
  * Bart Jonk {bart.jonk@wearespindle.com}
  * Erwin de Vries {erwin.de.vries@wearespindle.com}
+ * Esther Zigterman Rustenburg {estherzigterman@gmail.com}
