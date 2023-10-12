@@ -1,13 +1,13 @@
 import logging
 import hubspot
-import logging
+
 from hubspot.crm import companies, contacts, deals, properties
 
 """
 Module that takes care of HubSpot connection and API calls to HubSpot
 
 global parameters:
-- batch_input_map (map) map of the batch_inputs referring to the differen classes designed for the different HubSpot classes
+- batch_input_map (map) map of the batch_inputs referring to the different classes designed for the different HubSpot classes
 """
 
 batch_input_map = {
@@ -33,7 +33,6 @@ class Hubspot:
         - properties: data to be send
         - hs_object (string): hubspot object data will be sent to
         """
-
         logging.info("sending %s batch patch to hubspot" % hs_object)
 
         batch_input_class = batch_input_map.get(hs_object)
@@ -43,7 +42,12 @@ class Hubspot:
         batch_input = batch_input_class(inputs=properties)
         try:
             batch_api = getattr(self.client.crm, hs_object).batch_api
-            batch_api.update(batch_input_simple_public_object_batch_input=batch_input)
+            response = batch_api.update(
+                batch_input_simple_public_object_batch_input=batch_input
+            )
+            errors = response.errors
+            if len(errors) > 0:
+                log_errors(errors)
         except Exception as e:
             logging.error("Exception when calling batch_api->update: %s\n" % e)
 
@@ -70,3 +74,20 @@ class Hubspot:
             return property_names
         except properties.ApiException as e:
             logging.error("Exception when calling core_api->get_all: %s\n" % e)
+
+
+def log_errors(errors):
+    """
+    Function for the logging of errors in the response of the API request.
+
+    Parameters:
+    - errors: errors obtained from response
+
+    """
+    for error in errors:
+        category = error.category
+        context_ids = ", ".join(error.context["ids"])
+        logging.warning(
+            "An error occured of category %s with record_ids: %s"
+            % (category, context_ids)
+        )
