@@ -45,11 +45,17 @@ class Hubspot:
             response = batch_api.update(
                 batch_input_simple_public_object_batch_input=batch_input
             )
+        except Exception as e:
+            logging.error("Exception when calling batch_api->update: %s\n" % e)
+
+        try:
+            response.errors
             errors = response.errors
             if len(errors) > 0:
                 log_errors(errors)
-        except Exception as e:
-            logging.error("Exception when calling batch_api->update: %s\n" % e)
+
+        except Exception:
+            pass
 
     def get_properties(self, object_name: str):
         """
