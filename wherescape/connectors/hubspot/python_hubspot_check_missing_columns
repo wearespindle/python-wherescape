@@ -1,4 +1,11 @@
+"""
+Script that compares the columns from the Hubspot api with the columns in the
+WhereScape load tables. It will load all missing columns in a load table and
+compares it to the ds tables. If new ones have appeared, it add them to the
+WhereScape warning log messages so they turn up in the daily report in Slack.
+"""
 import logging
+from hubspot.crm.properties.exceptions import ForbiddenException
 
 from wherescape import WhereScape
 from wherescape.connectors.hubspot import Hubspot
@@ -75,12 +82,22 @@ def hubspot_check_missing_columns():
                 sql = "SELECT lc_col_name FROM ws_load_col WHERE lc_obj_key = ?"
                 results = wherescape_instance.query_meta(sql, [lc_obj_key])
                 wherescape_columns = [item[0] for item in results]
-                hubspot_columns = hubspot_instance.get_properties(object_type)
-                if hubspot_columns is None:
+                api_response = None
+                try:
+                    api_response = (
+                        hubspot_instance.client.crm.properties.core_api.get_all(
+                            object_type=object_type, archived=False
+                        )
+                    )
+                except ForbiddenException:
                     logging.info(
-                        f"No access for type {object_type} via the Hubspot api"
+                        f"No access for type {object_type} via the Hubspot api for {environment}"  # noqa: E501
                     )
                 else:
+                    api_results = api_response.to_dict()
+                    hubspot_columns = []
+                    for result in api_results["results"]:
+                        hubspot_columns.append(result["name"])
                     missing_in_wherescape, missing_in_hubspot = compare_columns(
                         wherescape_columns, hubspot_columns
                     )
