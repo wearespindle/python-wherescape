@@ -93,7 +93,10 @@ def log_errors(errors):
     for error in errors:
         category = error.category
         context_ids = ", ".join(error.context["ids"])
-        logging.warning(
-            "An error occured of category %s with record_ids: %s"
+        """
+        The process was stopped
+        """
+        logging.error(
+            "The process was stopped prematurely resulting from an error of category %s with record_ids: %s "
             % (category, context_ids)
         )
