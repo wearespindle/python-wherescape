@@ -334,7 +334,7 @@ class WhereScape:
         return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
-        return_code = int(return_values[0][0])
+        return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
 
@@ -387,7 +387,7 @@ class WhereScape:
         return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
-        return_code = int(return_values[0][0])
+        return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
         return return_code, return_message, result_number
