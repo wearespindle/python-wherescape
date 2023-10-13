@@ -331,7 +331,7 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result"""
 
-        return_values = self.push_to_meta(
+        return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
         return_code = int(return_values[0][0])
@@ -384,7 +384,7 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result;"""
 
-        return_values = self.push_to_meta(
+        return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
         return_code = int(return_values[0][0])
