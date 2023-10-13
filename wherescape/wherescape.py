@@ -106,7 +106,7 @@ class WhereScape:
             column_types = [result[1] for result in results]
         return (column_names, column_types)
 
-    def query(self, conn, sql, params):
+    def query(self, conn, sql, params=None):
         """
         Generic query function. Used for all connections
         Can only be used for SELECT queries that return one resultset
@@ -127,7 +127,7 @@ class WhereScape:
             raise
         return values
 
-    def query_meta(self, sql, params):
+    def query_meta(self, sql, params=None):
         """
         Query the meta database. Makes use of the generic query function.
         Can only be used for SELECT queries.
@@ -145,7 +145,7 @@ class WhereScape:
             raise
         return result
 
-    def push_to_meta(self, sql, params):
+    def push_to_meta(self, sql, params=None):
         """
         Function to push data to the metadate database. Returns rowcount.
         """
@@ -164,7 +164,7 @@ class WhereScape:
             raise
         return rowcount
 
-    def query_target(self, sql, params):
+    def query_target(self, sql, params=None):
         """
         Query the target database. Makes use of the generic query function.
         """
@@ -179,7 +179,7 @@ class WhereScape:
             raise
         return result
 
-    def push_to_target(self, sql, params):
+    def push_to_target(self, sql, params=None):
         """
         Function to push data to the target database. Returns rowcount.
 
@@ -206,7 +206,7 @@ class WhereScape:
             raise
         return rowcount
 
-    def push_many_to_target(self, sql, params):
+    def push_many_to_target(self, sql, params=None):
         """
         Function to push data to the target database.
 
@@ -366,7 +366,7 @@ class WhereScape:
         """
         # if options is "TRUNCATE" then all the archived logs are truncated.
         options = ""
-        function_parameter_list = [days_to_retain, job_to_clean, options]
+        function_parameter_list = [job_to_clean, days_to_retain, options]
 
         sql = """
         DECLARE @out nvarchar(max),@out1 nvarchar(max),@out2 nvarchar(max);
