@@ -334,7 +334,7 @@ class WhereScape:
         return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
-        return_code = int(return_values[0][0])
+        return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
 
@@ -366,7 +366,7 @@ class WhereScape:
         """
         # if options is "TRUNCATE" then all the archived logs are truncated.
         options = ""
-        function_parameter_list = [job_to_clean, days_to_retain, options]
+        function_parameter_list = [days_to_retain, job_to_clean, options]
 
         sql = """
         DECLARE @out nvarchar(max),@out1 nvarchar(max),@out2 nvarchar(max);
@@ -387,7 +387,7 @@ class WhereScape:
         return_values = self.query_meta(
             sql, self.common_input_parameter_list + function_parameter_list
         )
-        return_code = int(return_values[0][0])
+        return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
         return return_code, return_message, result_number
