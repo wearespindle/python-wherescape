@@ -6,8 +6,6 @@ from .hubspot_wrapper import Hubspot
 This module processes the collected data so it can be send to the Hubspot Module
 """
 
-IGNORED_COLUMNS = []
-
 
 def hubspot_process_results(
     access_token: str, results: list, column_names: list, table_name: str
@@ -114,6 +112,8 @@ def compare_names(source_names: list, destination_names: list):
     - known_destination_names (list) : list of property names that also exist as column names in the source table being used
 
     """
+
+    known_destination_names = []
 
     for name in source_names:
         if name not in destination_names and name != "record_id" and "dss_" not in name:
