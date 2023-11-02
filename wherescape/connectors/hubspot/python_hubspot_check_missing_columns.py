@@ -7,9 +7,6 @@ WhereScape warning log messages so they turn up in the daily report in Slack.
 import logging
 from hubspot.crm.properties.exceptions import ForbiddenException
 
-from wherescape import WhereScape
-from wherescape.connectors.hubspot import Hubspot
-
 
 def compare_columns(wherescape_columns, hubspot_columns):
     # Function checking columns missing in either WhereScape or Hubspot
@@ -49,8 +46,9 @@ def get_ds_rows(wherescape_instance):
     return rows
 
 
-def hubspot_check_missing_columns(wherescape_instance, hubspot_instance, table_name, object_type, environment):
-
+def hubspot_check_missing_columns(
+    wherescape_instance, hubspot_instance, table_name, object_type, environment
+):
     # Query the hubspot api per environment and object_type and compare with
     # the wherescape objects.
     sql = "SELECT lt_obj_key FROM ws_load_tab WHERE lt_table_name = ?"
@@ -64,10 +62,8 @@ def hubspot_check_missing_columns(wherescape_instance, hubspot_instance, table_n
         wherescape_columns = [item[0] for item in results]
         api_response = None
         try:
-            api_response = (
-                hubspot_instance.client.crm.properties.core_api.get_all(
-                    object_type=object_type, archived=False
-                )
+            api_response = hubspot_instance.client.crm.properties.core_api.get_all(
+                object_type=object_type, archived=False
             )
         except ForbiddenException:
             logging.info(
@@ -93,7 +89,8 @@ def hubspot_check_missing_columns(wherescape_instance, hubspot_instance, table_n
         )
 
     return table_rows
-    
+
+
 def compare_load_and_ds(wherescape_instance, table_rows):
     # Get the datastore rows to compare to the new load rows
     ds_rows = get_ds_rows(wherescape_instance)
