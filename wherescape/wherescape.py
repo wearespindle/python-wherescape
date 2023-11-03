@@ -109,7 +109,7 @@ class WhereScape:
     def query(self, conn, sql, params=None):
         """
         Generic query function. Used for all connections
-        Can only be used for SELECT queries that return one resultset
+        Can only be used for SELECT queries that return one resultset.
         """
         if params is None:
             params = []
