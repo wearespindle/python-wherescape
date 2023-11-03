@@ -1,7 +1,8 @@
+import logging
 import os
 
 import pyodbc
-import logging
+
 from .logging import initialise_wherescape_logging
 
 
@@ -11,6 +12,10 @@ class WhereScape:
     framework and all database connections needed.
     """
 
+    # class construction variables
+
+    # main_message is used to store the main message
+    #   This is the message that appears in the job_log
     main_message = ""
 
     def __init__(self):
@@ -28,7 +33,7 @@ class WhereScape:
         column_names, column_types  - column_names, column_types of a load or stage table
         object_key                  - object_key of a load or stage table
         file_path, file_name        - Taken from the lt_file_path, lt_file_name of the Wherescape object context
-        """
+        """  # noqa: E501
         self.workdir = os.getenv("WSL_WORKDIR")
         if self.workdir is None:
             # The WhereScape object is initialised outside of a job
@@ -58,6 +63,15 @@ class WhereScape:
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
 
+        # common input paramter list : these fields provide context for logging to the audit log  # noqa: E501
+        self.common_input_parameter_list = [
+            self.sequence,
+            self.job_name,
+            self.task_name,
+            self.job_key,
+            self.task_key,
+        ]
+
         self.table = os.getenv("WSL_LOAD_TABLE")
         self.schema = os.getenv("WSL_LOAD_SCHEMA")
         if self.schema == "load":
@@ -83,7 +97,7 @@ class WhereScape:
         elif self.schema == "stage":
             sql = "SELECT sc_col_name, sc_data_type FROM ws_stage_col WHERE sc_obj_key = ? ORDER BY sc_order"
         else:
-            logging.warn("Invalid schema: %s" % self.schema)
+            logging.warning("Invalid schema: %s", self.schema)
             return None
 
         results = self.query_meta(sql, [self.object_key])
@@ -92,11 +106,14 @@ class WhereScape:
             column_types = [result[1] for result in results]
         return (column_names, column_types)
 
-    def query(self, conn, sql, params=[]):
+    def query(self, conn, sql, params=None):
         """
         Generic query function. Used for all connections
-        Can only be used for SELECT queries that return one resultset
+        Can only be used for SELECT queries that return one resultset.
         """
+        if params is None:
+            params = []
+
         try:
             cursor = conn.cursor()
             cursor = cursor.execute(sql, params)
@@ -110,13 +127,16 @@ class WhereScape:
             raise
         return values
 
-    def query_meta(self, sql, params=[]):
+    def query_meta(self, sql, params=None):
         """
         Query the meta database. Makes use of the generic query function.
         Can only be used for SELECT queries.
 
         Returns a list of tuples
         """
+        if params is None:
+            params = []
+
         try:
             conn = pyodbc.connect(self.meta_db_connection_string)
             result = self.query(conn, sql, params)
@@ -125,10 +145,13 @@ class WhereScape:
             raise
         return result
 
-    def push_to_meta(self, sql, params=[]):
+    def push_to_meta(self, sql, params=None):
         """
         Function to push data to the metadate database. Returns rowcount.
         """
+        if params is None:
+            params = []
+
         try:
             conn = pyodbc.connect(self.meta_db_connection_string)
             cursor = conn.cursor()
@@ -141,10 +164,13 @@ class WhereScape:
             raise
         return rowcount
 
-    def query_target(self, sql, params=[]):
+    def query_target(self, sql, params=None):
         """
         Query the target database. Makes use of the generic query function.
         """
+        if params is None:
+            params = []
+
         try:
             conn = pyodbc.connect(self.target_db_connection_string)
             result = self.query(conn, sql, params)
@@ -153,7 +179,7 @@ class WhereScape:
             raise
         return result
 
-    def push_to_target(self, sql, params=[]):
+    def push_to_target(self, sql, params=None):
         """
         Function to push data to the target database. Returns rowcount.
 
@@ -165,6 +191,9 @@ class WhereScape:
         push_to_target('INSERT INTO schemaname.tablename (columname) VALUES (?)',  (value,) )
 
         """
+        if params is None:
+            params = []
+
         try:
             conn = pyodbc.connect(self.target_db_connection_string)
             cursor = conn.cursor()
@@ -177,7 +206,7 @@ class WhereScape:
             raise
         return rowcount
 
-    def push_many_to_target(self, sql, params=[]):
+    def push_many_to_target(self, sql, params=None):
         """
         Function to push data to the target database.
 
@@ -191,6 +220,9 @@ class WhereScape:
         rows = [row1, row2]
         push_to_target('INSERT INTO schemaname.tablename (columname) VALUES (?)',  rows )
         """
+        if params is None:
+            params = []
+
         try:
             conn = pyodbc.connect(self.target_db_connection_string)
             conn.autocommit = False
@@ -215,10 +247,10 @@ class WhereScape:
         sql = """
             DECLARE @out varchar(max),@out1 varchar(max);
             EXEC WsParameterRead
-        	  @p_parameter = ?
+        	 @p_parameter = ?
             ,@p_value = @out OUTPUT
             ,@p_comment=@out1 OUTPUT
-            SELECT @out AS p_value,@out1 AS p_comment;"""
+            SELECT @out AS p_value,@out1 AS p_comment;"""  # noqa: E101
 
         try:
             result = self.query_meta(sql, [name])
@@ -234,8 +266,9 @@ class WhereScape:
 
         if include_comment:
             return parameter, comment
-        else:
-            return parameter
+
+        # else:
+        return parameter
 
     def write_parameter(self, name, value="", comment=None):
         """
@@ -256,3 +289,105 @@ class WhereScape:
         result_number = self.push_to_meta(sql, [name, value, comment])
         result_number = int(result_number)
         return result_number
+
+    def job_clear_logs_by_date(self, days_to_retain=90, job_to_clean="%"):
+        """
+        Archives job logs that are older than the specified age in days.
+
+        Input:
+        ------
+        job_to_clean    : name of the job(s) to clean (Wild cards are supported)
+                            The name of the job(s) whose current logs are to be archived.
+                            Specifying % will match ALL jobs.
+        days_to_retain  : number of days to retain the logs for the specified job(s)
+                            If 90 days are retained then all the archived logs that are older than 90 days are
+                            archived. If 0 days are retained then all the logs are archived.
+        Returns:
+        return_code     : Output Return Code:
+                            • S - Success.
+                            • E - Error.
+                            • F - Fatal/Unexpected Error.
+        return_message  : Output message indicating the action applied or the reason for no action.
+        result_number:  : Output Result number:
+                            •  1 Success
+                            • -2 Error : Error. e.g. Due to invalid job name or job not running
+                            • -3 Fatal/Unexpected Error
+
+        """
+        function_parameter_list = [job_to_clean, days_to_retain]
+
+        sql = """
+        DECLARE @out nvarchar(max),@out1 nvarchar(max),@out2 nvarchar(max);
+        EXEC Ws_Job_Clear_Logs_By_Date
+         @p_sequence  =?
+        , @p_job_name  = ?
+        , @p_task_name  = ?
+        , @p_job_id = ?
+        , @p_task_id = ?
+        , @p_job_to_clean = ?
+        , @p_day_count = ?
+        , @p_return_code = @out OUTPUT
+        , @p_return_msg = @out1 OUTPUT
+        , @p_result   = @out2 OUTPUT;
+        SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result"""
+
+        return_values = self.query_meta(
+            sql, self.common_input_parameter_list + function_parameter_list
+        )
+        return_code = return_values[0][0]
+        return_message = return_values[0][1]
+        result_number = int(return_values[0][2])
+
+        return return_code, return_message, result_number
+
+    def job_clear_archive_by_date(self, days_to_retain=365, job_to_clean="%"):
+        """
+        Purges archives that are older than the specified age in days.
+
+        Input:
+        job_to_clean    : name of the job(s) to clean (Wild cards are supported)
+                            The name of the job(s) whose current logs are to be archived.
+                            Specifying % will match ALL jobs.
+        days_to_retain  : number of days to retain the logs for the specified job(s)
+                            If 90 days are retained then all the archived logs that are older than 90 days are
+                            purged/deleted. If 0 days are retained then all the archived logs are purged/deleted.
+
+        Returns:
+        return_code     : Output Return Code:
+                            • S - Success.
+                            • E - Error.
+                            • F - Fatal/Unexpected Error.
+        return_message  : Output message indicating the action applied or the reason for no action.
+        result_number:  : Output Result number:
+                            •  1 Success
+                            • -2 Error : Error. e.g. Due to invalid job name or job not running
+                            • -3 Fatal/Unexpected Error
+
+        """
+        # if options is "TRUNCATE" then all the archived logs are truncated.
+        options = ""
+        function_parameter_list = [job_to_clean, days_to_retain, options]
+
+        sql = """
+        DECLARE @out nvarchar(max),@out1 nvarchar(max),@out2 nvarchar(max);
+        EXEC Ws_Job_Clear_Archive
+          @p_sequence  = ?
+        , @p_job_name  = ?
+        , @p_task_name  = ?
+        , @p_job_id = ?
+        , @p_task_id = ?
+        , @p_day_count = ?
+        , @p_job = ?
+        , @p_options = ?
+        , @p_return_code = @out OUTPUT
+        , @p_return_msg = @out1 OUTPUT
+        , @p_result   = @out2 OUTPUT;
+        SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result;"""
+
+        return_values = self.query_meta(
+            sql, self.common_input_parameter_list + function_parameter_list
+        )
+        return_code = return_values[0][0]
+        return_message = return_values[0][1]
+        result_number = int(return_values[0][2])
+        return return_code, return_message, result_number
