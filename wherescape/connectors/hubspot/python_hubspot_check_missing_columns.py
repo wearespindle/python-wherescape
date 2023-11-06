@@ -6,10 +6,11 @@ WhereScape warning log messages so they turn up in the daily report in Slack.
 """
 import logging
 from hubspot.crm.properties.exceptions import ForbiddenException
+from ...helper_functions import prepare_metadata_query
 
 
 def compare_columns(wherescape_columns, hubspot_columns):
-    # Function checking columns missing in either WhereScape or Hubspot
+    """Function checking columns missing in either WhereScape or Hubspot"""
     missing_in_wherescape = []
     for hubspot_column in hubspot_columns:
         if hubspot_column not in wherescape_columns:
@@ -26,7 +27,7 @@ def compare_columns(wherescape_columns, hubspot_columns):
 def create_table_rows(
     missing_in_wherescape, missing_in_hubspot, environment, table_name
 ):
-    # Creating the table row list for the insert query
+    """Function that creates the table row list for the insert query"""
     table_rows = []
     if len(missing_in_wherescape) > 0:
         for row in missing_in_wherescape:
@@ -39,7 +40,7 @@ def create_table_rows(
 
 
 def get_ds_rows(wherescape_instance):
-    # Get the datastore rows for comparison with the new load rows
+    """Get the datastore rows for comparison with the new load rows"""
     table_name = f"datastore.ds{wherescape_instance.table[4:]}"
     sql = f"select hubspot_environment, column_name, hubspot_load_table_name, missing_where from {table_name}"  # noqa: E501
     rows = wherescape_instance.query_target(sql)
@@ -49,8 +50,10 @@ def get_ds_rows(wherescape_instance):
 def hubspot_check_missing_columns(
     wherescape_instance, hubspot_instance, table_name, object_type, environment
 ):
-    # Query the hubspot api per environment and object_type and compare with
-    # the wherescape objects.
+    """
+    Query the hubspot api for the supplied environment and object_type and
+    compare with the wherescape objects.
+    """
     sql = "SELECT lt_obj_key FROM ws_load_tab WHERE lt_table_name = ?"
     results = wherescape_instance.query_meta(sql, [table_name])
     table_rows = []
@@ -92,6 +95,11 @@ def hubspot_check_missing_columns(
 
 
 def compare_load_and_ds(wherescape_instance, table_rows):
+    """
+    Function that compares the ds table rows with the supplied table_rows. It
+    will push the diffence to the load table to be load table which will be
+    added to the ds table later in the process.
+    """
     # Get the datastore rows to compare to the new load rows
     ds_rows = get_ds_rows(wherescape_instance)
     # For comparison we need tuples instead of lists
@@ -111,3 +119,35 @@ def compare_load_and_ds(wherescape_instance, table_rows):
         % wherescape_instance.load_full_name,
         new_rows_in_load_table,
     )
+
+
+def create_metadata(wherescape_instance):
+    """
+    Function to create the metadata columns for the missing Hubspot columns
+    check.
+    """
+    sql = prepare_metadata_query(
+        lt_obj_key=wherescape_instance.object_key,
+        src_table_name="hubspot_api",
+        columns=[
+            "hubspot_environment",
+            "column_name",
+            "hubspot_load_table_name",
+            "missing_where",
+        ],
+        display_names=[
+            "Hubspot environment",
+            "Column name",
+            "Hubspot load table name",
+            "Missing where",
+        ],
+        comments=[
+            "Hubspot Environment",
+            "Missing column name",
+            "Hubspot load table name",
+            "Is the column missing in wherescape or hubspot",
+        ],
+        source_columns=["", "", "", ""],
+        types=["text", "text" "text", "text"],
+    )
+    wherescape_instance.push_to_meta(sql)
