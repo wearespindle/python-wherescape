@@ -1,4 +1,3 @@
-import logging
 import hubspot
 
 from hubspot.crm import companies, contacts, deals, properties
