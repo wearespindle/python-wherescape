@@ -43,7 +43,7 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     Returns
     - access_token (string): the token to be able to connect to hubspot.
     """
-    parameter_name = "hubspot_acces_token"
+    parameter_name = "hubspot_access_token"
     table_words = table_name.split("_")
 
     logging.info("retrieving access_token")
@@ -53,7 +53,7 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
         access_token = wherescape_instance.read_parameter(environment_parameter)
 
         if access_token:
-            logging.info("retreived access token for %s environment" % word)
+            logging.info("retreived acces token from %s" % environment_parameter)
             return access_token
 
     logging.warn("no specified environment found")
