@@ -366,7 +366,7 @@ class WhereScape:
         """
         # if options is "TRUNCATE" then all the archived logs are truncated.
         options = ""
-        function_parameter_list = [job_to_clean, days_to_retain, options]
+        function_parameter_list = [days_to_retain, job_to_clean, options]
 
         sql = """
         DECLARE @out nvarchar(max),@out1 nvarchar(max),@out2 nvarchar(max);
