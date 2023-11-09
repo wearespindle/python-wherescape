@@ -123,15 +123,15 @@ def compare_load_and_ds(wherescape_instance, table_rows):
             logging.warning(
                 f"Hubspot missing column: the {row[0]} environment in {row[3]}: table {row[2]} is missing column {row[1]}"  # noqa: E501
             )
+
+        # Pushing the missing columns to the load table
+        wherescape_instance.push_many_to_target(
+            "insert into %s values (?, ?, ?, ?, null, null)"
+            % wherescape_instance.load_full_name,
+            new_rows_in_load_table,
+        )
     else:
         logging.info("No new missing rows in Hubspot objects found.")
-
-    # Pushing the missing columns to the load table
-    wherescape_instance.push_many_to_target(
-        "insert into %s values (?, ?, ?, ?, null, null)"
-        % wherescape_instance.load_full_name,
-        new_rows_in_load_table,
-    )
 
 
 def create_metadata(wherescape_instance):
