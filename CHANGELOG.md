@@ -21,3 +21,4 @@
 | 2023-04-20  | In the Jira wrapper, when a date is None it will not get converted to a datetime |
 | 2023-05-32  | Added logging to fact_dimension_join |
 | 2023-10-13  | Added functions for scheduler archiving |
+| 2023-11-02  | Added Hubspot missing columns check feature to the Hubspot connector |
