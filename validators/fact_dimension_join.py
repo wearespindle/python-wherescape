@@ -20,12 +20,13 @@ def check_fact_dimension_join(output_file_location=""):
 
     Creates a file in output_file_location (WSL_WORKDIR by default)
     """
+    wherescape = WhereScape()
+
     start_time = datetime.now()
     logging.info(
         "Start time: %s for check_fact_dimension_join",
         start_time.strftime("%Y-%m-%d %H:%M:%S"),
     )
-    wherescape = WhereScape()
 
     date = datetime.now().strftime("%Y-%m-%d")
 
