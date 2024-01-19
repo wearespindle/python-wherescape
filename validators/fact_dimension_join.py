@@ -22,8 +22,8 @@ def check_fact_dimension_join(output_file_location=""):
     """
     start_time = datetime.now()
     logging.info(
-        "Start time: %s for check_fact_dimension_join"
-        % start_time.strftime("%Y-%m-%d %H:%M:%S")
+        "Start time: %s for check_fact_dimension_join",
+        start_time.strftime("%Y-%m-%d %H:%M:%S"),
     )
     wherescape = WhereScape()
 
@@ -31,6 +31,8 @@ def check_fact_dimension_join(output_file_location=""):
 
     # create empty list to store results
     result_rows = []
+    table_count = 0
+    dimension_count = 0
 
     # get all fact tables and all dimension keys
     sql = """
@@ -46,12 +48,9 @@ def check_fact_dimension_join(output_file_location=""):
         left join dbo.ws_obj_object on oo_obj_key = ft_obj_key
         left join dbo.ws_dbc_target on dt_target_key = oo_target_key
     where
-        -- key_type is also shown in wherescape UI. 
+        -- key_type is also shown in wherescape UI.
         -- key_type 2 corresponds to dimension keys
         ws_fact_col.fc_key_type = '2'
-    order by
-        ws_dbc_target.dt_schema
-        , ws_fact_tab.ft_table_name
     UNION
     select
         ws_dbc_target.dt_schema,
@@ -63,12 +62,15 @@ def check_fact_dimension_join(output_file_location=""):
         left join dbo.ws_dbc_target on dt_target_key = oo_target_key
     where
         not exists (
-            select 1 
+            select 1
               from dbo.ws_fact_col
              where
                 fc_obj_key = ft_obj_key
                 and fc_key_type = '2'
-        );
+        )
+    order by
+        ws_dbc_target.dt_schema
+        , ws_fact_tab.ft_table_name;
     """
 
     facts_with_dimensions = wherescape.query_meta(sql)
@@ -78,6 +80,7 @@ def check_fact_dimension_join(output_file_location=""):
     for fact_dimension in facts_with_dimensions:
         # create empty dict to store results
         result_row = {}
+
         # unpack tuple
         schema, table_name, column_name = fact_dimension
         # create qualified table name
@@ -97,18 +100,18 @@ def check_fact_dimension_join(output_file_location=""):
             for row in result_rows:
                 if row["table"] == qualified_table_name:
                     result_row["count_of_all_records"] = row["count_of_all_records"]
+                    table_count += 1
                     break
         else:
             # table does not exists in result_rows
             #   --> count all records in the target table
             sql = f"""
             -- count fact table rows and fact table rows with 0-dimension key
-            select
-                count(*)                              as count_of_all_records
-            from {qualified_table_name}
+            select count(*) as count_of_all_records
+              from {qualified_table_name}
             """
-            count_of_all_records = wherescape.query_target(sql)
-            result_row["count_of_all_records"] = count_of_all_records[0][0]
+            result_row["count_of_all_records"] = wherescape.query_target(sql)[0][0]
+            dimension_count += 1
 
         # secondly count the (0-dimension key) records
         #   if column_name is None, this is a fact table without dimension keys
@@ -117,21 +120,21 @@ def check_fact_dimension_join(output_file_location=""):
             # this is a fact table without dimension keys
             #   --> skip
             result_row["count_of_0_key_records"] = None
-            continue
         else:
             # this is a fact table with dimension keys
             # create sql statement to count (0-dimension key) records
             sql = f"""
             -- count fact table rows and fact table rows with 0-dimension key
-            select
-                count(*) filter (where {column_name} = 0) as count_of_0_key_records
-            from {qualified_table_name}
+            select count(*) as count_of_0_key_records
+              from {qualified_table_name}
+             where {column_name} = 0
             """
-            count_of_0_key_records = wherescape.query_target(sql)
-            result_row["count_of_0_key_records"] = count_of_0_key_records[0][1]
+            result_row["count_of_0_key_records"] = wherescape.query_target(sql)[0][0]
 
         # add the result_row to the result_rows
         result_rows.append(result_row)
+
+    wherescape.main_message = f"Checked and counted {table_count} fact tables and {dimension_count} dimension keys"
 
     # write the results to the file
     keys = [
