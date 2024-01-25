@@ -33,6 +33,9 @@ class WhereScape:
         column_names, column_types  - column_names, column_types of a load or stage table
         object_key                  - object_key of a load or stage table
         file_path, file_name        - Taken from the lt_file_path, lt_file_name of the Wherescape object context
+        source_base_url             - base url of the source connection configuration
+        source_user                 - user name for the source connection configuration
+        source_apikey               - api key for the source connection configuration
         """  # noqa: E501
         self.workdir = os.getenv("WSL_WORKDIR")
         if self.workdir is None:
@@ -62,6 +65,11 @@ class WhereScape:
             self.job_name = "job"
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
+
+        # source configuration; None if not set
+        self.source_base_url = os.getenv("WSL_SRCCFG_URL")
+        self.source_user = os.getenv("WSL_SRCCFG_USER")
+        self.source_apikey = os.getenv("WSL_SRCCFG_APIKEY")
 
         # common input paramter list : these fields provide context for logging to the audit log  # noqa: E501
         self.common_input_parameter_list = [

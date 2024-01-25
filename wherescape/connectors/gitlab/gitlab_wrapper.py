@@ -87,6 +87,12 @@ class Gitlab:
                 )
                 break
 
+            if response.status_code == 404:
+                logging.info(
+                    f"{resource_api}\n Resource not found."
+                )
+                break
+
             response.raise_for_status()
 
             json_response = response.json()
