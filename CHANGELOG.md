@@ -23,3 +23,4 @@
 | 2023-10-13  | Added functions for scheduler archiving |
 | 2023-11-02  | Added Hubspot missing columns check feature to the Hubspot connector |
 | 2024-01-19  | Included counts of facts without dimensions in fact-dimension join validator |
+| 2024-01-19  | Added source connection configuration properties to the Wherescape object  |
