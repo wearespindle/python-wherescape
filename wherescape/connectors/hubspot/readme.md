@@ -17,11 +17,12 @@ crm.objects.deals.read
 crm.objects.deals.write
 
 ## WhereScape Parameters
-Add the following paramter to WhereScape
+Add the following parameter to WhereScape
 
 * `hubspot_access_token`
 
 Fill in the correct access token referring to the private app created in HubSpot
+For a connection with the Sandbox, add `_sandbox` to the above mentioned parameter.
 
 ## load or stage table
 Create a load table for each HubSpot object where data will be sent to. 

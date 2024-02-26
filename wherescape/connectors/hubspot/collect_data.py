@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+
 from ...wherescape import WhereScape
 from .process_data import hubspot_process_results
 
@@ -23,8 +24,12 @@ def hubspot_load_data():
     table_name = f"{wherescape_instance.schema}.{wherescape_instance.table}"
     sql = f"select * from {table_name}"
 
+    # Determine whether it's run in development or production.
+    environment = wherescape_instance.meta_db_connection_string.split(";")[0]
+    develop_env = True if "dev" in environment.lower() else False
+
     result = wherescape_instance.query_target(sql)
-    access_token = hubspot_get_token(wherescape_instance, table_name)
+    access_token = hubspot_get_token(wherescape_instance, table_name, develop_env)
     column_names = wherescape_instance.get_columns()[0]
 
     if len(result) > 0:
@@ -32,9 +37,11 @@ def hubspot_load_data():
         logging.info("hubspot update done")
 
 
-def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
+def hubspot_get_token(
+    wherescape_instance: WhereScape, table_name: str, develop_env: bool
+):
     """
-    Function to get the hubspot access token form the table
+    Function to get the hubspot access token from the table
 
     Parameters:
     - wherescape_instance (WhereScape): the wherescape database instance to connect to.
@@ -47,6 +54,9 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
     table_words = table_name.split("_")
 
     logging.info("retrieving access_token")
+    if develop_env:
+        logging.info("using developmental environment")
+        return parameter_name + "_sandbox"
 
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
