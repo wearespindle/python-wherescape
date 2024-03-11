@@ -66,11 +66,16 @@ def hubspot_get_token(
         if access_token:
             logging.info("retreived acces token from %s" % environment_parameter)
             return access_token
+        elif develop_env:
+            environment_parameter = environment_parameter + "_dev"
+            access_token = wherescape_instance.read_parameter(environment_parameter)
+            if access_token:
+                return access_token
 
     # return acces token sandbox if environment is development
     if develop_env:
         logging.info("using developmental environment")
-        parameter_name = parameter_name + "_sandbox"
+        parameter_name = parameter_name + "_dev"
 
     logging.warn("no specified environment found")
     logging.info("retrieving access token from parameter %s" % parameter_name)
