@@ -41,7 +41,10 @@ def hubspot_get_token(
     wherescape_instance: WhereScape, table_name: str, develop_env: bool
 ):
     """
-    Function to get the hubspot access token from the table
+    Function to get the hubspot access token from the table.
+    First trying with environemnt specification from table_name.
+    Second checking for dev environment.
+    Last using base name.
 
     Parameters:
     - wherescape_instance (WhereScape): the wherescape database instance to connect to.
@@ -54,11 +57,8 @@ def hubspot_get_token(
     table_words = table_name.split("_")
 
     logging.info("retrieving access_token")
-    if develop_env:
-        logging.info("using developmental environment")
-        parameter_name = parameter_name + "_sandbox"
-        return wherescape_instance.read_parameter(parameter_name)
 
+    # return access token if it can be found with words in table
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
         access_token = wherescape_instance.read_parameter(environment_parameter)
@@ -67,6 +67,12 @@ def hubspot_get_token(
             logging.info("retreived acces token from %s" % environment_parameter)
             return access_token
 
+    # return acces token sandbox if environment is development
+    if develop_env:
+        logging.info("using developmental environment")
+        parameter_name = parameter_name + "_sandbox"
+
     logging.warn("no specified environment found")
     logging.info("retrieving access token from parameter %s" % parameter_name)
+    # return access token on base name
     return wherescape_instance.read_parameter(parameter_name)
