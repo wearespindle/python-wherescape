@@ -44,13 +44,16 @@ hubspot_load_data()
 ```
 
 ## multiple HubSpot environments
-If there are multiple environments, this script will distinguish which 
-To distinguish between multiple environments with different access tokens, a one word 
-name referring to the environment should be added at the end of the parameter `hubspot_access_token` and the table name.
-for example: if the environmentname would be "voys", the parameter would be called `hubspot_access_token_voys`
+If there are multiple environments, this script will be able to determine the desired environment
+using the names of the acccess token. This name consists of a required base name and an optional word specifying to the environment.
+The base name is `hubspot_access_token`. To specify which Hubspot environment, simply add `_{specific}` to the token name, where the word
+specific can be replaced with the word specifying the environment.
+This word can by any word, as long as it is also mentioned in the table name. 
+for example, if the token name for an environment is `voys`, the table name could be `voys_stage_send_data` and the access token would be `hubspot_access_token_voys`.
+If only one environment exists, there's no need to specify the environment as the script will use the base name.
 
 # Usage
 After creating the table, attach the host script to the table. 
 
 If multiple environments are used, make sure the name used to refer to the environment is 
-the same in both table name and the parameter `hubspot_access_token`
+the same in both table name and the parameter `hubspot_access_token`.
