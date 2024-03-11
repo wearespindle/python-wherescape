@@ -56,7 +56,8 @@ def hubspot_get_token(
     logging.info("retrieving access_token")
     if develop_env:
         logging.info("using developmental environment")
-        return parameter_name + "_sandbox"
+        parameter_name = parameter_name + "_sandbox"
+        return wherescape_instance.read_parameter(parameter_name)
 
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
