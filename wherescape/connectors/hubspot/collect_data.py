@@ -61,23 +61,24 @@ def hubspot_get_token(
     # return access token if it can be found with words in table
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
-        access_token = wherescape_instance.read_parameter(environment_parameter)
 
-        if access_token:
-            logging.info("retreived acces token from %s" % environment_parameter)
-            return access_token
-        elif develop_env:
+        if develop_env:
             environment_parameter = environment_parameter + "_dev"
             access_token = wherescape_instance.read_parameter(environment_parameter)
             if access_token:
                 return access_token
 
+        access_token = wherescape_instance.read_parameter(environment_parameter)
+        if access_token:
+            logging.info("retreived acces token from %s" % environment_parameter)
+            return access_token
+
     # return acces token sandbox if environment is development
     if develop_env:
         logging.info("using developmental environment")
         parameter_name = parameter_name + "_dev"
-
-    logging.warn("no specified environment found")
+    else:
+        logging.info("no specified environment found")
     logging.info("retrieving access token from parameter %s" % parameter_name)
     # return access token on base name
     return wherescape_instance.read_parameter(parameter_name)
