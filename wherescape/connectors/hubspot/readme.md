@@ -51,7 +51,7 @@ This word can by any word, as long as it is also mentioned in the table name.
 for example, if the token name for an environment is `voys`, the table name could be `voys_stage_send_data` and the access token would be `hubspot_access_token_voys`.
 If only one environment exists, there's no need to specify the environment as the script will use the base name.
 
-For a connection with the Sandbox, add `_dev` at the end of the parameter 
+For a connection with the Sandbox, add `_dev` at the end of the parameter.
 
 # Usage
 After creating the table, attach the host script to the table. 
