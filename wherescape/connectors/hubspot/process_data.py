@@ -106,7 +106,7 @@ def compare_names(source_names: list, destination_names: list):
 
     Parameters:
     - source_names (list) : list of column_names from the source table being used
-    - destination_names (list): lsit of all property names of the HubSpot object the data will go to
+    - destination_names (list): list of all property names of the HubSpot object the data will go to
 
     Returns:
     - known_destination_names (list) : list of property names that also exist as column names in the source table being used
@@ -116,15 +116,14 @@ def compare_names(source_names: list, destination_names: list):
     known_destination_names = []
 
     for name in source_names:
-        if name not in destination_names and name != "record_id":
+        if name not in destination_names and name != "record_id" and "dss_" not in name:
             """
             Only prints a warning if it doesn't have dss_ in it
             """
-            if "dss_" not in name:
-                logging.warning(
-                    "source name: %s does not exist in the destination. Please check its existence and spelling"
-                    % name
-                )
+            logging.warning(
+                "source name: %s does not exist in the destination. Please check its existence and spelling"
+                % name
+            )
         else:
             known_destination_names.append(name)
 

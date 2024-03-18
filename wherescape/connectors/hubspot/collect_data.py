@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+
 from ...wherescape import WhereScape
 from .process_data import hubspot_process_results
 
@@ -23,8 +24,12 @@ def hubspot_load_data():
     table_name = f"{wherescape_instance.schema}.{wherescape_instance.table}"
     sql = f"select * from {table_name}"
 
+    # Determine whether it's run in development or production.
+    environment = wherescape_instance.meta_db_connection_string.split(";")[0]
+    develop_env = True if "dev" in environment.lower() else False
+
     result = wherescape_instance.query_target(sql)
-    access_token = hubspot_get_token(wherescape_instance, table_name)
+    access_token = hubspot_get_token(wherescape_instance, table_name, develop_env)
     column_names = wherescape_instance.get_columns()[0]
 
     if len(result) > 0:
@@ -32,9 +37,14 @@ def hubspot_load_data():
         logging.info("hubspot update done")
 
 
-def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
+def hubspot_get_token(
+    wherescape_instance: WhereScape, table_name: str, develop_env: bool
+):
     """
-    Function to get the hubspot access token form the table
+    Function to get the hubspot access token from the table.
+    First trying with environemnt specification from table_name.
+    Second checking for dev environment.
+    Last using base name.
 
     Parameters:
     - wherescape_instance (WhereScape): the wherescape database instance to connect to.
@@ -48,14 +58,27 @@ def hubspot_get_token(wherescape_instance: WhereScape, table_name: str):
 
     logging.info("retrieving access_token")
 
+    # return access token if it can be found with words in table
     for word in table_words:
         environment_parameter = parameter_name + "_" + word
-        access_token = wherescape_instance.read_parameter(environment_parameter)
 
+        if develop_env:
+            environment_parameter = environment_parameter + "_dev"
+            access_token = wherescape_instance.read_parameter(environment_parameter)
+            if access_token:
+                return access_token
+
+        access_token = wherescape_instance.read_parameter(environment_parameter)
         if access_token:
             logging.info("retreived acces token from %s" % environment_parameter)
             return access_token
 
-    logging.warn("no specified environment found")
+    # return acces token sandbox if environment is development
+    if develop_env:
+        logging.info("using developmental environment")
+        parameter_name = parameter_name + "_dev"
+    else:
+        logging.info("no specified environment found")
     logging.info("retrieving access token from parameter %s" % parameter_name)
+    # return access token on base name
     return wherescape_instance.read_parameter(parameter_name)
