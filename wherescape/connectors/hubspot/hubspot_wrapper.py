@@ -140,7 +140,7 @@ class Hubspot:
             response = basic_api.get_by_id(record_id, properties=properties)
             return response
         except api_error.ApiException as e:
-            logging.error("An exception occured when calling %s batch_api_>update\n %s" % (hs_object, e))
+            logging.error(f"An exception occured when calling {hs_object} batch_api_>update\n {e}")
     
     def get_property_names(self, object_name: str):
         """
@@ -183,7 +183,7 @@ class Hubspot:
         """
         results = []
         basic_api = getattr(self.client.crm, hs_object).basic_api
-        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+        error_api = getattr(hubspot.crm, hs_object)
         try:
             api_response = basic_api.get_page(properties=properties, limit=100)
             results.extend(api_response.results)
