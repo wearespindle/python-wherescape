@@ -1,3 +1,4 @@
+gspread
 notion-client
 pandas
 pyodbc

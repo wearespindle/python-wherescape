@@ -8,3 +8,4 @@ __pycache__
 virtual/
 config.py
 script_tester.py
+.python-version
