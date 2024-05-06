@@ -4,14 +4,15 @@ from datetime import datetime
 from ...wherescape import WhereScape
 from .process_data import hubspot_process_results
 
-""" 
+
+"""
 this module retrieves the data from Wherescape
 """
 
 
 def hubspot_load_data():
     """
-    Function to load data from table and send to be processed
+    Function to load data from table and send to be processed.
     """
     start_time = datetime.now()
     logging.info("connecting to WhereScape")
@@ -26,7 +27,7 @@ def hubspot_load_data():
 
     # Determine whether it's run in development or production.
     environment = wherescape_instance.meta_db_connection_string.split(";")[0]
-    develop_env = True if "dev" in environment.lower() else False
+    develop_env = "dev" in environment.lower()
 
     result = wherescape_instance.query_target(sql)
     access_token = hubspot_get_token(wherescape_instance, table_name, develop_env)
