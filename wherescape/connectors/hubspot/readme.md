@@ -15,6 +15,8 @@ crm.objects.companies.write
 crm.objects.companies.read
 crm.objects.deals.read
 crm.objects.deals.write
+crm.export
+tickets
 
 ## WhereScape Parameters
 Add the following parameter to WhereScape
@@ -52,6 +54,17 @@ for example, if the token name for an environment is `voys`, the table name coul
 If only one environment exists, there's no need to specify the environment as the script will use the base name.
 
 For a connection with the Sandbox, add `_dev` at the end of the parameter.
+
+## Merging Tickets
+The method merge_double_tickets in connectors.hubspot.ticket_merge.py provides functionality to merge ticket information 
+based on having the same nerds_ticket_id while keeping content and note associations of all the merged tickets. 
+One of each ticket will be kept and all others are archieved. The property `nerds_ticket_id` is used to find these 
+double tickets and is therefore a required property.
+
+### Usage
+To use this script, run the method with the name of the wherescape parameter referring to the required token for the Hubspot connection.
+
+This method does not need or provide any input or output related to Wherescape and thus doesn't require to be connected to any table. However, because a Wherescape is still initialised, it will still have to be run from the WhereScape environment.
 
 # Usage
 After creating the table, attach the host script to the table. 

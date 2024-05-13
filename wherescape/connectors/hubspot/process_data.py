@@ -1,9 +1,11 @@
 import logging
 from decimal import Decimal
+
 from .hubspot_wrapper import Hubspot
 
+
 """
-This module processes the collected data so it can be send to the Hubspot Module
+This module processes the collected data so it can be send to the Hubspot Module.
 """
 
 
@@ -12,7 +14,7 @@ def hubspot_process_results(
 ):
     """
     function that handles the processing of the results for it to be send to Hubspot
-    Function to process the results to be send to hubspot
+    Function to process the results to be send to hubspot.
 
     Parameters:
     - access_token (string): token connecting to the private app allowing access to hubspot
@@ -52,21 +54,20 @@ def hubspot_process_results(
 
 def send_data_to_hubspot(object_type: str, properties: list, hubspot_instance: Hubspot):
     """
-    Function to send data as the correct request. Currently only as Patch so no checks are done
+    Function to send data as the correct request. Currently only as Patch so no checks are done.
 
     Parameters:
     - object_type (string): refers to hubspot objects
     - properties (list): list of properties that will be updated
     - hubspot_instance (Hubspot): HubSpot environment data will be sent to
     """
-
     hubspot_instance.send_patch(properties, object_type)
 
 
 def create_data_dict(result: list, column_names: list, known_names: list):
     """
-    This Function processes a list of results into a dict to fit the needs and expectations
-    from HubSpot
+    This Function processes a list of results into a dict to fit the needs and 
+    expectations from HubSpot.
 
     Parameters:
     - result (list) : list data from the WhereScape being table used
@@ -102,17 +103,15 @@ def create_data_dict(result: list, column_names: list, known_names: list):
 def compare_names(source_names: list, destination_names: list):
     """
     This function compares source names with destiny names for one to one data transfer.
-    It will give a warning for source names that do not appear in the list of destiny names
+    It will give a warning for source names that do not appear in the list of destiny names.
 
     Parameters:
     - source_names (list) : list of column_names from the source table being used
     - destination_names (list): list of all property names of the HubSpot object the data will go to
 
-    Returns:
+    Return:
     - known_destination_names (list) : list of property names that also exist as column names in the source table being used
-
     """
-
     known_destination_names = []
 
     for name in source_names:

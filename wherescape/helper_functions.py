@@ -1,3 +1,4 @@
+from dateutil.parser import parse
 from slugify import slugify
 
 
@@ -130,8 +131,8 @@ def filter_dict(dict_to_filter, keys_to_keep):
 
 def flatten_json(json_response, name_to_skip=None):
     """
-    This function flattens the json_response from an API request
-    Nested dicts are flattened
+    This function flattens the json_response from an API request.
+    Nested dicts are flattened.
 
     Parameters:
     json_response (object): The dict that needs to be flattened
@@ -143,14 +144,14 @@ def flatten_json(json_response, name_to_skip=None):
     out = {}
 
     def flatten(x, name=""):
-        if type(x) is dict:
+        if isinstance(x, dict):
             for a in x:
                 if name_to_skip and name_to_skip == a:
                     new_name = name
                 else:
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
-        elif type(x) is list and len(x) > 0:
+        elif isinstance(x, list) and len(x) > 0:
             i = 0
             for a in x:
                 flatten(a, name + str(i) + "_")
@@ -164,11 +165,12 @@ def flatten_json(json_response, name_to_skip=None):
 
 def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
     """
-    This function fills out empty keys for empty dicts returned by the API
+    This function fills out empty keys for empty dicts returned by the API.
+
     Parameters:
-    cleaned_json (object): Dict with the flattened and cleaned json response
-    keys_to_keep (dict array): A view object with a list of the keys from a dict
-    overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
+        - cleaned_json (object): Dict with the flattened and cleaned json response
+        - keys_to_keep (dict array): A view object with a list of the keys from a dict
+        - overwrite (dict): A dictionary with a key, value pair to overwrite the none value with a fixed value
 
     Returns:
     out: The dict with all keys, value is None when there was nothing returned from the API
@@ -183,3 +185,19 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
         else:
             out[key] = cleaned_json[key]
     return out
+
+def is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    string: str, string to check for date
+    fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try: 
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+    except OverflowError:
+        return False
