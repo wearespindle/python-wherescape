@@ -2,8 +2,9 @@ import logging
 from datetime import datetime
 
 from wherescape.connectors.hubspot.hubspot_wrapper import Hubspot
+from wherescape.wherescape import WhereScape
 
-# Ticket properties we need on want to make sure we have the info in the final ticket.
+# Ticket properties we need or want to make sure we have the info in the final ticket.
 ticket_properties = [
     "content",
     "hubspot_owner_id",
@@ -13,7 +14,7 @@ ticket_properties = [
     "notes",
 ]
 
-def merge_double_tickets(access_token: str):
+def merge_double_tickets(parameter_name: str):
     """
     Function start the process of merging tickets with the same nerds ticket id.
 
@@ -21,12 +22,17 @@ def merge_double_tickets(access_token: str):
     - access_token (str): token for connection to HubSpot
     """
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logging.info("connecting to Wherescape")
+    wherescape_instance = WhereScape()
     logging.info(
-        f"Start time: {start_time} for hubspot ticket merge"
+        f"Start time: {start_time} for hubspot merge_double_tickets"
     )
+    access_token = wherescape_instance.read_parameter(parameter_name)
+    if access_token is None:
+        logging.error(f"There was no parameter found with the name {parameter_name}.")
 
     hubspot = Hubspot(access_token)
-
+    
     all_tickets = hubspot.get_all("tickets", ticket_properties)
 
     double_ticket_ids = get_double_nerd_ids(all_tickets)

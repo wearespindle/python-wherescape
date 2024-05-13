@@ -2,7 +2,6 @@ import logging
 from enum import StrEnum, auto
 
 import hubspot.crm
-import hubspot.crm.companies
 from hubspot.client import Client
 from hubspot.crm import AssociationType, associations, companies, contacts, deals, properties, tickets
 
@@ -34,11 +33,14 @@ batch_input_map = {
 
 class Hubspot:
     def __init__(self, access_token: str):
-        self.access_token = access_token
-        self.client: Client = hubspot.client.Client.create(access_token=access_token)
         """
-        this method returns all information of contact properties
+        Set up Hubspot connection.
         """
+        try:
+            self.client: Client = Client.create(access_token=access_token)
+        except Exception:
+            logging.error("The connection with HubSpot failed. Please Check if the access token is still correct.")
+
 
     def send_patch(self, properties: list, hs_object: str):
         """
@@ -162,11 +164,11 @@ class Hubspot:
 
         Returns:
         - to_keep: ticket to be kept and updated in Hubspot
-        - to_remove: ticket which can be removed after the merge has succeeded with HubSpot.
+        - to_remove: ticket which can be removed after the merge has succeeded with Hubspot.
         """
-        # We keep the older ticket and merge what is needed from the newer ticket
-        to_remove = ticket_a if ticket_a.created_at > ticket_b.created_at else ticket_b
-        to_keep = ticket_b if ticket_a.created_at > ticket_b.created_at else ticket_a
+        # We keep the newer ticket and merge what is needed from the older ticket.
+        to_remove = ticket_a if ticket_a.created_at < ticket_b.created_at else ticket_b
+        to_keep = ticket_b if ticket_a.created_at < ticket_b.created_at else ticket_a
 
         for property_ in to_remove.properties:
             if to_remove.properties[property_] is not None and to_keep.properties[property_] is not None:
