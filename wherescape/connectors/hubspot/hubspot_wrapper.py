@@ -145,8 +145,6 @@ class Hubspot:
                 )
 
                 results.extend(api_response.results)
-                count += 1
-                print(count)
 
         except error_api.ApiException as e:
             logging.error(e)
