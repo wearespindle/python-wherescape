@@ -6,7 +6,7 @@ from .process_data import hubspot_process_results
 
 
 """
-this module retrieves the data from Wherescape
+This module uses the Wherescape environment to update hubspot objects.
 """
 
 

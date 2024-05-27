@@ -1,9 +1,12 @@
 import logging
 from enum import StrEnum, auto
+from time import sleep
 
 import hubspot.crm
 from hubspot.client import Client
 from hubspot.crm import AssociationType, associations, companies, contacts, deals, properties, tickets
+import hubspot.crm.associations
+import hubspot.crm.companies
 
 from ...helper_functions import is_date
 
@@ -29,6 +32,12 @@ batch_input_map = {
     HubspotObjectEnum.DEALS: deals.BatchInputSimplePublicObjectBatchInput,
     HubspotObjectEnum.TICKETS: tickets.BatchInputSimplePublicObjectBatchInput,
 }
+simple_search_map = {
+    HubspotObjectEnum.COMPANIES: companies.PublicObjectSearchRequest,
+    HubspotObjectEnum.CONTACTS: contacts.PublicObjectSearchRequest,
+    HubspotObjectEnum.DEALS: deals.PublicObjectSearchRequest,
+    HubspotObjectEnum.TICKETS: tickets.PublicObjectSearchRequest,
+}
 
 
 class Hubspot:
@@ -39,8 +48,7 @@ class Hubspot:
         try:
             self.client: Client = Client.create(access_token=access_token)
         except Exception:
-            logging.error("The connection with HubSpot failed. Please Check if the access token is still correct.")
-
+            logging.error("The connection with HubSpot failed. Please Check if the access token is still up to date.")
 
     def send_patch(self, properties: list, hs_object: str):
         """
@@ -82,9 +90,23 @@ class Hubspot:
         """
         input_list = update_properties_list(object_items)
         input_batch_class = get_batch_input_class(hs_object)
-        input_batch = input_batch_class(input_list)
 
+        # While more than 100, do 100 at a time.
+        if len(object_items) > 100:
+            while len(object_items) > 100:
+                input_batch = input_batch_class(input_list[100:])
+
+                try:
+                    api_batch = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
+                    api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+
+                    api_batch.update(input_batch)
+                except api_error.ApiException as e:
+                    logging.error(f"Exception when calling {hs_object} batch_api->update\n {e}")
+                del object_items[:100]
+        # When less than 100, do all in one go.
         try:
+            input_batch = input_batch_class(input_list)
             api_batch = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
             api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
 
@@ -92,12 +114,32 @@ class Hubspot:
         except api_error.ApiException as e:
             logging.error(f"Exception when calling {hs_object} batch_api->update\n {e}")
 
+    def get_object(self, record_id: str, hs_object: str, properties: list = []):
+        """
+        Method that retreives the specified object.
+
+        Params:
+        - record_id(str): unique id used to locate item in Hubspot.
+        - hs_object(str): type of the object.
+        - properties(list): optional. list of properties retreived with the object.
+
+        Returns:
+        - Hubspotobject 
+        """
+        basic_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).basic_api
+        api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+        try:
+            response = basic_api.get_by_id(record_id, properties=properties)
+            return response
+        except api_error.ApiException as e:
+            logging.error("An exception occured when calling %s batch_api_>update\n %s" % hs_object, e)
+    
     def get_properties(self, object_name: str):
         """
-        Function to get the properties of an object.
+        Function to get the properties of an object type (i.e. companies).
 
         Paramters:
-        - object_name (string): name of the hubspot object the properties need to come from
+        - object_name (string): name of the hubspot object the properties need to come from.
 
         Returns
         - property_names (list): list of all the propertynames under an object
@@ -122,11 +164,14 @@ class Hubspot:
         properties: list = [],
     ):
         """
-        Method to retrieve all items of a hubspot object.
+        Method to retrieve all items of the given hubspot object.
 
         Params:
         - hs_object (str): name of the hubspot object
         - properties (list): list of properties desired to retreieve. Empty by default
+
+        Returns:
+        - list of all items items under a hubspot object.
         """
         try:
             results = []
@@ -135,7 +180,6 @@ class Hubspot:
             api_response = basic_api.get_page(properties=properties, limit=100)
 
             results.extend(api_response.results)
-            count = 0
 
             while api_response.paging:
                 api_response = basic_api.get_page(
@@ -151,6 +195,94 @@ class Hubspot:
 
         logging.info(f"returning {len(results)} items of Hubspot {hs_object}.")
         return results
+
+    def get_associations(self, id_: str, object_type: str, associated_object_type: str):
+        """
+        Method to retreive all associations of a specified object type.
+
+        Params:
+        - id_ (str): hubspot record id of specified object.
+        - object-type (str): hubspot object type. 
+        - associated_object_type (str): hubspot object of the associations to be retrieved.
+
+        Returns:
+        - list of all associations as association objects.
+        """
+        try:
+            error_api = associations.ApiException
+            basic_api = self.client.crm.associations.v4.basic_api
+            response = basic_api.get_page(
+                object_type=object_type,
+                object_id=id_,
+                to_object_type=associated_object_type,
+                limit=500,
+            )
+            results = response.results
+
+            while response.paging:
+                response = basic_api.get_page(
+                    object_type=object_type,
+                    object_id=str(id_),
+                    to_object_type=associated_object_type,
+                    limit=500,
+                )
+                results.extend(response.results)
+            
+            return results
+
+        except error_api as e:
+            logging.error("Exception when calling basic_api->create: %s\n" % e)
+    
+    def filtered_search(
+            self, hs_object: str, filters: list = [], properties: list = [] , associations: list = []
+    ) -> list:
+        """
+        Method to find one or more objects based on provided filters.
+        If a value doesn't fit in the property (i.e. text in number property), an error will be thrown.
+
+        Params:
+        - hs_object (str): name of type of object to search in.
+        - filters (list): applied filters searcg
+        - properties (list): list of properties to be included in the return
+        - associations (list): list of association object desired to be retreived.
+
+        Returns:
+        - list of object fitting search query.
+        """
+        search_request = {
+            "limit": 100,
+            "properties": properties,
+            "associations": associations,
+            "filterGroups": [{
+                "filters": filters
+            }]
+        }
+
+        try:
+            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+            search_api = getattr(self.client.crm, hs_object).search_api
+            response = search_api.do_search(public_object_search_request=search_request)
+
+            results = response.results
+            while response.paging:
+                print(f"{response.paging=}")
+                search_request["after"] = response.paging.next.after
+                response = search_api.do_search(
+                    public_object_search_request=search_request
+                )
+                results.extend(response.results)
+                sleep(0.1) # too fast results in error
+            
+            if results:
+                logging.info(f"{len(results)} items found.")
+                # print(f"{len(results)=}")
+                return results
+            else:
+                logging.warning(f"No results were found for {hs_object} using filters: \n {filters}")
+                pass
+                
+        except error_api.ApiException as e:
+            logging.error(f"An error occured while doing a filtered search: {e}")
 
     def merge_tickets(self, ticket_a, ticket_b) -> tuple:
         """
@@ -185,21 +317,25 @@ class Hubspot:
             for key in to_remove.associations:
                 associations = to_remove.associations[key]
                 for association in associations.results:
-                    self.update_association(association, key, to_keep, "tickets")
+                    self.add_association(association, key, to_keep, "tickets")
 
         return to_keep, to_remove
 
-    def update_association(self, association, association_type, object_, object_type):
+    def add_association(self, association, association_type: str, object_, object_type: str, hubspot_defined: bool = True):
         """
         Method to add association of an object to a new object using existing connection type.
 
         Params:
-        - association: Hubspot Association object.
-        - association_type (str): type of association
+        - association: object that will be associated.
+        - association_type (str): type of association using singular form (company instead of companies).
+        - object_: object that the association will be associated to.
+        - object_type (str): type of association using singular form (company instead of companies).
+        - hubspot_defined (str): 
         """
         association_type_id = getattr(AssociationType, association.type.upper())
         association_id = association.id
         object_id= object_.id
+        defined = "HUBSPOT_DEFINED" if hubspot_defined is True else "USER_DEFINED"
 
         try:
             self.client.crm.associations.v4.basic_api.create(
@@ -208,12 +344,53 @@ class Hubspot:
                 to_object_type=association_type,
                 to_object_id= association_id,
                 association_spec=[{
-                    "associationCategory": "HUBSPOT_DEFINED",
+                    "associationCategory": defined,
                     "associationTypeId": association_type_id,
                 }],
             )
         except associations.ApiException as e:
             logging.error(f"Exception when calling batch_apo->create: {e}")
+
+    def create_association(
+            self, 
+            from_object_id: str, 
+            from_object_type: str, 
+            to_object_id: str, 
+            to_object_type: str , 
+            association_type: str, 
+            hubspot_defined: bool = True,
+    ):
+        """
+        Method that creates a new association.
+
+        Params:
+        - from_object_id (str): id of the from object.
+        - from_object_type (str): hubspot type of the from object.
+        - to_object_id (str): id of the to object.
+        - to_object_type (str): hubspot type of the to object.
+        - association_type (str): written out association. ex: "company_to_ticket"
+        - hubspot_defined (bool): whether object is Hubspot defined or user made. default True.
+
+        Returns:
+        - New association on succes.
+        """
+        association_type_id = getattr(AssociationType, association_type.upper())
+        association_spec = [{
+            "associationCategory": ("HUBSPOT_DEFINED" if hubspot_defined is True else "USER_DEFINED"),
+            "associationTypeId": association_type_id,
+        }]
+        try:
+            result = self.client.crm.associations.v4.basic_api.create(
+                object_type= from_object_type,
+                object_id=from_object_id,
+                to_object_type= to_object_type,
+                to_object_id= to_object_id,
+                association_spec= association_spec,
+            )
+        except associations.ApiException as e:
+            logging.error(f"Exception when calling basic_api->create: {e}")
+            print(f"Exception when calling basic_api->create: {e}")
+        return result
 
     def archive_object(self, object_id: str, hs_object: str):
         """
@@ -234,7 +411,7 @@ class Hubspot:
 
     def batch_archive(self, object_ids: list, hs_object:str):
         """
-        Funtion to archive one object.
+        Funtion to archive multiple objects at once.
 
         Parameters:
             object_ids (list): list of of dicts containing {"id": string} to be deleted.
@@ -251,7 +428,6 @@ class Hubspot:
             batch_api.archive(input_batch)
         except error_api.ApiException as e:
             logging.error(f"Exception when calling basic_api->archive: {e}")
-
 
 def log_errors(errors):
     """
@@ -277,7 +453,10 @@ def get_batch_input_class(hs_object:str):
     Logs as error if no input class was found.
 
     Params:
-    - hs_object (str): name of the object type
+    - hs_object (str): name of the object type.
+
+    Returns:
+    - batch input object
     """
     batch_input_class = batch_input_map.get(HubspotObjectEnum(hs_object))
     if not batch_input_class:
@@ -292,7 +471,7 @@ def update_properties_list(hubspot_items: list) -> list:
     - hubspot_items (list): list of all the hubspot_objects that need to be updated.
 
     Returns:
-    - list of all items ready to be sent to Hubspot
+    - list of all items ready to be sent to Hubspot.
     """
     final_list = []
     for item in hubspot_items:
@@ -309,3 +488,52 @@ def update_properties_list(hubspot_items: list) -> list:
         final_list.append(item_dict)
 
     return final_list
+
+def create_filter(
+        property_name: str, 
+        operator: str, 
+        property_value: str | list = None, 
+        higher_value: str = "", 
+        property_values: list = [],
+) -> dict:
+    """
+    Method that returns a fitler that can be used for hubspot searches.
+
+    Params:
+    - property_name (str): internal name of the property
+    - operator (str): operator for the search
+    - property_value (str): value the property must have. lower value if between 2 values.
+    - higer_value (str): higher value when between 2 values. 
+    - property_values (list): list of values for IN or NOT_IN operators.
+
+    Returns filter dict
+    """
+    if operator.upper() in  [
+        "LT", "LTE", "GT", "GTE", "EQ", "NEQ"
+    ]:
+        return {
+            "propertyName": property_name,
+            "operator": operator.upper(),
+            "value": property_value,
+        }
+    elif operator.upper() in ["BETWEEN"]:
+        return {
+            "propertyName": property_name,
+            "operator": operator.upper(),
+            "highValue": higher_value,
+            "value": property_value,
+        }
+    elif operator.upper() in [
+        "IN", "NOT_IN"
+    ]:
+        return {
+            "propertyName": property_name,
+            "operator": operator.upper(),
+            "value": property_values,
+        }
+    # elif operator.upper() in [
+    #     "CONTAINS_TOKEN", "NOT_CONTAINS_TOKEN"
+    # ]:
+    #     pass # something special ?
+    else:
+        logging.error("the operator doesn't exist")
