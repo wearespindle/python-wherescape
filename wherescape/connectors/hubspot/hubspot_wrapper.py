@@ -114,7 +114,7 @@ class Hubspot:
         except api_error.ApiException as e:
             logging.error(f"Exception when calling {hs_object} batch_api->update\n {e}")
 
-    def get_object(self, record_id: str, hs_object: str, properties: list = []):
+    def get_object(self, record_id: str, hs_object: str, properties: list = [], archived: bool = False):
         """
         Method that retreives the specified object.
 
@@ -122,6 +122,7 @@ class Hubspot:
         - record_id(str): unique id used to locate item in Hubspot.
         - hs_object(str): type of the object.
         - properties(list): optional. list of properties retreived with the object.
+        - archived(bool): include archived. Default False.
 
         Returns:
         - Hubspotobject 
@@ -129,17 +130,18 @@ class Hubspot:
         basic_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).basic_api
         api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
         try:
-            response = basic_api.get_by_id(record_id, properties=properties)
+            response = basic_api.get_by_id(record_id, properties=properties, archived=archived)
             return response
         except api_error.ApiException as e:
-            logging.error("An exception occured when calling %s batch_api_>update\n %s" % hs_object, e)
+            logging.error("An exception occured when calling %s batch_api_>update\n %s" % (hs_object, e))
     
-    def get_properties(self, object_name: str):
+    def get_properties(self, object_name: str, archived: bool = False):
         """
         Function to get the properties of an object type (i.e. companies).
 
         Paramters:
-        - object_name (string): name of the hubspot object the properties need to come from.
+        - object_name (string): Name of the hubspot object the properties need to come from.
+        - archived(bool): include archived. Default False.
 
         Returns
         - property_names (list): list of all the propertynames under an object
@@ -147,7 +149,7 @@ class Hubspot:
         property_names = []
         try:
             api_response = self.client.crm.properties.core_api.get_all(
-                object_type=object_name, archived=False
+                object_type=object_name, archived=archived
             )
             api_results = api_response.to_dict()
 
@@ -162,6 +164,7 @@ class Hubspot:
         self,
         hs_object: str,
         properties: list = [],
+        archived: bool = False
     ):
         """
         Method to retrieve all items of the given hubspot object.
@@ -169,6 +172,7 @@ class Hubspot:
         Params:
         - hs_object (str): name of the hubspot object
         - properties (list): list of properties desired to retreieve. Empty by default
+        - archived(bool): include archived. Default False.
 
         Returns:
         - list of all items items under a hubspot object.
@@ -186,6 +190,7 @@ class Hubspot:
                     properties=properties,
                     limit=100,
                     after=api_response.paging.next.after,
+                    archived=archived,
                 )
 
                 results.extend(api_response.results)
@@ -196,7 +201,12 @@ class Hubspot:
         logging.info(f"returning {len(results)} items of Hubspot {hs_object}.")
         return results
 
-    def get_associations(self, id_: str, object_type: str, associated_object_type: str):
+    def get_associations(
+            self, id_: str, 
+            object_type: str, 
+            associated_object_type: str, 
+            archived: bool = False,
+    ):
         """
         Method to retreive all associations of a specified object type.
 
@@ -204,6 +214,7 @@ class Hubspot:
         - id_ (str): hubspot record id of specified object.
         - object-type (str): hubspot object type. 
         - associated_object_type (str): hubspot object of the associations to be retrieved.
+        - archived(bool): include archived. Default False.
 
         Returns:
         - list of all associations as association objects.
@@ -216,6 +227,7 @@ class Hubspot:
                 object_id=id_,
                 to_object_type=associated_object_type,
                 limit=500,
+                archived=archived,
             )
             results = response.results
 
@@ -234,7 +246,12 @@ class Hubspot:
             logging.error("Exception when calling basic_api->create: %s\n" % e)
     
     def filtered_search(
-            self, hs_object: str, filters: list = [], properties: list = [] , associations: list = []
+            self, 
+            hs_object: str, 
+            filters: list = [], 
+            properties: list = [] , 
+            associations: list = [], 
+            archived: bool = False,
     ) -> list:
         """
         Method to find one or more objects based on provided filters.
@@ -245,6 +262,7 @@ class Hubspot:
         - filters (list): applied filters searcg
         - properties (list): list of properties to be included in the return
         - associations (list): list of association object desired to be retreived.
+        - archived(bool): include archived. Default False.
 
         Returns:
         - list of object fitting search query.
@@ -261,11 +279,10 @@ class Hubspot:
         try:
             error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
             search_api = getattr(self.client.crm, hs_object).search_api
-            response = search_api.do_search(public_object_search_request=search_request)
+            response = search_api.do_search(public_object_search_request=search_request, archived=archived)
 
             results = response.results
             while response.paging:
-                print(f"{response.paging=}")
                 search_request["after"] = response.paging.next.after
                 response = search_api.do_search(
                     public_object_search_request=search_request
@@ -321,7 +338,14 @@ class Hubspot:
 
         return to_keep, to_remove
 
-    def add_association(self, association, association_type: str, object_, object_type: str, hubspot_defined: bool = True):
+    def add_association(
+            self, 
+            association, 
+            association_type: str, 
+            object_, 
+            object_type: str, 
+            hubspot_defined: bool = True, 
+    ):
         """
         Method to add association of an object to a new object using existing connection type.
 
@@ -369,7 +393,7 @@ class Hubspot:
         - to_object_id (str): id of the to object.
         - to_object_type (str): hubspot type of the to object.
         - association_type (str): written out association. ex: "company_to_ticket"
-        - hubspot_defined (bool): whether object is Hubspot defined or user made. default True.
+        - hubspot_defined (bool): whether object is Hubspot defined or user made. Default True.
 
         Returns:
         - New association on succes.
