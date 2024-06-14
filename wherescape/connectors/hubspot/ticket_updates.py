@@ -34,7 +34,7 @@ def merge_double_tickets(parameter_name: str):
     )
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
-        logging.error(f"No Token found under parameter: {parameter_name}.")
+        logging.error(f"Nothing Token found under parameter: {parameter_name}.")
         exit()        
 
     hubspot = Hubspot(access_token)
@@ -103,7 +103,7 @@ def hubspot_update_company_associaton(parameter_name: str):
     # get parameter
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
-        logging.error(f"No Token found under parameter: {parameter_name}.")
+        logging.error(f"Nothing Token found under parameter: {parameter_name}.")
         exit()
 
     hubspot = Hubspot(access_token)
