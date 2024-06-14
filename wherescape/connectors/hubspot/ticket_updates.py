@@ -2,10 +2,11 @@ import logging
 from datetime import datetime
 
 from wherescape.connectors.hubspot.hubspot_wrapper import Hubspot, create_filter
+from wherescape.connectors.hubspot.utils import get_double_nerd_ids, get_double_tickets
 from wherescape.wherescape import WhereScape
 
 """
-This module reuqires only the access token to update information
+This module requires only the access token to update information
 """
 
 # Ticket properties we need or want to make sure we have the info in the final ticket.
@@ -33,39 +34,43 @@ def merge_double_tickets(parameter_name: str):
     )
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
-        logging.error(f"There was no parameter found with the name {parameter_name}.")
+        logging.error(f"No Token found under parameter: {parameter_name}.")
+        exit()        
 
     hubspot = Hubspot(access_token)
     
     all_tickets = hubspot.get_all("tickets", ticket_properties)
 
-    double_ticket_ids = _get_double_nerd_ids(all_tickets)
+    double_ticket_ids = get_double_nerd_ids(all_tickets)
     delete_tickets = []
     update_tickets = []
     # Work through all nerd ticket ids.
     logging.info("Merging tickets locally.")
     for id_ in double_ticket_ids:
-        ticket_list = _get_double_tickets(all_tickets, str(id_))
+        ticket_list = get_double_tickets(all_tickets, str(id_))
 
-        # merge the tickets until only one is left.
+        # Merge the tickets.
+        # Set first ticket to keep and remove from list.
+        keep_ticket = ticket_list.pop(0)
         count = len(ticket_list)
-        while count > 1:
-            keep, delete = hubspot.merge_tickets(ticket_list[0], ticket_list[1])
-            ticket_list[0] = keep
-            ticket_list.pop(1)
+        while count > 0:
+            # Merge current keep and first in ticket_list and get (new) keep ticket
+            keep_ticket, delete = hubspot.merge_tickets(keep_ticket, ticket_list.pop(0))
             delete_tickets.append(delete)
             count = len(ticket_list)
-        update_tickets.append(ticket_list[0])
+        update_tickets.append(keep_ticket)
 
     logging.info(f"Updating {len(update_tickets)} tickets.")
-     # Does max 100 at a time
+    # Does max 100 at a time
     if len(update_tickets) > 100:
         while len(update_tickets) > 100:
             batch_list = update_tickets[:100]
             hubspot.batch_archive(batch_list, "tickets")
 
             del update_tickets[:100]
-    hubspot.update_batch(update_tickets, "tickets")
+    result = hubspot.update_batch(update_tickets, "tickets") 
+    if result is None:
+        exit() # exit if nothing was updated. to avoid archiving everything
 
     delete_ids = []
     for ticket in delete_tickets:
@@ -98,22 +103,16 @@ def hubspot_update_company_associaton(parameter_name: str):
     # get parameter
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
-        logging.error(f"There was no parameter found with the name {parameter_name}.")
+        logging.error(f"No Token found under parameter: {parameter_name}.")
+        exit()
 
     hubspot = Hubspot(access_token)
 
-    ticket_filters = [{
-        "propertyName": "nerds_customer_email",
-        "operator": "EQ",
-        "value": "anoniem@voys.nerds.nl",
-    },{
-        "propertyName": "nerds_customer_id",
-        "operator": "HAS_PROPERTY",
-    },{
-        "propertyName": "nerds_customer_id",
-        "operator": "NEQ",
-        "value": "123327"       # doesn't exist. Seems like a filler
-    }]
+    ticket_filters = []
+    ticket_filters.append(create_filter("nerds_customer_email", "EQ", "anoniem@voys.nerds.nl"))
+    ticket_filters.append(create_filter("nerds_customer_id", "HAS_PROPERTY"))
+    ticket_filters.append(create_filter("nerds_customer_id", "NEQ", "123327"))
+
     tickets = hubspot.filtered_search(hs_object="tickets", filters=ticket_filters, properties=["nerds_customer_id"])
 
     nerds_company = None
@@ -152,39 +151,5 @@ def hubspot_update_company_associaton(parameter_name: str):
                         association_type="primary_company_to_ticket"
                     )
             else:
-                logging.error(f"customer_id could not be used: {customer_id}")
+                logging.warning(f"customer_id could not be used: {customer_id}")
 
-def _get_double_nerd_ids(tickets: list) -> list:
-    """
-    Function to retrieve all nerd ticket id that appear multiple times.
-
-    Params:
-    - tickets (list): list of hubspot tickets
-
-    Returns:
-    - list if nerd ticket id's that appear more than once
-    """
-    seen_nerd_ticket_id = {}
-    for ticket in tickets:
-        nerds_ticket = ticket.properties["nerds_ticket_id"]
-        if ticket.properties["nerds_ticket_id"] is not None:
-
-            if nerds_ticket not in seen_nerd_ticket_id:
-                seen_nerd_ticket_id[nerds_ticket] = 1
-            else:
-                seen_nerd_ticket_id[nerds_ticket] += 1
-
-    return [k for k, count in seen_nerd_ticket_id.items() if count > 1]
-
-def _get_double_tickets(tickets: list, id_: str) -> list:
-    """
-    Function to collect all tickets with the provided id.
-
-    Params:
-    - tickets (list): list of Hubspot tickets
-    - id_ (str): nerds ticket id to look for.
-
-    Returns:
-    - list of tickets with the given nerds_ticket_id
-    """
-    return [ticket for ticket in tickets if (ticket.properties["nerds_ticket_id"]) == id_]

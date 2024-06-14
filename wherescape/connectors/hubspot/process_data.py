@@ -26,7 +26,7 @@ def hubspot_process_results(
     properties = []
 
     object_name = get_object_name(table_name)
-    property_names = hubspot_instance.get_properties(object_name)
+    property_names = hubspot_instance.get_property_names(object_name)
     overlapping_names = compare_names(column_names, property_names)
 
     """
@@ -61,7 +61,7 @@ def send_data_to_hubspot(object_type: str, properties: list, hubspot_instance: H
     - properties (list): list of properties that will be updated
     - hubspot_instance (Hubspot): HubSpot environment data will be sent to
     """
-    hubspot_instance.send_patch(properties, object_type)
+    hubspot_instance.update_batch(properties, object_type)
 
 
 def create_data_dict(result: list, column_names: list, known_names: list):

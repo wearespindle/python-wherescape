@@ -4,9 +4,15 @@ from time import sleep
 
 import hubspot.crm
 from hubspot.client import Client
-from hubspot.crm import AssociationType, associations, companies, contacts, deals, properties, tickets
-import hubspot.crm.associations
-import hubspot.crm.companies
+from hubspot.crm import (
+    AssociationType, 
+    associations, 
+    companies, 
+    contacts, 
+    deals, 
+    properties, 
+    tickets,
+)
 
 from ...helper_functions import is_date
 
@@ -49,6 +55,7 @@ class Hubspot:
             self.client: Client = Client.create(access_token=access_token)
         except Exception:
             logging.error("The connection with HubSpot failed. Please Check if the access token is still up to date.")
+            exit()
 
     def send_patch(self, properties: list, hs_object: str):
         """
@@ -62,23 +69,24 @@ class Hubspot:
 
         batch_input_class = get_batch_input_class(hs_object)
         batch_input = batch_input_class(inputs=properties)
+        batch_api = getattr(self.client.crm, hs_object).batch_api
+        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
         try:
-            batch_api = getattr(self.client.crm, hs_object).batch_api
-            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
             response = batch_api.update(
                 batch_input_simple_public_object_batch_input=batch_input
             )
         except error_api.ApiException as e:
             logging.error("Exception when calling batch_api->update: %s\n" % e)
+            return None
 
         try:
             response.errors
             errors = response.errors
             if len(errors) > 0:
                 log_errors(errors)
-
         except Exception:
             pass
+        return response
 
     def update_batch(self, object_items: list, hs_object:str):
         """
@@ -90,19 +98,19 @@ class Hubspot:
         """
         input_list = update_properties_list(object_items)
         input_batch_class = get_batch_input_class(hs_object)
+        response = []
+        api_batch = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
+        api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
 
         # While more than 100, do 100 at a time.
         if len(object_items) > 100:
             while len(object_items) > 100:
                 input_batch = input_batch_class(input_list[100:])
-
                 try:
-                    api_batch = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
-                    api_error = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
-
-                    api_batch.update(input_batch)
+                    response.append(api_batch.update(input_batch))
                 except api_error.ApiException as e:
                     logging.error(f"Exception when calling {hs_object} batch_api->update\n {e}")
+                    return None #stopping the program
                 del object_items[:100]
         # When less than 100, do all in one go.
         try:
@@ -135,9 +143,9 @@ class Hubspot:
         except api_error.ApiException as e:
             logging.error("An exception occured when calling %s batch_api_>update\n %s" % (hs_object, e))
     
-    def get_properties(self, object_name: str, archived: bool = False):
+    def get_property_names(self, object_name: str, archived: bool = False):
         """
-        Function to get the properties of an object type (i.e. companies).
+        Function to get the property names of an object type (i.e. companies).
 
         Paramters:
         - object_name (string): Name of the hubspot object the properties need to come from.
@@ -177,14 +185,13 @@ class Hubspot:
         Returns:
         - list of all items items under a hubspot object.
         """
+        results = []
+        basic_api = getattr(self.client.crm, hs_object).basic_api
+        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
         try:
-            results = []
-            basic_api = getattr(self.client.crm, hs_object).basic_api
-            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
             api_response = basic_api.get_page(properties=properties, limit=100)
-
             results.extend(api_response.results)
-
+            self.client.crm.companies.basic_api.get_page
             while api_response.paging:
                 api_response = basic_api.get_page(
                     properties=properties,
@@ -219,14 +226,14 @@ class Hubspot:
         Returns:
         - list of all associations as association objects.
         """
+        error_api = associations.ApiException
+        basic_api = self.client.crm.associations.v4.basic_api
         try:
-            error_api = associations.ApiException
-            basic_api = self.client.crm.associations.v4.basic_api
             response = basic_api.get_page(
                 object_type=object_type,
                 object_id=id_,
                 to_object_type=associated_object_type,
-                limit=500,
+                limit=100,
                 archived=archived,
             )
             results = response.results
@@ -234,9 +241,11 @@ class Hubspot:
             while response.paging:
                 response = basic_api.get_page(
                     object_type=object_type,
-                    object_id=str(id_),
+                    object_id=id_,
                     to_object_type=associated_object_type,
-                    limit=500,
+                    limit=100,
+                    archived=archived,
+                    after=response.paging.next.after,
                 )
                 results.extend(response.results)
             
@@ -275,12 +284,10 @@ class Hubspot:
                 "filters": filters
             }]
         }
-
+        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+        search_api = getattr(self.client.crm, hs_object).search_api
         try:
-            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
-            search_api = getattr(self.client.crm, hs_object).search_api
             response = search_api.do_search(public_object_search_request=search_request, archived=archived)
-
             results = response.results
             while response.paging:
                 search_request["after"] = response.paging.next.after
@@ -289,17 +296,15 @@ class Hubspot:
                 )
                 results.extend(response.results)
                 sleep(0.1) # too fast results in error
-            
-            if results:
-                logging.info(f"{len(results)} items found.")
-                # print(f"{len(results)=}")
-                return results
-            else:
-                logging.warning(f"No results were found for {hs_object} using filters: \n {filters}")
-                pass
-                
         except error_api.ApiException as e:
             logging.error(f"An error occured while doing a filtered search: {e}")
+
+        if results:
+            logging.info(f"{len(results)} items found.")
+            return results
+        else:
+            logging.warning(f"No results were found for {hs_object} using filters: \n {filters}")
+            pass
 
     def merge_tickets(self, ticket_a, ticket_b) -> tuple:
         """
@@ -373,7 +378,7 @@ class Hubspot:
                 }],
             )
         except associations.ApiException as e:
-            logging.error(f"Exception when calling batch_apo->create: {e}")
+            logging.error(f"Exception when calling batch_api->create: {e}")
 
     def create_association(
             self, 
@@ -413,7 +418,6 @@ class Hubspot:
             )
         except associations.ApiException as e:
             logging.error(f"Exception when calling basic_api->create: {e}")
-            print(f"Exception when calling basic_api->create: {e}")
         return result
 
     def archive_object(self, object_id: str, hs_object: str):
@@ -425,10 +429,10 @@ class Hubspot:
             object_type (str): husbpot object type,
         """
         logging.info(f"Archiving {hs_object} object with record_id {object_id}.")
+        basic_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).basic_api
+        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
 
         try:
-            basic_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).basic_api
-            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
             basic_api.archive(object_id)
         except error_api.ApiException as e:
             logging.error(f"Exception when calling basic_api->archive: {e}")
@@ -445,13 +449,14 @@ class Hubspot:
         input_batch_class = get_batch_input_class(hs_object)
         input_batch = input_batch_class(object_ids)
 
-        try:
-            batch_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
-            error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
+        batch_api = getattr(self.client.crm, HubspotObjectEnum(hs_object)).batch_api
+        error_api = getattr(hubspot.crm, HubspotObjectEnum(hs_object))
 
-            batch_api.archive(input_batch)
+        try:
+            return batch_api.archive(input_batch)
         except error_api.ApiException as e:
             logging.error(f"Exception when calling basic_api->archive: {e}")
+
 
 def log_errors(errors):
     """
@@ -516,7 +521,7 @@ def update_properties_list(hubspot_items: list) -> list:
 def create_filter(
         property_name: str, 
         operator: str, 
-        property_value: str | list = None, 
+        property_value: str = None, 
         higher_value: str = "", 
         property_values: list = [],
 ) -> dict:
