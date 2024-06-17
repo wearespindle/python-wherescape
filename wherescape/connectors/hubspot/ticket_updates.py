@@ -107,49 +107,61 @@ def hubspot_update_company_associaton(parameter_name: str):
         exit()
 
     hubspot = Hubspot(access_token)
+    
+    # Get Nerds company.
+    filters = []
+    filters.append(create_filter("domain", "EQ", "nerds.nl"))
+    filters.append(create_filter("city", "EQ", "utrecht"))
+    try:
+        nerds_company = hubspot.filtered_search("companies", filters, ["associations.company"])[0]
+    except: # if something goes wrong when getting Nerds company
+        logging.error("problem while locating company")
+    
 
+    # Get tickets with Nerds as associated company.
     ticket_filters = []
-    ticket_filters.append(create_filter("nerds_customer_email", "EQ", "anoniem@voys.nerds.nl"))
+    ticket_filters.append(create_filter("associations.company", "EQ", nerds_company.id))
     ticket_filters.append(create_filter("nerds_customer_id", "HAS_PROPERTY"))
-    ticket_filters.append(create_filter("nerds_customer_id", "NEQ", "123327"))
-
     tickets = hubspot.filtered_search(hs_object="tickets", filters=ticket_filters, properties=["nerds_customer_id"])
+    logging.info("%i tickets found with " % len(tickets) )
 
-    nerds_company = None
     for ticket in tickets:
         correct_company = None
-        # get customer_id
         customer_id = ticket.properties["nerds_customer_id"]
+
+        # Remove nerds ticket association
+        hubspot.remove_association(nerds_company.id, "companies", ticket.id, "tickets")
+
         # Get associated Companies
         associated_companies = hubspot.get_associations(ticket.id, "ticket", "company")
         # see if correct company is already there.
         for association in associated_companies:
             company = hubspot.get_object(
-                association.to_object_id, "companies", ["client_id", "domain"]
+                association.to_object_id, "companies", ["client_id", "domain", "city"]
             )
-
-            if nerds_company is None:
-                if company.properties["domain"] == "nerds.nl":
-                    nerds_company = company
-                elif company.properties["client_id"] == customer_id:
-                    # correct company found
-                    correct_company = company
-                    break
-            elif company.properties["client_id"] == customer_id:
+            if company is not None: # we can stop once we find the correct one
                 correct_company = company
                 break
+        
         if correct_company is None:
             filters = []
             # Client id is numeric, so if customer id is not, the search would give an error.
             if customer_id.isnumeric():
                 filters.append(create_filter("client_id", "EQ", customer_id))
                 association = hubspot.filtered_search("companies", filters)
+
                 if association is not None and len(association) == 1:
-                    hubspot.create_association(
-                        from_object= company.id, from_object_type= "companies",
-                        to_object= ticket.id, to_object_type="tickets",
+                    response = hubspot.create_association(
+                        from_object_id= company.id, 
+                        from_object_type= "companies",
+                        to_object_id= ticket.id, 
+                        to_object_type="tickets",
                         association_type="primary_company_to_ticket"
                     )
+                    if response is None: # no response indicates it failed
+                        logging.warning("Correct company could not be set for ticket with record id %s." % ticket.id)
+                    
             else:
                 logging.warning(f"customer_id could not be used: {customer_id}")
+        
 
