@@ -64,7 +64,8 @@ double tickets and is therefore a required property.
 ## Fixing Company on ticket using ticket nerds_customer_id and company client id
 The method `hubspot_update_company_associaton` in connectors.hubspot.ticket_updates.py adds the correct primary company association to
 tickets based on the properties `nerds_customer_id` in tickets and `client_id` in companies. If these values are set correctly in 
-Hubspot, the correct company will be set as the primary company for the ticket.
+Hubspot, the correct company will be set as the primary company for the ticket. The association with Nerds company will be removed regardless
+of whether the correct company is associated or not.
 
 ### Usage
 To use this script, run the method with the name of the wherescape parameter referring to the required token for the Hubspot connection.
