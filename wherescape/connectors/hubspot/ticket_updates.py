@@ -103,7 +103,7 @@ def hubspot_update_company_associaton(parameter_name: str):
     # get parameter
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
-        logging.error(f"Nothing Token found under parameter: {parameter_name}.")
+        logging.error(f"Nothing found under parameter: {parameter_name}.")
         exit()
 
     hubspot = Hubspot(access_token)
@@ -112,16 +112,18 @@ def hubspot_update_company_associaton(parameter_name: str):
     filters = []
     filters.append(create_filter("domain", "EQ", "nerds.nl"))
     filters.append(create_filter("city", "EQ", "utrecht"))
-    try:
-        nerds_company = hubspot.filtered_search("companies", filters, ["associations.company"])[0]
-    except: # if something goes wrong when getting Nerds company
+
+    nerds_company = hubspot.filtered_search("companies", filters, ["associations.company"])[0]
+    if nerds_company is None:
         logging.error("problem while locating company")
+        return
     
 
     # Get tickets with Nerds as associated company.
     ticket_filters = []
     ticket_filters.append(create_filter("associations.company", "EQ", nerds_company.id))
     ticket_filters.append(create_filter("nerds_customer_id", "HAS_PROPERTY"))
+    ticket_filters.append(create_filter("nerds_customer_email", "EQ", "anoniem@voys.nerds.nl"))
     tickets = hubspot.filtered_search(hs_object="tickets", filters=ticket_filters, properties=["nerds_customer_id"])
     logging.info("%i tickets found with " % len(tickets) )
 

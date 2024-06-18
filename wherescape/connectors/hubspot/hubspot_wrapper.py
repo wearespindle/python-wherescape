@@ -361,7 +361,7 @@ class Hubspot:
         defined = "HUBSPOT_DEFINED" if hubspot_defined is True else "USER_DEFINED"
 
         try:
-            self.client.crm.associations.v4.basic_api.create(
+            return self.client.crm.associations.v4.basic_api.create(
                 object_type=object_type,
                 object_id=object_id,
                 to_object_type=association_type,
