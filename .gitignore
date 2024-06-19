@@ -9,3 +9,4 @@ virtual/
 config.py
 script_tester.py
 .python-version
+secret.py

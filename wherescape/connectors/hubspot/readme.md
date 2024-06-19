@@ -56,10 +56,16 @@ If only one environment exists, there's no need to specify the environment as th
 For a connection with the Sandbox, add `_dev` at the end of the parameter.
 
 ## Merging Tickets
-The method merge_double_tickets in connectors.hubspot.ticket_merge.py provides functionality to merge ticket information 
+The method `merge_double_tickets` in connectors.hubspot.ticket_updates.py provides functionality to merge ticket information 
 based on having the same nerds_ticket_id while keeping content and note associations of all the merged tickets. 
 One of each ticket will be kept and all others are archieved. The property `nerds_ticket_id` is used to find these 
 double tickets and is therefore a required property.
+
+## Fixing Company on ticket using ticket nerds_customer_id and company client id
+The method `hubspot_update_company_associaton` in connectors.hubspot.ticket_updates.py adds the correct primary company association to
+tickets based on the properties `nerds_customer_id` in tickets and `client_id` in companies. If these values are set correctly in 
+Hubspot, the correct company will be set as the primary company for the ticket. The association with Nerds company will be removed regardless
+of whether the correct company is associated or not.
 
 ### Usage
 To use this script, run the method with the name of the wherescape parameter referring to the required token for the Hubspot connection.
