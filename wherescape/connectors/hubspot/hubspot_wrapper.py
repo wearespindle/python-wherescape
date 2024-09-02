@@ -543,14 +543,21 @@ def update_properties_list(hubspot_items: list) -> list:
     """
     final_list = []
     for item in hubspot_items:
-        properties = item.properties
+        if type(properties) == dict:
+            properties = item["properties"]
+        else:
+            properties = item.properties
         change_properties = {}
         for prop in properties:
             # not changing properties set by hubspot or the create date.
             if not prop.startswith("hs_") and prop != "createdate":
                 change_properties[prop] = properties[prop]
+        if type(item) == dict:
+            id = item["id"]
+        else:
+            id = item.id
         item_dict = {
-            "id": item.id,
+            "id": id,
             "properties": change_properties,
         }
         final_list.append(item_dict)
