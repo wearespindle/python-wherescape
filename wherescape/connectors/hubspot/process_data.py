@@ -119,6 +119,7 @@ def compare_names(source_names: list, destination_names: list):
         if name not in destination_names and name != "record_id" and "dss_" not in name:
             unknown_destination_names.append(name)
         elif "dss_" in name:
+            # These are generated columsn for during the modeling process.
             pass
         else:
             known_destination_names.append(name)
