@@ -113,18 +113,18 @@ def compare_names(source_names: list, destination_names: list):
     - known_destination_names (list) : list of property names that also exist as column names in the source table being used
     """
     known_destination_names = []
+    unknown_destination_names = []
 
     for name in source_names:
         if name not in destination_names and name != "record_id" and "dss_" not in name:
-            """
-            Only prints a warning if it doesn't have dss_ in it
-            """
-            logging.warning(
-                "source name: %s does not exist in the destination. Please check its existence and spelling"
-                % name
-            )
+            unknown_destination_names.append(name)
+        elif "dss_" in name:
+            # These are generated columsn for during the modeling process.
+            pass
         else:
             known_destination_names.append(name)
+    if len(unknown_destination_names) > 0:
+        logging.warning(f"following properties were not located in destination {unknown_destination_names}")
 
     return known_destination_names
 
