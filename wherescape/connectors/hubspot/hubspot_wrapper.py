@@ -543,7 +543,7 @@ def update_properties_list(hubspot_items: list) -> list:
     """
     final_list = []
     for item in hubspot_items:
-        if type(properties) == dict:
+        if type(item) == dict:
             properties = item["properties"]
         else:
             properties = item.properties
