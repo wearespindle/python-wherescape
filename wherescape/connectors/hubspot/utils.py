@@ -1,4 +1,3 @@
-
 def get_double_nerd_ids(tickets: list) -> list:
     """
     Function to retrieve all nerd ticket id that appear multiple times.
