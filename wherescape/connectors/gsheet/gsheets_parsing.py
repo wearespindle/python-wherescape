@@ -66,7 +66,7 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--workbook_name", action="store", help="Name of the Google Sheet/ workbook"
+        "workbook_name", action="store", help="Name of the Google Sheet/ workbook"
     )  # positional argument
     parser.add_argument("--sheet", help="Name of the sheet in the workbook", default="Sheet1")
     parser.add_argument("--range", help="Cell range to retrieve")
