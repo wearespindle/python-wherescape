@@ -7,10 +7,15 @@ from datetime import datetime
 from gspread import (
     Client,
     Spreadsheet,
-    SpreadsheetNotFound,
     Worksheet,
-    WorksheetNotFound,
 )
+from gspread.exceptions import (
+    SpreadsheetNotFound,
+    WorksheetNotFound,
+    APIError,
+)
+
+
 
 from ...helper_functions import convert_string, remove_empty_rows_and_columns, get_python_type
 
@@ -77,7 +82,7 @@ class Gsheet:
             self.set_spreadsheet(url, name)
             return self.spreadsheet
 
-    def set_worksheet(self, title: str = "Sheet1"):
+    def set_worksheet(self, title: str = None):
         """
         Sets the worksheet based on the given title.
         A spreadsheet needs to have already been set.
@@ -88,22 +93,15 @@ class Gsheet:
         """
         try:
             if self.spreadsheet is None:
-                logging.error("No spreadsheet available to take the worksheet from.")
-                raise SpreadsheetNotFound
+                logging.info("No name was provided. Using the first sheet")
+                self.spreadsheet = self.worksheet.get_worksheet(0)
             else:
                 self.worksheet = self.spreadsheet.worksheet(title)
-        except WorksheetNotFound:
-            logging.warning("Invalid worksheet title in --sheet")
-            try:
-                # using the automated name used by Apple.
-                # in case it was imported to google from there.
-                title = "Table1"
-                self.worksheet = self.spreadsheet.worksheet(title)
-                logging.info(f"worksheet found with title {title}")
-            except WorksheetNotFound as notFound:
-                logging.error("No worksheet was found")
-                raise notFound
-        logging.info(f"worksheet found with title {title}")
+        except WorksheetNotFound as notFound:
+            logging.warning("No worksheet was found")
+            raise notFound
+
+        logging.info(f"worksheet found")
 
     def get_worksheet(self, title: str = "") -> Worksheet:
         """
@@ -123,14 +121,21 @@ class Gsheet:
             self.set_worksheet()
         return self.worksheet
 
-    def set_content(self):
+    def set_content(self, range: str = None):
         """
         Retreives content from gsheet. removes empty rows.
         """
-        content = self.worksheet.get_all_values()
+        if range:
+            try:
+                content = self.worksheet.get(range)
+            except APIError as e:
+                logging.error(f"Invalid range: {range}")
+                raise e
+        else:
+            content = self.worksheet.get_all_values()
         self.content = remove_empty_rows_and_columns(content)
 
-    def get_content(self) -> list:
+    def get_content(self, range: str = None) -> list:
         """
         Getter for content. Calls setter if not already present.
 
@@ -138,38 +143,48 @@ class Gsheet:
         - List of lists containing the content of the sheet.
         """
         if self.content is None:
-            self.set_content()
+            self.set_content(range)
         return self.content
 
-    def set_header(self, no_header: str = None):
+    def set_header(self, no_header: str = None, header_range: str = None):
         """
         Creates the header for the content. Takes it from content if no_header is False.
 
         Params:
-        - no_header (str): (optional) input of args.no_header (legacy naming)
+        - no_header (str): (optional) input of args.no_header
+        - header_Range (str): (optional) range of the header example: "A1:B5"
         """
         # Set content if none is set yet.
         if self.content is None:
             self.set_content()
         
         if not no_header:
+            if header_range:
+                try:
+                    row = self.worksheet.get(header_range)
+                    self.header = ["column_" + str(i + 1) if value == "" else value for i, value in enumerate(row)]
+                except APIError as e:
+                    logging.error(f"Invalid Header range: {header_range}")
+                    raise e
+
             row = self.content.pop(0)
             self.header = ["column_" + str(i + 1) if value == "" else value for i, value in enumerate(row)]
         else:
             self.header = ["column_" + str(i + 1) for i in range(len(self.content[0]))]
 
-    def get_header(self, no_header: str = None) -> list:
+    def get_header(self, no_header: bool = False, range: str = None) -> list:
         """
         Getter for the header. Calls setter if not already present.
 
         Params:
-        - no_header (str): (optional) input of args.no_header (legacy naming)
+        - no_header (str): (optional) True if no header is provided (legacy naming)
+        - range (str): (optional) range of the header.
 
         Returns
         - List containing header values.
         """
         if self.header == []:
-            self.set_header(no_header)
+            self.set_header(no_header, range)
         return self.header
 
     def set_column_types(self):
@@ -224,8 +239,8 @@ def set_gsheet_variables(gsheet: Gsheet, url: str, args):
     gsheet.set_worksheet(title=args.sheet)
 
     # Set all content.
-    gsheet.set_content()
-    gsheet.set_header(args.no_header)
+    gsheet.set_content(args.range)
+    gsheet.set_header(args.no_header, args.header_range)
     gsheet.set_column_types()
 
 def _authorize() -> Client:

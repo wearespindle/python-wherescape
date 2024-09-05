@@ -36,9 +36,8 @@ def google_sheet_load_data():
 
     args = parse_gspread_arguments(workbook_details)
     set_gsheet_variables(gsheet, url, args)
-    content = gsheet.get_content()
+    content = gsheet.get_content(args.range)
     # For name consistency.
-    # gsheet_header = create_column_names(gsheet.get_header())
     gsheet_header = gsheet.get_header()
 
     # Missing from wherescape (added after metadata upload)

@@ -51,7 +51,7 @@ def parse_gspread_arguments(argument: str) -> argparse.Namespace:
         )
         row_index_range = a1_range_to_grid_range(args.range).get("startRowIndex")
         if row_index_header_range == row_index_range:
-            logging.error(
+            logging.warning(
                 "If both a range and a header_range are specified, they can not overlap."
             )
     return args
@@ -66,13 +66,13 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "workbook_name", action="store", help="Name of the Google Sheet/ workbook"
+        "workbook_name", help="Name of the Google Sheet/ workbook", default=None
     )  # positional argument
-    parser.add_argument("--sheet", help="Name of the sheet in the workbook", default="Sheet1")
+    parser.add_argument("--sheet", help="Name of the sheet in the workbook")
     parser.add_argument("--range", help="Cell range to retrieve")
-    parser.add_argument("--header_range", action="store_true", help="Cell range to be used as header")
+    parser.add_argument("--header_range", help="Cell range to be used as header")
     parser.add_argument(
-        "--no_header", action="store_true", help="Specify if table has no header"
+       "--no_header", action="store_true", help="Specify if table has no header"
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Print debug messages"
