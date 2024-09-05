@@ -127,7 +127,7 @@ class Gsheet:
         """
         if range:
             try:
-                content = self.worksheet.get(range)
+                content = self.worksheet.get(range, )
             except APIError as e:
                 logging.error(f"Invalid range: {range}")
                 raise e
@@ -161,14 +161,15 @@ class Gsheet:
         if not no_header:
             if header_range:
                 try:
-                    row = self.worksheet.get(header_range)
+                    row = self.worksheet.get(header_range)[0]
                     self.header = ["column_" + str(i + 1) if value == "" else value for i, value in enumerate(row)]
+                    self.content.pop(0)
                 except APIError as e:
                     logging.error(f"Invalid Header range: {header_range}")
                     raise e
-
-            row = self.content.pop(0)
-            self.header = ["column_" + str(i + 1) if value == "" else value for i, value in enumerate(row)]
+            else:
+                row = self.content.pop(0)
+                self.header = ["column_" + str(i + 1) if value == "" else value for i, value in enumerate(row)]
         else:
             self.header = ["column_" + str(i + 1) for i in range(len(self.content[0]))]
 

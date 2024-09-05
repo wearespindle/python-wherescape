@@ -50,9 +50,9 @@ def parse_gspread_arguments(argument: str) -> argparse.Namespace:
             "startRowIndex"
         )
         row_index_range = a1_range_to_grid_range(args.range).get("startRowIndex")
-        if row_index_header_range == row_index_range:
+        if row_index_header_range != row_index_range:
             logging.warning(
-                "If both a range and a header_range are specified, they can not overlap."
+                "If both a range and a header_range are specified, they should overlap."
             )
     return args
 
