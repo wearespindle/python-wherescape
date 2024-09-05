@@ -25,6 +25,7 @@ def parse_gspread_arguments(argument: str) -> argparse.Namespace:
     try:
         args = parser.parse_args(argument_list)
     except SystemExit as ex:
+        logging.warning("There might be a mistake with the arguments. Ensure it's all correct.")
         logging.error(ex)
 
     if args.range:
