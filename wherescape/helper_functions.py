@@ -13,7 +13,6 @@ def create_column_names(display_names=[]):
     Columns get truncated to 59 characters, because 63 characters is the max
     column lenght for Postgres columns.
     """
-    i = 0
     columns = []
     for display_name in display_names:
         column = slugify(display_name, separator="_", max_length=59)
@@ -21,7 +20,6 @@ def create_column_names(display_names=[]):
             column = "column"
         column = f"{column}"
         columns.append(column)
-        i += 1
     return columns
 
 
