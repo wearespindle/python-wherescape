@@ -4,13 +4,13 @@ import re
 from datetime import datetime, UTC
 from itertools import zip_longest
 
-from .gsheets_wrapper import Gsheet, set_gsheet_variables
+from .gsheets_wrapper import Gsheet
 from .gsheets_parsing import parse_gspread_arguments
 from ...helper_functions import set_date_to_ymd
 from ...wherescape import WhereScape
 
 
-def google_sheet_load_data():
+def python_gsheet_load_data():
     """
     Loads content of a google sheet file into a table from a google sheet.
     Relevant metadata must already be created.
@@ -19,9 +19,14 @@ def google_sheet_load_data():
     logging.info("Start time: %s" % start_time.strftime("%Y-%m-%d %H:%M:%S"))
     
     wherescape = WhereScape()
-    gsheet = Gsheet()
     table_name = wherescape.table
     column_names, column_types = wherescape.get_columns()
+    try:
+        assert column_names is not None
+        assert column_types is not None
+    except AssertionError as e:
+        logging.error("no column_names or column_types found in wherescape")
+        raise e
 
     url = wherescape.query_meta(
             "select lt_file_path from ws_load_tab where lt_table_name = ?",
@@ -35,8 +40,8 @@ def google_sheet_load_data():
     logging.info(f"Metadata. URL: {url} ; Details : {workbook_details}")
 
     args = parse_gspread_arguments(workbook_details)
-    set_gsheet_variables(gsheet, url, args)
-    content = gsheet.get_content(args.range)
+    gsheet = Gsheet(args, url)
+    content = gsheet.get_content()
     # For name consistency.
     gsheet_header = gsheet.get_header()
 
@@ -93,10 +98,10 @@ def get_missing_columns(input_header: list, expected: list) -> tuple:
     - indexes (list): list of index values of missing columns.
     """
     # WS might end with digits. Remove those to compare.
-    if re.search(r'_\d{3}$', input_header[0]) is not None:
-        input_header = remove_final_digits(input_header)
-    elif re.search(r'_\d{3}$', expected[0]) is not None:
-        expected = remove_final_digits(expected)
+    if input_header[0] is not None:
+        input_header = input_header
+    elif expected[0] is not None:
+        expected = expected
 
     columns = []
     indexes = []
@@ -137,13 +142,13 @@ def remove_extra_columns(content: list, header: list, indexes: list)-> tuple:
     remove columns from content that aren't listed for it's destination.
 
     Params:
-    - content (list): full content to add empty columns to.
-    - header (list): header to add missing headers to.
-    - indexes (list): indexes of missing columns.
+    - content (list): full content to remove unlisted columns to.
+    - header (list): header to remove unlisted headers to.
+    - indexes (list): indexes of unlisted columns.
 
     Returns:
-    - content (list): content including new columns for missing fields.
-    - header (list): header including new column names for missing fields.
+    - content (list): content excluding columns for unlisted fields.
+    - header (list): header excluding columns for unlisted fields.
     """
     transposed = [list(i) for i in zip_longest(*content, fillvalue=None)]
     indexes.reverse()
@@ -153,7 +158,7 @@ def remove_extra_columns(content: list, header: list, indexes: list)-> tuple:
     content = [list(i) for i in zip_longest(*transposed, fillvalue=None)]
     return content, header
 
-def remove_final_digits(header: list) -> list:
+def remove_final_digits(headers: list[str]) -> list:
     """
     Removes _000 (or other digits) from the end of words in a list if they are there.
     This method is to make comparing easier since the numbers might differ if the columns are not the same.
@@ -165,9 +170,9 @@ def remove_final_digits(header: list) -> list:
     - result (list): new header without the _000.
     """
     result = []
-    for header in header:
-        if re.search(r'_\d{3}$', header) is None:
-            result.append(header)
+    for header in headers:
+        if re.search(pattern=r"_\d{3}$", string=header) is None:
+            result.append(headers)
         else:
-            result.append(header[:-4])
+            result.append(headers[:-4])
     return result

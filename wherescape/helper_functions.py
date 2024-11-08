@@ -19,7 +19,7 @@ def create_column_names(display_names=[]):
         column = slugify(display_name, separator="_", max_length=59)
         if column == "":
             column = "column"
-        column = f"{column}_{str(i + 1).zfill(3)}"
+        column = f"{column}"
         columns.append(column)
         i += 1
     return columns
@@ -238,7 +238,7 @@ def set_date_to_ymd(value: str | None) -> str | None:
     return parse(value).strftime("%Y-%m-%d") if value is not None else value
 
 
-def get_python_type(column_values: list) -> str:
+def get_python_type(column_values: list) -> type:
     """
     Returns string of the Python type fit for the data in the list.
 

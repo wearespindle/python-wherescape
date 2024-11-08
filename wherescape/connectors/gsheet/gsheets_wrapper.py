@@ -4,32 +4,50 @@ import os
 import sys
 
 from datetime import datetime
-from gspread import (
-    Client,
-    Spreadsheet,
-    Worksheet,
-)
+from gspread.client import Client
+from gspread.spreadsheet import Spreadsheet
+from gspread.worksheet import Worksheet
 from gspread.exceptions import (
     SpreadsheetNotFound,
     WorksheetNotFound,
     APIError,
 )
 
-
-
-from ...helper_functions import convert_string, remove_empty_rows_and_columns, get_python_type
+from ...helper_functions import remove_empty_rows_and_columns, get_python_type
 
 
 class Gsheet:
-    def __init__(self):
-        self._client: Client = _authorize()
-        self.spreadsheet: Spreadsheet = None
-        self.worksheet: Worksheet = None
-        self.header: list = []
-        self.content = None
-        self.column_types = None
+    def __init__(self, args = None, url: str = "", test: bool = False):
+        """
+        Init for Gsheet. set all variables.
 
-    def set_spreadsheet(self, url: str = "", name: str = ""):
+        Args:
+        - args: args provided for processing correct data
+        - url (str): link to the spreadsheet being uploaded
+        - test (bool): False by default. set True in tests to not require args
+        """
+        self._client: Client = _authorize()
+        if test:
+            logging.warning("Marked as TEST. no params will be set")
+        elif args:
+            self.set_gsheet_variables(url, args)
+        else:
+            logging.error("No args provided")
+    
+    def set_gsheet_variables(self, url: str, args):
+        """
+        Function to set all of the variables for gsheet.
+        """
+        # Set spreadsheet and worksheet.
+        self._set_spreadsheet(url=url, name=args.workbook_name)
+        self._set_worksheet(title=args.sheet)
+
+        # Set all content.
+        self._set_content(args.range)
+        self._set_header(args.no_header, args.header_range)
+        self._set_column_types()
+
+    def _set_spreadsheet(self, url: str = "", name: str = ""):
         """
         Attempts to retreive the spreadsheet from google drive. 
         Requires either url or name.
@@ -44,7 +62,7 @@ class Gsheet:
                     self.spreadsheet = self._client.open_by_url(url)
                     logging.info("spreadsheet file has been obtained.")
                     return
-                except SpreadsheetNotFound as notFound:
+                except SpreadsheetNotFound:
                     logging.error("Invalid URL")
 
             if name:
@@ -52,37 +70,27 @@ class Gsheet:
                     self.spreadsheet = self._client.open(name)
                     logging.info("spreadsheet file has been obtained.")
                     return
-                except SpreadsheetNotFound as notFound:
+                except SpreadsheetNotFound:
                     logging.error("Invalid workbook name")
 
             logging.error("Enter a valid workbook URL or workbook name")
             # Raised when both url and name don't find a spreadsheet.
-            raise notFound
+            raise SpreadsheetNotFound
 
         except PermissionError as pe:
             logging.error("Invalid Permissions, make sure access is granted.")
             raise pe
 
-    def get_spreadsheet(
-        self, url: str = "", name: str = ""
-    ) -> Spreadsheet:
+    def get_spreadsheet(self) -> Spreadsheet:
         """
-        Getter for Spreadsheet. Calls setter if not already present.
-
-        Args:
-        - url (str): (optional) link to the spreadsheet.
-        - name (str): (optional) name of spreadsheet.
+        Getter for Spreadsheet.
 
         Returns:
         - Spreadsheet.
         """
-        if self.spreadsheet is not None:
-            return self.spreadsheet
-        else:
-            self.set_spreadsheet(url, name)
-            return self.spreadsheet
+        return self.spreadsheet
 
-    def set_worksheet(self, title: str = None):
+    def _set_worksheet(self, title: str | None = None):
         """
         Sets the worksheet based on the given title.
         A spreadsheet needs to have already been set.
@@ -92,36 +100,30 @@ class Gsheet:
             spreadsheet applications
         """
         try:
-            if self.spreadsheet is None:
+            if title is None:
                 logging.info("No name was provided. Using the first sheet")
-                self.spreadsheet = self.worksheet.get_worksheet(0)
+                self.worksheet = self.spreadsheet.get_worksheet(0)
             else:
                 self.worksheet = self.spreadsheet.worksheet(title)
+        except AttributeError as ae:
+            logging.error("No spreadsheet was provided")
+            raise SpreadsheetNotFound
         except WorksheetNotFound as notFound:
-            logging.warning("No worksheet was found")
+            logging.warning(f"No worksheet was found with {title}")
             raise notFound
 
-        logging.info(f"worksheet found")
+        logging.info(f"worksheet found with title {self.worksheet.title}")
 
-    def get_worksheet(self, title: str = "") -> Worksheet:
+    def get_worksheet(self) -> Worksheet:
         """
-        Getter for worksheet. Calls setter if not already present.
-
-        Params:
-        - title (str) : title of the worksheet
+        Getter for worksheet.
 
         Returns:
         - Worksheet
         """
-        if self.worksheet:
-            pass
-        elif title:
-            self.set_worksheet(title)
-        else:
-            self.set_worksheet()
         return self.worksheet
 
-    def set_content(self, range: str = None):
+    def _set_content(self, range: str | None = None):
         """
         Retreives content from gsheet. removes empty rows.
         """
@@ -135,20 +137,22 @@ class Gsheet:
             content = self.worksheet.get_all_values()
         self.content = remove_empty_rows_and_columns(content)
 
-    def get_content(self, range: str = None) -> list:
+    def get_content(self) -> list:
         """
-        Getter for content. Calls setter if not already present.
+        Getter for content
 
         Returns:
         - List of lists containing the content of the sheet.
         """
-        if self.content is None:
-            self.set_content(range)
         return self.content
 
-    def set_header(self, no_header: str = None, header_range: str = None):
+    def _set_header(
+        self, 
+        no_header: bool | None = None, 
+        header_range: str | None = None,
+    ):
         """
-        Creates the header for the content. Takes it from content if no_header is False.
+        Creates the header for the content. Takes it from content if no_header is False or None.
 
         Params:
         - no_header (str): (optional) input of args.no_header
@@ -156,7 +160,7 @@ class Gsheet:
         """
         # Set content if none is set yet.
         if self.content is None:
-            self.set_content()
+            self._set_content()
         
         if not no_header:
             if header_range:
@@ -173,27 +177,21 @@ class Gsheet:
         else:
             self.header = ["column_" + str(i + 1) for i in range(len(self.content[0]))]
 
-    def get_header(self, no_header: bool = False, range: str = None) -> list:
+    def get_header(self) -> list:
         """
-        Getter for the header. Calls setter if not already present.
-
-        Params:
-        - no_header (str): (optional) True if no header is provided (legacy naming)
-        - range (str): (optional) range of the header.
+        Getter for the header.
 
         Returns
         - List containing header values.
         """
-        if self.header == []:
-            self.set_header(no_header, range)
         return self.header
 
-    def set_column_types(self):
+    def _set_column_types(self):
         """
         Set a list with the postgrestype for each column in content.
         """
         if not self.content or self.header == []:
-            self.set_header() # will also set content
+            self._set_header() # will also set content
         
         postgres_types = []
         
@@ -228,21 +226,10 @@ class Gsheet:
         - list of column types
         """
         if not self.column_types:
-            self.set_column_types()
+            self._set_column_types()
         return self.column_types
 
-def set_gsheet_variables(gsheet: Gsheet, url: str, args):
-    """
-    Function to set all a bunch of variables for gsheet.
-    """
-    # Set spreadsheet and worksheet.
-    gsheet.set_spreadsheet(url=url, name=args.workbook_name)
-    gsheet.set_worksheet(title=args.sheet)
 
-    # Set all content.
-    gsheet.set_content(args.range)
-    gsheet.set_header(args.no_header, args.header_range)
-    gsheet.set_column_types()
 
 def _authorize() -> Client:
     """
@@ -252,7 +239,7 @@ def _authorize() -> Client:
     - Client for authorization when handling data
     """
     json_keyfile = _read_secret()
-    return gspread.service_account(
+    return gspread.auth.service_account(
         json_keyfile,
     )
 

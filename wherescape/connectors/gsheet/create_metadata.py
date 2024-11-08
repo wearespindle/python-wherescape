@@ -3,11 +3,11 @@ from datetime import datetime, UTC
 
 from ...helper_functions import create_column_names, create_display_names, prepare_metadata_query
 from ...wherescape import WhereScape
-from .gsheets_wrapper import Gsheet, set_gsheet_variables
+from .gsheets_wrapper import Gsheet
 from .gsheets_parsing import parse_gspread_arguments
 
 
-def gsheet_create_metadata():
+def python_gsheet_create_metadata():
     """
     Function that creates a load table in Wherescape based on the data
     in a provided Google sheet file.
@@ -19,7 +19,6 @@ def gsheet_create_metadata():
     logging.info(
         "Start time: %s for gsheet_load_data_os." % start_time.strftime("%Y-%m-%d %H:%M:%S")
     )
-    gsheet: Gsheet = Gsheet()
 
     load_table_name = wherescape_instance.table
     url = wherescape_instance.query_meta(
@@ -36,7 +35,7 @@ def gsheet_create_metadata():
     if args.debug:
         logging.warning("Debug mode on -> do not use for production.")
 
-    set_gsheet_variables(gsheet, url, args)
+    gsheet = Gsheet(args, url)
 
     header_row = gsheet.get_header()
     column_types = gsheet.get_column_types()

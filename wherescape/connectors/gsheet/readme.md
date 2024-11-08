@@ -7,11 +7,13 @@ DEFAULT_SCOPES =[
     ]
 # Gsheet connector
 
-Gsheet Connector for WhereSCape. Takes care of creating metadata for a loading data and uploading the data from a gsheet file.
+Gsheet Connector for WhereScape. Takes care of creating metadata for a loading data and uploading the data from a gsheet file.
 
-# Preparation
+## WhereScape Parameters
+
+## Connection Details
 An authentication user is required from Wherescape. For this, a client secret has to be created in the Google API Console. 
-Its secret should be stored in `%%APPDATAPP\gspread` for Windows orin `~/.gspread` for Unix.
+Its secret should be stored in `%%APPDATAPP\gspread` for Windows or in `~/.gspread` for Unix.
 
 The default scopes for this client secret are:
 
@@ -21,9 +23,6 @@ DEFAULT_SCOPES =[
         'https://www.googleapis.com/auth/drive'
     ]
 ```
-
-## WhereScape Parameters
-
 
 ## Load table
 
