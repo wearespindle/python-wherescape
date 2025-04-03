@@ -54,7 +54,7 @@ class WhereScape:
         wsl_tgt_user = os.getenv("WSL_TGT_USER")
         wsl_tgt_pwd = os.getenv("WSL_TGT_PWD")
         self.target_db_connection_string = (
-            f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd}"
+            f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd};sslmode=prefer"
         )
 
         self.sequence = os.getenv("WSL_SEQUENCE")
@@ -243,6 +243,45 @@ class WhereScape:
         else:
             conn.commit()
             cursor.close()
+    
+    def query_source(self, sql, params=[]):
+        """
+        Query a source database. Makes use of the generic query function.
+        """
+        try:
+            conn = pyodbc.connect(self.source_db_connection_string)
+            result = self.query(conn, sql, params)
+        except Exception as e:
+            logging.error(e)
+            raise
+        return result
+    
+    def push_to_source(self, sql, params=[]):
+        """
+        Function to push data to a source database. Returns rowcount.
+
+        Input :
+        sql     : a sql statement, possibly with ? placeholders for parameters
+        params  : a tuple with values to replace ? placeholders in the SQL
+
+        Example:
+        push_to_source('INSERT INTO schemaname.tablename (columname) VALUES (?)',  (value,) )
+
+        """
+        try:
+            conn = pyodbc.connect(self.source_db_connection_string)
+            cursor = conn.cursor()
+            cursor = cursor.execute(sql, params)
+        except Exception as e:
+            rowcount=0
+            conn.rollback()
+            logging.error(e)
+            raise
+        else:
+            rowcount = cursor.rowcount
+            conn.commit()
+            cursor.close()
+        return rowcount
 
     def read_parameter(self, name, include_comment=False):
         """
@@ -399,3 +438,4 @@ class WhereScape:
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
         return return_code, return_message, result_number
+
