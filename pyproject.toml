@@ -1,0 +1,41 @@
+[tool.ruff]
+ignore = [
+    "D100",  # Checks for undocumented public module definitions.
+    "D101",  # Checks for undocumented public class definitions.
+    "D102",  # Checks for undocumented public method definitions.
+    "D104",  # Checks for undocumented public package definitions.
+    "D105",  # Checks for undocumented magic method definitions.
+    "D106",  # Checks for undocumented public class definitions, for nested classes.
+    "D107",  # Checks for public __init__ method definitions that are missing docstrings.
+    "D200",  # Checks for single-line docstrings that are broken across multiple lines.
+    "D205",  # Checks for docstring summary lines that are not separated from the docstring description by one blank line.
+    "D401",  # Checks for docstring first lines that are not in an imperative mood.
+    "D402",  # Checks for function docstrings that include the function's signature in the summary line.
+    "E501",  # Checks for lines that exceed the specified maximum character length. Black does this.
+    "E731",  # Checks for lambda expressions which are assigned to a variable. Lambda is ok.
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "SIM117",  # multiple-with-statements
+    "UP038"  # non-pep604-isinstance (N/A for <=Python3.9)
+]
+line-length = 119
+select = [
+    "C4",  # flake8-comprehensions
+    "D",  # pydocstyle
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "PIE",  # flake8-pie
+    "SIM",  # simplify
+    "UP",  # pyupgrade
+    "W"  # pycodestyle warnings.
+]
+
+[tool.ruff.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.pycodestyle]
+max-doc-length = 119
+
+[tool.ruff.pydocstyle]
+convention = "pep257"
