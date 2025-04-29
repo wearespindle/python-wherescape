@@ -1,3 +1,6 @@
+import ast
+import json
+
 from dateutil.parser import parse
 from slugify import slugify
 
@@ -10,16 +13,34 @@ def create_column_names(display_names=[]):
     Columns get truncated to 59 characters, because 63 characters is the max
     column lenght for Postgres columns.
     """
-    i = 0
     columns = []
     for display_name in display_names:
         column = slugify(display_name, separator="_", max_length=59)
         if column == "":
             column = "column"
-        column = f"{column}_{str(i + 1).zfill(3)}"
+        column = f"{column}"
         columns.append(column)
-        i += 1
     return columns
+
+
+def remove_empty_rows_and_columns(input: list) -> list:
+    """
+    Returns the list with the emtpy rows removed.
+
+    Params:
+    - input (list): List of lists containing the content.
+
+    Returns
+    - List of list.
+    """
+    content = [row for row in input if not all(cell == "" for cell in row)]
+    # switch and empty
+    content_transposed = [list(i) for i in zip(*content)]
+    content_transposed = [
+        row for row in content_transposed if not all(cell == "" for cell in row)
+    ]
+    # switch again
+    return [list(i) for i in zip(*content_transposed)]
 
 
 def create_display_names(columns=[]):
@@ -120,13 +141,11 @@ def filter_dict(dict_to_filter, keys_to_keep):
     Returns:
     dict: The dict with only the key, value pairs you want to keep.
     """
-    return dict(
-        [
-            (key, dict_to_filter[key])
+    return {
+            key: dict_to_filter[key]
             for key in dict_to_filter
             if key in set(keys_to_keep)
-        ]
-    )
+    }
 
 
 def flatten_json(json_response, name_to_skip=None):
@@ -186,12 +205,13 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
             out[key] = cleaned_json[key]
     return out
 
+
 def is_date(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
 
     string: str, string to check for date
-    fuzzy: bool, ignore unknown tokens in string if True
+    fuzzy: bool, ignore unknown tokens in string if True.
     """
     try: 
         parse(string, fuzzy=fuzzy)
@@ -201,3 +221,69 @@ def is_date(string, fuzzy=False):
         return False
     except OverflowError:
         return False
+
+
+def set_date_to_ymd(value: str | None) -> str | None:
+    """
+    Set the dateformat of a datetime string to YYYY-mm-dd.
+    
+    Args:
+    - value (str): value to set dateformat for.
+
+    Returns:
+    - string of date of format YYYY-mm-dd
+    """
+    return parse(value).strftime("%Y-%m-%d") if value is not None else value
+
+
+def get_python_type(column_values: list) -> type:
+    """
+    Returns string of the Python type fit for the data in the list.
+
+    Params: 
+    - column_values (list): list of the values.
+    """
+    values = []
+    is_bool = True
+    types = set()
+    
+    for item in column_values:
+        if item not in ["TRUE", "FALSE", "1", "0"]:
+            is_bool = False
+    
+    if is_bool:
+        return bool
+    else:
+        for item in column_values:
+            values.append(convert_string(item))
+        types = {type(item) for item in values}
+
+    if len(types) > 1:
+        for t in values:
+            if not (isinstance(t, int) or isinstance(t, float)):
+                return str
+        return float
+    else:
+        return next(iter(types))
+
+
+def convert_string(value: str):
+    """
+    Determines literal python type of a string value.
+
+    Params:
+    - value (str): value to determine literal type of.
+
+    Returns
+    - Any value as it's literal object type
+    """
+    try:
+        return (ast.literal_eval(value))
+    except (ValueError, SyntaxError):
+        try:
+            return (json.loads(value))
+        except (ValueError, TypeError):
+            try:
+                return (parse(value))
+            except (ValueError, OverflowError):
+                return (value)
