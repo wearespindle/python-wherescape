@@ -1,4 +1,5 @@
 """Module to fetch tickets and projects from the Jira API"""
+
 import json
 import logging
 import pandas as pd
@@ -47,7 +48,6 @@ KEYS_TO_KEEP_FROM_TICKETS_JSON = {
     "timeoriginalestimate": "int",
     "duedate": "datetime64[ns]",
     "resolution": "object",
-    "resolutiondate": "datetime64[ns]",
     "status_in_progress_date": "datetime64[ns]",
 }
 
@@ -73,7 +73,7 @@ class Jira:
 
         self.issue_jql = "project = {} ORDER BY key"
         self.issue_jql_since = 'project = {} AND (created >= "{}" OR updated >= "{}")'
-        self.search_issues = "/search"
+        self.search_issues = "/search/jql"
         self.search_projects = "/project/search"
 
     def issue_column_names_and_types(self):
@@ -190,9 +190,9 @@ class Jira:
         Returns:
         all_issues: list of issues for one project
         """
-        total_of_issues = 1
-        max_results = 1
-        start_at = 0
+        max_results = 50
+        nextPageToken = None
+        isLast = False
         if since:
             jql = self.issue_jql_since.format(project_id, since, since)
         else:
@@ -200,15 +200,14 @@ class Jira:
 
         all_issues = []
 
-        while start_at <= (total_of_issues - max_results):
+        while not isLast:
             url = f"{self.base_url}{self.search_issues}"
-
             payload = json.dumps(
                 {
                     "jql": jql,
                     "maxResults": max_results,
-                    "startAt": start_at,
-                    "expand": ["changelog"],
+                    "nextPageToken": nextPageToken,
+                    "expand": "changelog",
                 }
             )
             response = self.make_request(url, "POST", payload=payload)
@@ -219,9 +218,9 @@ class Jira:
                 logging.warn(json_response["errorMessages"])
                 return []
 
-            total_of_issues = json_response["total"]
-            max_results = json_response["maxResults"]
-            start_at = json_response["startAt"] + json_response["maxResults"]
+            isLast = json_response["isLast"]
+            if not isLast:
+                nextPageToken = json_response["nextPageToken"]
 
             if len(json_response["issues"]) > 0:
                 all_issues.extend(self.clean_issue_data(json_response["issues"]))
@@ -248,7 +247,10 @@ class Jira:
             try:
 
                 # When working with dates, we want to keep None values None and not NaT. Otherwise we get a 00:00:00 date in wherescape
-                if value == "datetime64[ns]" and dataframe[key].loc[dataframe.index[0]] is None:
+                if (
+                    value == "datetime64[ns]"
+                    and dataframe[key].loc[dataframe.index[0]] is None
+                ):
                     continue
                 else:
                     dataframe[key] = dataframe[key].astype(value, errors="ignore")
