@@ -59,12 +59,14 @@ def anythingllm_load_data_chats():
 
             logging.warning(warning_msg)
 
-        # Mask sensitive fields (prompt and response_text) with [MASKED]
+        # Mask sensitive fields (prompt, response_text, connection_ip) with [MASKED]
         for record in values:
             if "prompt" in record:
                 record["prompt"] = "[MASKED]"
             if "response_text" in record:
                 record["response_text"] = "[MASKED]"
+            if "connection_ip" in record:
+                record["connection_ip"] = "[MASKED]"
 
         # Prepare columns names for query.
         columns = create_column_names(columns)
