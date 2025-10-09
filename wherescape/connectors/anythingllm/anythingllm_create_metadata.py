@@ -61,7 +61,7 @@ def anythingllm_create_metadata():
     # Define display names for the columns
     display_names = [
         "ID",
-        "Prompt",
+        "[GDPR_HIGH] Prompt",
         "Session ID",
         "Include",
         "Embed ID",
@@ -70,7 +70,7 @@ def anythingllm_create_metadata():
         "Connection Host",
         "[GDPR_MEDIUM] Connection IP",
         "[GDPR_MEDIUM] Connection Username",
-        "Response Text",
+        "[GDPR_HIGH] Response Text",
         "Response Type",
         "Response Attachments",
         "Response Sources",
@@ -119,7 +119,9 @@ def anythingllm_create_metadata():
 
     # Execute the SQL
     wherescape.push_to_meta(sql)
-    wherescape.main_message = f"Created {len(columns) + 2} columns in metadata table for embed {embed_uuid}"
+    wherescape.main_message = (
+        f"Created {len(columns) + 2} columns in metadata table for embed {embed_uuid}"
+    )
 
     # Final logging
     end_time = datetime.now()
