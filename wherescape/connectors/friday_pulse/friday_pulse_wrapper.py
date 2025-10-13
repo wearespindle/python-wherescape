@@ -10,8 +10,6 @@ from typing import Any
 
 import requests
 
-logger = logging.getLogger(__name__)
-
 
 class FridayPulseClient:
     """Client for interacting with the FridayPulse API.
@@ -92,19 +90,19 @@ def get_all_results(bearer_token: str, since_date: str = None, max_dates: int = 
     client = FridayPulseClient(bearer_token)
 
     # Get all available result dates
-    logger.info("Fetching available result dates...")
+    logging.info("Fetching available result dates...")
     result_dates = client.results_dates()
-    logger.info(f"Found {len(result_dates)} result dates")
+    logging.info(f"Found {len(result_dates)} result dates")
 
     # Filter dates if since_date is provided
     if since_date:
         result_dates = [rd for rd in result_dates if rd["date"] > since_date]
-        logger.info(f"Filtered to {len(result_dates)} dates after {since_date}")
+        logging.info(f"Filtered to {len(result_dates)} dates after {since_date}")
 
     # Limit number of dates if specified
     if max_dates:
         result_dates = result_dates[:max_dates]
-        logger.info(f"Limited to {len(result_dates)} dates (max_dates={max_dates})")
+        logging.info(f"Limited to {len(result_dates)} dates (max_dates={max_dates})")
 
     # Fetch results for each date
     all_results = []
@@ -112,12 +110,14 @@ def get_all_results(bearer_token: str, since_date: str = None, max_dates: int = 
         date = result_date["date"]
         question_count = result_date["question_count"]
 
-        logger.info(f"Processing date {idx}/{len(result_dates)}: {date} ({question_count} questions)")
+        logging.info(
+            f"Processing date {idx}/{len(result_dates)}: {date} ({question_count} questions)"
+        )
 
         try:
             # Get results for this date
             results = client.results(date)
-            logger.info(f"  Retrieved {len(results)} results for {date}")
+            logging.info(f"  Retrieved {len(results)} results for {date}")
 
             # Flatten each result and add question_count
             for result in results:
@@ -125,13 +125,15 @@ def get_all_results(bearer_token: str, since_date: str = None, max_dates: int = 
                 all_results.append(flattened)
 
         except requests.exceptions.Timeout:
-            logger.error(f"  Timeout retrieving results for {date}, skipping...")
+            logging.error(f"  Timeout retrieving results for {date}, skipping...")
             continue
         except requests.exceptions.RequestException as e:
-            logger.error(f"  Error retrieving results for {date}: {e}, skipping...")
+            logging.error(f"  Error retrieving results for {date}: {e}, skipping...")
             continue
 
-    logger.info(f"Completed: retrieved {len(all_results)} total results from {len(result_dates)} dates")
+    logging.info(
+        f"Completed: retrieved {len(all_results)} total results from {len(result_dates)} dates"
+    )
     return all_results
 
 

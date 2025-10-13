@@ -10,7 +10,7 @@ import os
 from datetime import datetime, timedelta
 
 from ...wherescape import WhereScape
-from ...wherescape.helper_functions import create_column_names
+from ...helper_functions import create_column_names
 
 from .friday_pulse_create_metadata import EXPECTED_COLUMNS
 from .friday_pulse_wrapper import get_all_results
@@ -30,7 +30,9 @@ def friday_pulse_load_data(lookback_weeks: int = 3):
 
     # Initialise WhereScape (logging is initialised through WhereScape object)
     wherescape_instance = WhereScape()
-    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for friday_pulse_load_data")
+    logging.info(
+        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for friday_pulse_load_data"
+    )
 
     # Get the relevant values from WhereScape
     bearer_token = os.getenv("WSL_SRCCFG_APIKEY")
@@ -46,11 +48,15 @@ def friday_pulse_load_data(lookback_weeks: int = 3):
             since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
             since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
             since_date = since_datetime.strftime("%Y-%m-%d")
-            logging.info(f"Incremental load: fetching results after {since_date} ({lookback_weeks} weeks before HWM)")
+            logging.info(
+                f"Incremental load: fetching results after {since_date} ({lookback_weeks} weeks before HWM)"
+            )
         else:
             logging.info("Full load: HWM_ds_friday_pulse_question parameter not set")
     except Exception as e:
-        logging.warning(f"Could not read HWM_ds_friday_pulse_question parameter, performing full load: {e}")
+        logging.warning(
+            f"Could not read HWM_ds_friday_pulse_question parameter, performing full load: {e}"
+        )
 
     # Request data from Friday Pulse
     logging.info("Requesting data from Friday Pulse")
@@ -103,7 +109,9 @@ def friday_pulse_load_data(lookback_weeks: int = 3):
         wherescape_instance.push_many_to_target(sql, rows)
 
         # Set success message
-        wherescape_instance.main_message = f"Loaded {len(rows)} Friday Pulse results into {table_name}"
+        wherescape_instance.main_message = (
+            f"Loaded {len(rows)} Friday Pulse results into {table_name}"
+        )
         wherescape_instance.update_task_log(inserted=len(rows))
 
     else:
@@ -112,7 +120,9 @@ def friday_pulse_load_data(lookback_weeks: int = 3):
 
     # Final logging
     end_time = datetime.now()
-    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for friday_pulse_load_data")
+    logging.info(
+        f"Time elapsed: {(end_time - start_time).seconds} seconds for friday_pulse_load_data"
+    )
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 
 from ...wherescape import WhereScape
-from ...wherescape.helper_functions import prepare_metadata_query
+from ...helper_functions import prepare_metadata_query
 
 
 # Define expected columns matching the flattened result structure from get_all_results()
@@ -31,7 +31,9 @@ def friday_pulse_create_metadata():
 
     # Initialise WhereScape (logging is initialised through WhereScape object)
     wherescape = WhereScape()
-    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for friday_pulse_create_metadata")
+    logging.info(
+        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for friday_pulse_create_metadata"
+    )
     wherescape_object_id = wherescape.object_key
 
     # Use the shared expected columns definition
@@ -66,7 +68,7 @@ def friday_pulse_create_metadata():
     # Prepare the SQL (dss_record_source and dss_load_date are added automatically)
     sql = prepare_metadata_query(
         wherescape_object_id,
-        "Friday Pulse API - results",
+        "Friday Pulse API - questions",
         columns=columns,
         display_names=display_names,
         types=types,
@@ -75,11 +77,15 @@ def friday_pulse_create_metadata():
     # Execute the SQL
     try:
         wherescape.push_to_meta(sql)
-        wherescape.main_message = f"Created {len(columns)} columns in metadata table for Friday Pulse results"
+        wherescape.main_message = (
+            f"Created {len(columns)} columns in metadata table for Friday Pulse results"
+        )
     except Exception as e:
         logging.error(f"Failed to create metadata: {e}")
         raise
 
     # Final logging
     end_time = datetime.now()
-    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for friday_pulse_create_metadata")
+    logging.info(
+        f"Time elapsed: {(end_time - start_time).seconds} seconds for friday_pulse_create_metadata"
+    )
