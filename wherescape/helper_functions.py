@@ -16,7 +16,9 @@ def create_column_names(display_names=[]):
         column = slugify(display_name, separator="_", max_length=59)
         if column == "":
             column = "column"
-        column = f"{column}_{str(i + 1).zfill(3)}"
+            column = f"{column}_{str(i + 1).zfill(3)}"
+        if column in columns:
+            column = f"{column}_{str(i + 1).zfill(3)}"
         columns.append(column)
         i += 1
     return columns
@@ -120,13 +122,7 @@ def filter_dict(dict_to_filter, keys_to_keep):
     Returns:
     dict: The dict with only the key, value pairs you want to keep.
     """
-    return dict(
-        [
-            (key, dict_to_filter[key])
-            for key in dict_to_filter
-            if key in set(keys_to_keep)
-        ]
-    )
+    return dict([(key, dict_to_filter[key]) for key in dict_to_filter if key in set(keys_to_keep)])
 
 
 def flatten_json(json_response, name_to_skip=None):
@@ -186,6 +182,7 @@ def fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite):
             out[key] = cleaned_json[key]
     return out
 
+
 def is_date(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
@@ -193,7 +190,7 @@ def is_date(string, fuzzy=False):
     string: str, string to check for date
     fuzzy: bool, ignore unknown tokens in string if True
     """
-    try: 
+    try:
         parse(string, fuzzy=fuzzy)
         return True
 

@@ -8,8 +8,8 @@ and adds it to the WhereScape load object in the repository database.
 import logging
 from datetime import datetime
 
-from ...wherescape import WhereScape
 from ...helper_functions import prepare_metadata_query
+from ...wherescape import WhereScape
 
 
 # Define expected columns matching the flattened result structure from get_all_results()

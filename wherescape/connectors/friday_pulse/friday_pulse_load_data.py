@@ -9,9 +9,8 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from ...wherescape import WhereScape
 from ...helper_functions import create_column_names
-
+from ...wherescape import WhereScape
 from .friday_pulse_create_metadata import EXPECTED_COLUMNS
 from .friday_pulse_wrapper import get_all_results
 
