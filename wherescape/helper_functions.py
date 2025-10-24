@@ -24,6 +24,41 @@ def create_column_names(display_names=[]):
     return columns
 
 
+def create_legacy_column_names(display_names=[]):
+    """
+    LEGACY FUNCTION - Use create_column_names() for new tables instead.
+
+    This was the original create_column_names() function that appended a
+    zero-padded number suffix to EVERY column (e.g., column_name_001,
+    column_name_002). While this guaranteed uniqueness, it created less
+    readable column names than necessary.
+
+    The function was replaced with a newer version that only adds numeric
+    suffixes when needed (for duplicate or empty column names), resulting
+    in cleaner column names in most cases.
+
+    This legacy version is preserved because existing WhereScape tables may
+    still use the old numbered column name format. Removing this function
+    could break compatibility with those tables.
+
+    Args:
+        display_names (list): List of display names to convert to column names
+
+    Returns:
+        list: Column names with numbered suffixes (e.g., ['name_001', 'email_002'])
+    """
+    i = 0
+    columns = []
+    for display_name in display_names:
+        column = slugify(display_name, separator="_", max_length=59)
+        if column == "":
+            column = "column"
+        column = f"{column}_{str(i + 1).zfill(3)}"
+        columns.append(column)
+        i += 1
+    return columns
+
+
 def create_display_names(columns=[]):
     """
     Change column names in to display names.

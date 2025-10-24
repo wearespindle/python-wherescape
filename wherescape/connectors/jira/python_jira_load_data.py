@@ -1,38 +1,38 @@
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 
-from .jira_wrapper import Jira
 from ... import WhereScape
 from ...helper_functions import create_column_names
+from .jira_wrapper import Jira
 
 
-def jira_load_data_project():
+def jira_load_data_project(legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     project data to the load table.
     """
-    jira_load_data("project")
+    jira_load_data("project", legacy=legacy)
 
 
-def jira_load_data_issue():
+def jira_load_data_issue(legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     all issue data to the load table.
     """
-    jira_load_data("issue")
+    jira_load_data("issue", legacy=legacy)
 
 
-def jira_load_data_issue_incremental():
+def jira_load_data_issue_incremental(legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     issue data to the load table that has been added or modified in the last
     period. Defaults to 48 hours. Ideally for running every 24 hours.
     """
-    jira_load_data("issue", use_high_water_mark=True)
+    jira_load_data("issue", use_high_water_mark=True, legacy=legacy)
 
 
-def jira_load_data(load_type, use_high_water_mark=False, since=None):
+def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=False):
     """
     Main jira load data function. Loads data from Jira and pushes it to
     the warehouse. This is the glue between the jira_wrapper and WhereScape.
@@ -41,9 +41,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
     # First initialise WhereScape to setup logging
     logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
-    logging.info(
-        "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    logging.info("Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
     # Get the high_water_mark if applicable
     if use_high_water_mark:
@@ -74,7 +72,12 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
 
     if values:
         # Prepare columns names for query.
-        columns = create_column_names(columns)
+        if not legacy:
+            columns = create_column_names(columns)
+        else:
+            from ...helper_functions import create_legacy_column_names
+
+            columns = create_legacy_column_names(columns)
         columns.append("dss_record_source")
         columns.append("dss_load_date")
 
@@ -99,9 +102,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
         wherescape_instance.write_parameter(
             "jira_high_water_mark", start_time.strftime("%Y-%m-%d %H:%M")
         )
-        logging.info(
-            "New high water mark is: %s" % start_time.strftime("%Y-%m-%d %H:%M")
-        )
+        logging.info("New high water mark is: %s" % start_time.strftime("%Y-%m-%d %H:%M"))
 
         # Add success message
         wherescape_instance.main_message = (
@@ -113,6 +114,4 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None):
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        "Time elapsed: %s seconds for jira_load_data" % (end_time - start_time).seconds
-    )
+    logging.info("Time elapsed: %s seconds for jira_load_data" % (end_time - start_time).seconds)
