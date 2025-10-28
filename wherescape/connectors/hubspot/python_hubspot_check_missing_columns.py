@@ -126,8 +126,7 @@ def compare_load_and_ds(wherescape_instance, table_rows):
 
         # Pushing the missing columns to the load table
         wherescape_instance.push_many_to_target(
-            "insert into %s values (?, ?, ?, ?, null, null)"
-            % wherescape_instance.load_full_name,
+            f"insert into {wherescape_instance.load_full_name} values (?, ?, ?, ?, null, null)",
             new_rows_in_load_table,
         )
     else:

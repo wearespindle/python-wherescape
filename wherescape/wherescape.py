@@ -109,7 +109,7 @@ class WhereScape:
         elif self.schema == "stage":
             sql = "SELECT sc_col_name, sc_data_type FROM ws_stage_col WHERE sc_obj_key = ? ORDER BY sc_order"
         else:
-            logging.warning("Invalid schema: %s", self.schema)
+            logging.warning(f"Invalid schema: {self.schema}")
             return None
 
         results = self.query_meta(sql, [self.object_key])

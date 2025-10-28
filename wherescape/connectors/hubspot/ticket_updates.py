@@ -161,7 +161,7 @@ def hubspot_update_company_associaton(parameter_name: str):
                         association_type="primary_company_to_ticket"
                     )
                     if response is None: # no response indicates it failed
-                        logging.warning("Correct company could not be set for ticket with record id %s." % ticket.id)
+                        logging.warning(f"Correct company could not be set for ticket with record id {ticket.id}.")
                     
             else:
                 logging.warning(f"customer_id could not be used: {customer_id}")

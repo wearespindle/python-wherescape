@@ -7,41 +7,74 @@ from ...helper_functions import create_column_names
 from .jira_wrapper import Jira
 
 
-def jira_load_data_project(legacy=False):
+def jira_load_data_project(is_legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     project data to the load table.
+
+    Args:
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
-    jira_load_data("project", legacy=legacy)
+    jira_load_data("project", is_legacy=is_legacy)
 
 
-def jira_load_data_issue(legacy=False):
+def jira_load_data_issue(is_legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     all issue data to the load table.
+
+    Args:
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
-    jira_load_data("issue", legacy=legacy)
+    jira_load_data("issue", is_legacy=is_legacy)
 
 
-def jira_load_data_issue_incremental(legacy=False):
+def jira_load_data_issue_incremental(is_legacy=False):
     """
     Function to be called from the host script in WhereScape. Will import
     issue data to the load table that has been added or modified in the last
     period. Defaults to 48 hours. Ideally for running every 24 hours.
+
+    Args:
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
-    jira_load_data("issue", use_high_water_mark=True, legacy=legacy)
+    jira_load_data("issue", use_high_water_mark=True, is_legacy=is_legacy)
 
 
-def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=False):
+def jira_load_data(load_type, use_high_water_mark=False, since=None, is_legacy=False):
     """
     Main jira load data function. Loads data from Jira and pushes it to
     the warehouse. This is the glue between the jira_wrapper and WhereScape.
+
+    Args:
+        load_type (str): Type of data to load - either "project" or "issue"
+        use_high_water_mark (bool): If True, loads only data modified since the
+            stored high water mark. Defaults to False (full load).
+        since (str): Optional datetime string to load data modified since this date.
+            Overridden by high water mark if use_high_water_mark is True.
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
     start_time = datetime.now()
     # First initialise WhereScape to setup logging
     logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
-    logging.info("Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S"))
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for jira_load_data")
 
     # Get the high_water_mark if applicable
     if use_high_water_mark:
@@ -50,7 +83,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=Fals
             logging.info("High water mark is empty so fetching all issues")
             since = None
         else:
-            logging.info("Using high water mark: %s" % since)
+            logging.info(f"Using high water mark: {since}")
 
     # Get the relevant values from WhereScape
     base_url = os.getenv("WSL_SRCCFG_URL")
@@ -72,7 +105,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=Fals
 
     if values:
         # Prepare columns names for query.
-        if not legacy:
+        if not is_legacy:
             columns = create_column_names(columns)
         else:
             from ...helper_functions import create_legacy_column_names
@@ -102,7 +135,7 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=Fals
         wherescape_instance.write_parameter(
             "jira_high_water_mark", start_time.strftime("%Y-%m-%d %H:%M")
         )
-        logging.info("New high water mark is: %s" % start_time.strftime("%Y-%m-%d %H:%M"))
+        logging.info(f"New high water mark is: {start_time.strftime('%Y-%m-%d %H:%M')}")
 
         # Add success message
         wherescape_instance.main_message = (
@@ -114,4 +147,4 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None, legacy=Fals
 
     # Final logging
     end_time = datetime.now()
-    logging.info("Time elapsed: %s seconds for jira_load_data" % (end_time - start_time).seconds)
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for jira_load_data")
