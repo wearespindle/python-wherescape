@@ -14,8 +14,8 @@ import logging
 import os
 from datetime import datetime
 
+from ...helper_functions import prepare_metadata_query
 from ...wherescape import WhereScape
-from ...wherescape.helper_functions import prepare_metadata_query
 
 
 # Define expected columns matching the flattened chat structure from get_all_embed_chats()
@@ -68,7 +68,7 @@ def anythingllm_create_metadata():
         "[GDPR_MEDIUM] User ID",
         "Created At",
         "Connection Host",
-        "[GDPR_MEDIUM] Connection IP",
+        "[GDPR_HIGH] Connection IP",
         "[GDPR_MEDIUM] Connection Username",
         "[GDPR_HIGH] Response Text",
         "Response Type",

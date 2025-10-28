@@ -1,6 +1,7 @@
-import logging
-import requests
 import json
+import logging
+
+import requests
 
 
 def get_all_embed_chats(embed_uuid, api_key, base_url):
@@ -83,12 +84,8 @@ def _flatten_chat(chat):
             "response_attachments": json.dumps(response_obj.get("attachments", [])),
             "response_sources": json.dumps(response_obj.get("sources", [])),
             "response_sources_count": len(response_obj.get("sources", [])),
-            "metrics_completion_tokens": response_obj.get("metrics", {}).get(
-                "completion_tokens"
-            ),
-            "metrics_prompt_tokens": response_obj.get("metrics", {}).get(
-                "prompt_tokens"
-            ),
+            "metrics_completion_tokens": response_obj.get("metrics", {}).get("completion_tokens"),
+            "metrics_prompt_tokens": response_obj.get("metrics", {}).get("prompt_tokens"),
             "metrics_total_tokens": response_obj.get("metrics", {}).get("total_tokens"),
             "metrics_output_tps": response_obj.get("metrics", {}).get("outputTps"),
             "metrics_duration": response_obj.get("metrics", {}).get("duration"),

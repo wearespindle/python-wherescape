@@ -1,14 +1,13 @@
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
+
+from ...helper_functions import create_column_names
+from ...wherescape import WhereScape
+from .anythingllm_create_metadata import EXPECTED_COLUMNS
 
 # Add the current directory to the path to import anythingllm_wrapper
 from .anythingllm_wrapper import get_all_embed_chats
-from .anythingllm_create_metadata import EXPECTED_COLUMNS
-
-# Import WhereScape from wherescape_os
-from ...wherescape import WhereScape
-from ...wherescape.helper_functions import create_column_names
 
 
 def anythingllm_load_data_chats():
