@@ -1,19 +1,26 @@
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 
-from . import Gitlab
-from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
 from ... import WhereScape
 from ...helper_functions import create_column_names
+from . import Gitlab
+from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
 
 
-def gitlab_load_data_smart():
+def gitlab_load_data_smart(is_legacy=False):
     """
     Function to load the data for Gitlab objects. Will look at the load table
     names to determine the object type. So in order for this funtion towork as
     intended, correct load table names need to be chosen. Can be easily
     extended with more object types.
+
+    Args:
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
     wherescape_instance = WhereScape()
 
@@ -39,18 +46,26 @@ def gitlab_load_data_smart():
     else:
         raise Exception("Could not find the specific Gitlab object type")
 
-    gitlab_load_data(wherescape_instance, load_type)
+    gitlab_load_data(wherescape_instance, load_type, is_legacy)
 
 
-def gitlab_load_data(wherescape_instance, load_type):
+def gitlab_load_data(wherescape_instance, load_type, is_legacy=False):
     """
     Main Gitlab load data function. Loads data from Gitlab and pushes it to
     the warehouse. This is the glue between the gitlab_wrapper and WhereScape.
+
+    Args:
+        wherescape_instance (WhereScape): WhereScape instance for database operations
+        load_type (str): Type of GitLab object to load (e.g., "projects", "issues",
+            "pipelines", "merge_requests", "tags", "commits", "branches")
+        is_legacy (bool): If True, uses create_legacy_column_names() which adds
+            numbered suffixes to ALL columns (e.g., column_name_001). If False,
+            uses create_column_names() which only adds numbers when needed for
+            uniqueness. Set to True for existing tables that were created with
+            the legacy naming convention. Defaults to False.
     """
     start_time = datetime.now()
-    logging.info(
-        "Start time: %s for gitlab_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for gitlab_load_data")
 
     base_url = os.getenv("WSL_SRCCFG_URL")
     access_token = os.getenv("WSL_SRCCFG_APIKEY")
@@ -82,7 +97,12 @@ def gitlab_load_data(wherescape_instance, load_type):
         raise Exception("Wrong gitlab load type supplied")
 
     if len(values) > 0:
-        columns = create_column_names(columns)
+        if not is_legacy:
+            columns = create_column_names(columns)
+        else:
+            from ...helper_functions import create_legacy_column_names
+
+            columns = create_legacy_column_names(columns)
         columns.append("dss_record_source")
         columns.append("dss_load_date")
 
@@ -106,13 +126,8 @@ def gitlab_load_data(wherescape_instance, load_type):
         )
     else:
         logging.info(f"No modified values found for {load_type.capitalize()}")
-        wherescape_instance.main_message = (
-            f"No modified values found for {load_type.capitalize()}"
-        )
+        wherescape_instance.main_message = f"No modified values found for {load_type.capitalize()}"
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        "Time elapsed: %s seconds for gitlab_load_data"
-        % (end_time - start_time).seconds
-    )
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for gitlab_load_data")

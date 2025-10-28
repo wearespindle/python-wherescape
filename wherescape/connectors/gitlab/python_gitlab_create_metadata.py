@@ -57,9 +57,7 @@ def gitlab_create_metadata(wherescape_instance, columns, python_types, title):
     gitlab_wrapper and WhereScape.
     """
     start_time = datetime.now()
-    logging.info(
-        "Start time: %s for Gitlab_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for Gitlab_load_data")
     wherescape_object_id = wherescape_instance.object_key
     types = []
     for python_type in python_types:
@@ -94,7 +92,4 @@ def gitlab_create_metadata(wherescape_instance, columns, python_types, title):
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        "Time elapsed: %s seconds for gitlab_load_data"
-        % (end_time - start_time).seconds
-    )
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for gitlab_load_data")

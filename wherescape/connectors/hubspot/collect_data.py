@@ -17,10 +17,7 @@ def hubspot_load_data():
     start_time = datetime.now()
     logging.info("connecting to WhereScape")
     wherescape_instance = WhereScape()
-    logging.info(
-        "Start time: %s for hubspot_load_data"
-        % start_time.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for hubspot_load_data")
     logging.info("post load")
     table_name = f"{wherescape_instance.schema}.{wherescape_instance.table}"
     sql = f"select * from {table_name}"
@@ -71,7 +68,7 @@ def hubspot_get_token(
 
         access_token = wherescape_instance.read_parameter(environment_parameter)
         if access_token:
-            logging.info("retreived acces token from %s" % environment_parameter)
+            logging.info(f"retreived acces token from {environment_parameter}")
             return access_token
 
     # return acces token sandbox if environment is development
@@ -80,6 +77,6 @@ def hubspot_get_token(
         parameter_name = parameter_name + "_dev"
     else:
         logging.info("no specified environment found")
-    logging.info("retrieving access token from parameter %s" % parameter_name)
+    logging.info(f"retrieving access token from parameter {parameter_name}")
     # return access token on base name
     return wherescape_instance.read_parameter(parameter_name)

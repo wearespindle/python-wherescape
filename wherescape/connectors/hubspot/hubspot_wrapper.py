@@ -65,7 +65,7 @@ class Hubspot:
         - properties: data to be send
         - hs_object (string): hubspot object data will be sent to
         """
-        logging.info("sending %s batch patch to hubspot" % hs_object)
+        logging.info(f"sending {hs_object} batch patch to hubspot")
 
         batch_input_class = get_batch_input_class(hs_object)
         batch_input = batch_input_class(inputs=properties)
@@ -76,7 +76,7 @@ class Hubspot:
                 batch_input_simple_public_object_batch_input=batch_input
             )
         except error_api.ApiException as e:
-            logging.error("Exception when calling batch_api->update: %s\n" % e)
+            logging.error(f"Exception when calling batch_api->update: {e}\n")
             return None
 
         try:
@@ -140,7 +140,7 @@ class Hubspot:
             response = basic_api.get_by_id(record_id, properties=properties)
             return response
         except api_error.ApiException as e:
-            logging.error("An exception occured when calling %s batch_api_>update\n %s" % (hs_object, e))
+            logging.error(f"An exception occured when calling {hs_object} batch_api_>update\n {e}")
     
     def get_property_names(self, object_name: str):
         """
@@ -164,7 +164,7 @@ class Hubspot:
 
             return property_names
         except properties.ApiException as e:
-            logging.error("Exception when calling core_api->get_all: %s\n" % e)
+            logging.error(f"Exception when calling core_api->get_all: {e}\n")
 
     def get_all(
         self,
@@ -243,7 +243,7 @@ class Hubspot:
             return results
 
         except error_api as e:
-            logging.error("Exception when calling basic_api->create: %s\n" % e)
+            logging.error(f"Exception when calling basic_api->create: {e}\n")
     
     def filtered_search(
             self, 
@@ -440,7 +440,7 @@ class Hubspot:
             )
             return 1 # return something when success
         except associations.ApiException as e:
-            logging.error("Exception while trying to archive an association: %s" % e)
+            logging.error(f"Exception while trying to archive an association: {e}")
             return # None when fail
 
     def archive_object(self, object_id: str, hs_object: str):
@@ -512,7 +512,7 @@ def get_batch_input_class(hs_object:str):
     """
     batch_input_class = batch_input_map.get(HubspotObjectEnum(hs_object))
     if not batch_input_class:
-        logging.error("Invalid hs_object: %s" % hs_object)
+        logging.error(f"Invalid hs_object: {hs_object}")
     return batch_input_class
 
 def get_search_input_class(hs_object:str):
@@ -528,7 +528,7 @@ def get_search_input_class(hs_object:str):
     """
     simple_input_class = simple_search_map.get(HubspotObjectEnum(hs_object))
     if not simple_input_class:
-        logging.error("Invalid hs_object: %s" % hs_object)
+        logging.error(f"Invalid hs_object: {hs_object}")
     return simple_input_class
 
 def update_properties_list(hubspot_items: list) -> list:

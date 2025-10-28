@@ -111,8 +111,7 @@ class Jira:
 
         if response.status_code != 200:
             raise Exception(
-                "JIRA connection error %d: %s"
-                % (response.status_code, response.content)
+                f"JIRA connection error {response.status_code}: {response.content}"
             )
         return response
 

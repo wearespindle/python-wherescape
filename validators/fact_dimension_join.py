@@ -24,8 +24,7 @@ def check_fact_dimension_join(output_file_location=""):
 
     start_time = datetime.now()
     logging.info(
-        "Start time: %s for check_fact_dimension_join",
-        start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for check_fact_dimension_join"
     )
 
     date = datetime.now().strftime("%Y-%m-%d")

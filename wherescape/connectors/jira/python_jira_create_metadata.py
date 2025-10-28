@@ -37,9 +37,7 @@ def jira_create_metadata(title):
     # First initialise WhereScape to setup logging
     logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
-    logging.info(
-        "Start time: %s for jira_load_data" % start_time.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for jira_load_data")
 
     # Get the relevant values from WhereScape
     base_url = os.getenv("WSL_SRCCFG_URL")
@@ -89,6 +87,4 @@ def jira_create_metadata(title):
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        "Time elapsed: %s seconds for jira_load_data" % (end_time - start_time).seconds
-    )
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for jira_load_data")

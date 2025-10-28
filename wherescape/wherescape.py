@@ -65,11 +65,8 @@ class WhereScape:
         )
 
         self.sequence = os.getenv("WSL_SEQUENCE")
-        self.job_key = os.getenv("WSL_JOB_KEY")
-        self.job_name = os.getenv("WSL_JOB_NAME")
-        if self.job_name is None:
-            # The WhereScape object is initialised outside of a job
-            self.job_name = "job"
+        self.job_key = os.getenv("WSL_JOB_KEY", "no-job-key")
+        self.job_name = os.getenv("WSL_JOB_NAME", "no-job-name")
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
 
@@ -112,7 +109,7 @@ class WhereScape:
         elif self.schema == "stage":
             sql = "SELECT sc_col_name, sc_data_type FROM ws_stage_col WHERE sc_obj_key = ? ORDER BY sc_order"
         else:
-            logging.warning("Invalid schema: %s", self.schema)
+            logging.warning(f"Invalid schema: {self.schema}")
             return None
 
         results = self.query_meta(sql, [self.object_key])
@@ -250,7 +247,7 @@ class WhereScape:
         else:
             conn.commit()
             cursor.close()
-    
+
     def query_source(self, sql, params=[]):
         """
         Query a source database. Makes use of the generic query function.
@@ -264,7 +261,7 @@ class WhereScape:
             logging.error(e)
             raise
         return result
-    
+
     def push_to_source(self, sql, params=[]):
         """
         Function to push data to a source database. Returns rowcount.
@@ -282,7 +279,7 @@ class WhereScape:
             cursor = conn.cursor()
             cursor = cursor.execute(sql, params)
         except Exception as e:
-            rowcount=0
+            rowcount = 0
             conn.rollback()
             logging.error(e)
             raise
@@ -522,8 +519,6 @@ class WhereScape:
             result = self.push_to_meta(sql, parameters)
             return result
         except Exception as e:
-            self.error_messages.append(
+            logging.error(
                 f"Error in update task log for job id/name: {job_id}  {job_name} task is/name: {task_id} {task_name} : {str(e)}"
             )
-            self.error_messages.append(get_stack_trace_str())
-            return None
