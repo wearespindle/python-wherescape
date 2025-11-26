@@ -1,0 +1,67 @@
+[tool.ruff]
+# Target Python 3.12
+target-version = "py312"
+
+# Set line length to match common Python conventions
+line-length = 119
+
+# Exclude common directories
+extend-exclude = [
+    "__pycache__",
+    "*.pyc",
+    ".venv",
+    "venv",
+]
+
+# Enable specific rule sets
+[tool.ruff.lint]
+ignore = [
+    "D100",  # Checks for undocumented public module definitions.
+    "D101",  # Checks for undocumented public class definitions.
+    "D102",  # Checks for undocumented public method definitions.
+    "D103",  # Checks for undocumented public function definitions.
+    "D104",  # Checks for undocumented public package definitions.
+    "D105",  # Checks for undocumented magic method definitions.
+    "D106",  # Checks for undocumented public class definitions, for nested classes.
+    "D107",  # Checks for public __init__ method definitions that are missing docstrings.
+    "D200",  # Checks for single-line docstrings that are broken across multiple lines.
+    "D205",  # Checks for docstring summary lines that are not separated from the docstring description by one blank line.
+    "D401",  # Checks for docstring first lines that are not in an imperative mood.
+    "D402",  # Checks for function docstrings that include the function's signature in the summary line.
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "SIM117"  # multiple-with-statements
+]
+select = [
+    "B", # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    # "COM",  # flake8-commas
+    # "D",  # pydocstyle
+    # "D405",  # capitalize-section-name
+    # "D411",  # no-blank-line-before-section
+    # "D416",  # section-name-ends-in-colon
+    # "D417",  # undocumented-param
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    # "G004",  # Logging statements should not use f"..." for their first argument
+    "I",  # isort
+    "N",   # pep8-naming
+    # "PIE",  # flake8-pie
+    # "PT",  # flake8-pytest
+    "SIM",  # flake8-simplify
+    # "TID252",  # relative-imports
+    "UP",  # pyupgrade
+    "W"  # pycodestyle warnings
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 119
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"

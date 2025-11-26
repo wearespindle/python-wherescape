@@ -2,7 +2,7 @@ from dateutil.parser import parse
 from slugify import slugify
 
 
-def create_column_names(display_names=[]):
+def create_column_names(display_names=None):
     """
     Some api sources (like Notion) don't have column names that easily
     translate to a column name. This function slugifies the display names
@@ -10,9 +10,10 @@ def create_column_names(display_names=[]):
     Columns get truncated to 59 characters, because 63 characters is the max
     column lenght for Postgres columns.
     """
-    i = 0
+    if display_names is None:
+        display_names = []
     columns = []
-    for display_name in display_names:
+    for i, display_name in enumerate(display_names):
         column = slugify(display_name, separator="_", max_length=59)
         if column == "":
             column = "column"
@@ -20,11 +21,10 @@ def create_column_names(display_names=[]):
         if column in columns:
             column = f"{column}_{str(i + 1).zfill(3)}"
         columns.append(column)
-        i += 1
     return columns
 
 
-def create_legacy_column_names(display_names=[]):
+def create_legacy_column_names(display_names=None):
     """
     LEGACY FUNCTION - Use create_column_names() for new tables instead.
 
@@ -47,22 +47,24 @@ def create_legacy_column_names(display_names=[]):
     Returns:
         list: Column names with numbered suffixes (e.g., ['name_001', 'email_002'])
     """
-    i = 0
+    if display_names is None:
+        display_names = []
     columns = []
-    for display_name in display_names:
+    for i, display_name in enumerate(display_names):
         column = slugify(display_name, separator="_", max_length=59)
         if column == "":
             column = "column"
         column = f"{column}_{str(i + 1).zfill(3)}"
         columns.append(column)
-        i += 1
     return columns
 
 
-def create_display_names(columns=[]):
+def create_display_names(columns=None):
     """
     Change column names in to display names.
     """
+    if columns is None:
+        columns = []
     display_names = []
     for column in columns:
         display_names.append(column.replace("_", " ").capitalize())
@@ -72,11 +74,11 @@ def create_display_names(columns=[]):
 def prepare_metadata_query(
     lt_obj_key,
     src_table_name,
-    columns=[],
-    display_names=[],
-    types=[],
-    comments=[],
-    source_columns=[],
+    columns=None,
+    display_names=None,
+    types=None,
+    comments=None,
+    source_columns=None,
 ):
     """
     Creating the metadata query to create the columns of an API load table is
@@ -84,11 +86,21 @@ def prepare_metadata_query(
     assumptions regarding nulls, numeric, additive and attribute. All provided
     lists should be the same size.
     """
+    if columns is None:
+        columns = []
+    if display_names is None:
+        display_names = []
+    if types is None:
+        types = []
+    if comments is None:
+        comments = []
+    if source_columns is None:
+        source_columns = []
+
     lt_obj_key = str(lt_obj_key)
     meta_values = ""
-    i = 0
 
-    for column in columns:
+    for i, column in enumerate(columns):
         if types[i] in ("text", "date", "timestamp", "bool", "varchar(256)"):
             nulls = "Y"
             numeric = "N"
@@ -108,37 +120,47 @@ def prepare_metadata_query(
             additive = "N"
             attribute = "N"
 
-        if display_names == []:
+        if not display_names:
             display_name = ""
         else:
             display_name = display_names[i]
 
-        if source_columns == []:
-            if display_names == []:
+        if not source_columns:
+            if not display_names:
                 source_column = ""
             else:
                 source_column = display_names[i]
         else:
             source_column = source_columns[i]
 
-        if comments == []:
+        if not comments:
             comment = display_name
         else:
             comment = comments[i]
 
         order = str((i + 1) * 10)
-        meta_values += f"({lt_obj_key}, '{column}', '{display_name}', '{src_table_name}', '{source_column}', '{comment}', '{types[i]}', '{nulls}', '{numeric}', '{additive}', '{attribute}', '{order}')"
-        i += 1
-        if i != len(columns):
+        meta_values += (
+            f"({lt_obj_key}, '{column}', '{display_name}', '{src_table_name}', "
+            f"'{source_column}', '{comment}', '{types[i]}', '{nulls}', '{numeric}', "
+            f"'{additive}', '{attribute}', '{order}')"
+        )
+        if i != len(columns) - 1:
             meta_values += ",\n"
         else:
-            meta_values += f",\n({lt_obj_key}, 'dss_record_source', 'dss record source', null, null, 'Record source.', 'varchar(256)', 'Y', 'N', 'N', 'Y', 99999991)"
-            meta_values += f",\n({lt_obj_key}, 'dss_load_date', 'dss load date', null, null, 'Load date.', 'timestamp', 'Y', 'N', 'N', 'Y', 99999992)"
+            meta_values += (
+                f",\n({lt_obj_key}, 'dss_record_source', 'dss record source', null, null, "
+                f"'Record source.', 'varchar(256)', 'Y', 'N', 'N', 'Y', 99999991)"
+            )
+            meta_values += (
+                f",\n({lt_obj_key}, 'dss_load_date', 'dss load date', null, null, "
+                f"'Load date.', 'timestamp', 'Y', 'N', 'N', 'Y', 99999992)"
+            )
 
     # Create the actual sql
     sql = f"""
     DELETE FROM ws_load_col where lc_obj_key = {lt_obj_key};
-    INSERT INTO dbo.ws_load_col (lc_obj_key, lc_col_name, lc_display_name, lc_src_table, lc_src_column, lc_src_strategy, lc_data_type, lc_nulls_flag, lc_numeric_flag, lc_additive_flag, lc_attribute_flag, lc_order)
+    INSERT INTO dbo.ws_load_col (lc_obj_key, lc_col_name, lc_display_name, lc_src_table, lc_src_column,
+    lc_src_strategy, lc_data_type, lc_nulls_flag, lc_numeric_flag, lc_additive_flag, lc_attribute_flag, lc_order)
     VALUES {meta_values};
     """
 
@@ -157,13 +179,14 @@ def filter_dict(dict_to_filter, keys_to_keep):
     Returns:
     dict: The dict with only the key, value pairs you want to keep.
     """
-    return dict([(key, dict_to_filter[key]) for key in dict_to_filter if key in set(keys_to_keep)])
+    return {key: dict_to_filter[key] for key in dict_to_filter if key in set(keys_to_keep)}
 
 
 def flatten_json(json_response, name_to_skip=None):
     """
     This function flattens the json_response from an API request.
     Nested dicts are flattened.
+    Lists are converted to comma-separated strings (for both simple values and dicts).
 
     Parameters:
     json_response (object): The dict that needs to be flattened
@@ -182,11 +205,32 @@ def flatten_json(json_response, name_to_skip=None):
                 else:
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
-        elif isinstance(x, list) and len(x) > 0:
-            i = 0
-            for a in x:
-                flatten(a, name + str(i) + "_")
-                i += 1
+        elif isinstance(x, list):
+            if len(x) > 0:
+                # Check if list contains simple values (strings, numbers, etc.)
+                if all(isinstance(item, (str, int, float, bool, type(None))) for item in x):
+                    # Convert to comma-separated string
+                    out[name[:-1]] = ", ".join(str(item) if item is not None else "" for item in x)
+                elif all(isinstance(item, dict) for item in x):
+                    # List contains dictionaries - collect all unique keys
+                    all_keys = set()
+                    for item in x:
+                        all_keys.update(item.keys())
+
+                    # For each key, create a comma-separated string of values
+                    for key in sorted(all_keys):
+                        values = []
+                        for item in x:
+                            value = item.get(key)
+                            values.append(str(value) if value is not None else "")
+                        out[name + key] = ", ".join(values)
+                else:
+                    # Mixed types or other complex structure - use numbered approach
+                    for i, a in enumerate(x):
+                        flatten(a, name + str(i) + "_")
+            else:
+                # Empty list
+                out[name[:-1]] = None
         else:
             out[name[:-1]] = x
 
@@ -233,3 +277,73 @@ def is_date(string, fuzzy=False):
         return False
     except OverflowError:
         return False
+
+
+def infer_postgres_type(value, column_name: str) -> str:
+    """
+    Infer PostgreSQL data type from a sample value.
+
+    Args:
+        value: Sample value from the data
+        column_name: Name of the column (for heuristics)
+
+    Returns:
+        PostgreSQL data type string
+    """
+    if value is None:
+        # Use heuristics based on column name
+        if any(kw in column_name.lower() for kw in ["date", "time", "created", "updated"]):
+            return "timestamp"
+        elif any(kw in column_name.lower() for kw in ["count", "id", "number"]):
+            return "int"
+        elif any(kw in column_name.lower() for kw in ["rate", "score", "percent"]):
+            return "numeric"
+        else:
+            return "text"
+
+    # Infer from actual value
+    if isinstance(value, bool):
+        return "bool"
+    elif isinstance(value, int):
+        return "bigint" if abs(value) > 2147483647 else "int"
+    elif isinstance(value, float):
+        return "numeric"
+    elif isinstance(value, str):
+        # Check if it looks like a date
+        if any(kw in column_name.lower() for kw in ["date", "time", "created", "updated"]):
+            return "timestamp"
+        return "text"
+    else:
+        return "text"
+
+
+def get_metadata_from_sample_data(sample_data: list[dict]) -> tuple[list[str], list[str]]:
+    """
+    Analyze sample data to determine column names and types.
+
+    Args:
+        sample_data: List of flattened dictionaries (at least 1 record)
+
+    Returns:
+        Tuple of (column_names, data_types)
+    """
+    if not sample_data:
+        return [], []
+
+    # Get columns from first record
+    columns = list(sample_data[0].keys())
+
+    # Infer types by looking at first non-None value for each column
+    types = []
+    for col in columns:
+        # Find first non-None value
+        sample_value = None
+        for record in sample_data:
+            if record.get(col) is not None:
+                sample_value = record[col]
+                break
+
+        inferred_type = infer_postgres_type(sample_value, col)
+        types.append(inferred_type)
+
+    return columns, types
