@@ -317,7 +317,9 @@ def infer_postgres_type(value, column_name: str) -> str:
         return "text"
 
 
-def get_metadata_from_sample_data(sample_data: list[dict]) -> tuple[list[str], list[str]]:
+def get_metadata_from_sample_data(
+    sample_data: list[dict],
+) -> tuple[list[str], list[str]]:
     """
     Analyze sample data to determine column names and types.
 
@@ -326,6 +328,17 @@ def get_metadata_from_sample_data(sample_data: list[dict]) -> tuple[list[str], l
 
     Returns:
         Tuple of (column_names, data_types)
+
+    Example:
+        >>> sample_data = [
+        ...     {"id": 1, "name": "John", "score": 95.5, "created_at": "2025-01-01", "active": True},
+        ...     {"id": 2, "name": "Jane", "score": 87.3, "created_at": "2025-01-02", "active": False}
+        ... ]
+        >>> columns, types = get_metadata_from_sample_data(sample_data)
+        >>> columns
+        ['id', 'name', 'score', 'created_at', 'active']
+        >>> types
+        ['int', 'text', 'numeric', 'timestamp', 'bool']
     """
     if not sample_data:
         return [], []

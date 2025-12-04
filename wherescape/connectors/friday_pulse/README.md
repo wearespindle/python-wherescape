@@ -127,69 +127,6 @@ risks = client.get_group_risks()
 risks = client.get_group_risks(since_date="2025-01-01")
 ```
 
-## WhereScape Integration
-
-### `friday_pulse_load_data(lookback_weeks=3)`
-
-Main function to load Friday Pulse data into WhereScape. Automatically detects which data type to load based on the table name.
-
-**Parameters:**
-- `lookback_weeks`: Number of weeks to look back from the high water mark to capture late responses. Default is 3 weeks (21 days).
-
-**Returns:**
-- None (data is loaded directly into WhereScape)
-
-## Data Structures
-
-All data is returned as flattened dictionaries ready for database insertion. WhereScape automatically adds metadata columns.
-
-### Topics
-- `code` (text): Topic code identifier
-- `name` (text): Topic display name
-
-### Group Types
-- `code` (text): Group type code identifier
-- `name` (text): Group type display name
-
-### Groups
-- `id` (bigint): Unique group identifier
-- `name` (text): Group name
-- `group_type_code` (text): Associated group type code
-- Additional fields may be present depending on API response
-
-### General Results
-- `sample_date` (date): Survey date
-- `score` (numeric): Overall happiness score
-- `response_rate` (numeric): Percentage of responses received
-- `response_count` (int): Number of responses received
-- `total_count` (int): Total number of potential respondents
-- `question_count` (int): Number of questions in the survey
-- `topic_code` (text): Topic code identifier
-- `topic_name` (text): Topic display name
-
-### Group Results
-Same structure as General Results, plus:
-- `group_id` (bigint): Associated group identifier
-
-### General Notes
-- Additional note fields depending on API response
-- Typically includes fields like `id`, `action`, `text`, `flow_date`, `created_at`, `author_name`, `author_email`, `recipients_name`, `recipients_email`
-
-### Group Notes
-- `group_id` (bigint): Associated group identifier
-- Additional note fields depending on API response
-
-### General Risks
-- Additional risk fields depending on API response
-
-### Group Risks
-- `group_id` (bigint): Associated group identifier
-- Additional risk fields depending on API response
-
-### Metadata Fields (added by WhereScape)
-- `dss_record_source` (varchar): Record source identifier
-- `dss_load_date` (timestamp): Load timestamp
-
 ## Supported Load Tables
 
 The integration automatically detects which data to load based on the table name. Supported patterns:
@@ -249,7 +186,7 @@ Survey data tables (general_results, group_results, group_notes) support increme
 
 2. **Initial Load**: Leave the HWM parameter empty for the first run (full load)
 
-3. **Update Parameter**: After each successful load, update the parameter with:
+3. **Update Parameter**: After each successful load, the data from the load table has been persisted in the ds table, update the parameter with:
    ```sql
    SELECT MAX(sample_date) FROM datastore.{target_table}
    ```
@@ -263,7 +200,8 @@ First run:
   - HWM_ds_friday_pulse_general_results parameter: (empty)
   - Action: Full load
   - API calls: Fetch all available dates, get results for each
-  - Result: 150 results loaded, max date = 2025-01-16
+  - Result: 150 results loaded into load table, max date = 2025-01-16
+  - Action: update datastore table. Result : load table persisted into datastore
   - Update parameter: HWM_ds_friday_pulse_general_results = 2025-01-16
 
 Second run:
@@ -272,6 +210,7 @@ Second run:
   - Action: Incremental load (fetch dates > 2025-01-16 - 21 days = 2024-12-26)
   - API calls: Fetch results for dates after 2024-12-26 (includes lookback period)
   - Result: 45 results loaded (15 new + 30 from lookback for updates), max date = 2025-01-21
+  - Action: update datastore table. Result : load table persisted into datastore
   - Update parameter: HWM_ds_friday_pulse_general_results = 2025-01-21
 
 Third run:
@@ -280,6 +219,7 @@ Third run:
   - Action: Incremental load (fetch dates > 2025-01-21 - 21 days = 2024-12-31)
   - API calls: Fetch results for dates after 2024-12-31
   - Result: 30 results loaded (checking for updates in the last 21 days)
+  - Action: update datastore table. Result : load table persisted into datastore
   - Update parameter: HWM_ds_friday_pulse_general_results = 2025-01-21 (unchanged if no newer dates)
 ```
 ## WhereScape Host Script Setup
@@ -296,9 +236,11 @@ friday_pulse_create_metadata()
 
 This automatically creates all column definitions in the WhereScape metadata repository based on actual API response data.
 
-**Required Environment Variables:**
-- `WSL_SRCCFG_APIKEY`: Friday Pulse bearer token
-- Standard WhereScape environment variables (set automatically by WhereScape)
+**Required WhereScape Connection Object:**
+- Create a Friday Pulse connection object in WhereScape RED
+- Set the API key field to your Friday Pulse bearer token
+- WhereScape will expose this as the `WSL_SRCCFG_APIKEY` environment variable
+- Standard WhereScape environment variables are set automatically by WhereScape
 
 ### Loading Data
 
@@ -316,10 +258,6 @@ friday_pulse_load_data(lookback_weeks=2)
 
 **Parameters:**
 - `lookback_weeks`: Optional integer specifying how many weeks to look back from the high water mark (default: 3)
-
-**Required Environment Variables:**
-- `WSL_SRCCFG_APIKEY`: Friday Pulse bearer token
-- Standard WhereScape environment variables (set automatically by WhereScape)
 
 **WhereScape Parameters (for incremental loads):**
 - Reference data tables: No parameters needed (always full load)
@@ -343,71 +281,7 @@ https://app.fridaypulse.com/
 
 #### Reference Data
 
-**Get Topics:**
-```
-GET /api/v1/topics
-```
-Returns list of available survey topics.
-
-**Get Group Types:**
-```
-GET /api/v1/group-types
-```
-Returns list of group type definitions.
-
-**Get Groups for a Group Type:**
-```
-GET /api/v1/group-types/{group_type_code}/groups
-```
-Returns list of groups for a specific group type.
-
-#### Survey Data
-
-**Get Available Result Dates:**
-```
-GET /api/v1/info/results-dates
-```
-Returns list of available survey dates with question counts.
-
-**Get General Results:**
-```
-GET /api/v1/results?date={date}
-```
-Returns company-wide survey results for a specific date (YYYY-MM-DD).
-
-**Get Group Results:**
-```
-GET /api/v1/groups/{group_id}/results?date={date}
-```
-Returns survey results for a specific group and date.
-
-**Get General Notes:**
-```
-GET /api/v1/notes
-GET /api/v1/notes?date={date}
-```
-Returns general notes (not associated with groups). Optional date parameter filters to specific date.
-
-**Get Group Notes:**
-```
-GET /api/v1/groups/{group_id}/notes
-GET /api/v1/groups/{group_id}/notes?date={date}
-```
-Returns qualitative notes for a specific group. Optional date parameter filters to specific date.
-
-**Get General Risks:**
-```
-GET /api/v1/risk
-GET /api/v1/risk?date={date}
-```
-Returns general risk data. Optional date parameter filters to specific date.
-
-**Get Group Risks:**
-```
-GET /api/v1/groups/{group_id}/risk
-GET /api/v1/groups/{group_id}/risk?date={date}
-```
-Returns risk data for a specific group. Optional date parameter filters to specific date.
+https://api-docs.fridaypulse.com/group/endpoint-info
 
 ### Response Format
 

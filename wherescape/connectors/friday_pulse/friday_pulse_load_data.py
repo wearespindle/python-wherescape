@@ -14,19 +14,59 @@ from ...wherescape import WhereScape
 from .friday_pulse_wrapper import FridayPulseClient
 
 
+def get_incremental_since_date(
+    wherescape: WhereScape, hwm_param_name: str, lookback_weeks: int, data_type: str
+) -> str | None:
+    """
+    Get the since_date for incremental loading based on high water mark parameter.
+
+    Args:
+        wherescape: WhereScape instance to read parameters from
+        hwm_param_name: Name of the high water mark parameter
+        lookback_weeks: Number of weeks to look back from the high water mark
+        data_type: Description of the data type being loaded (for logging)
+
+    Returns:
+        since_date string in YYYY-MM-DD format, or None for full load
+    """
+    since_date = None
+    try:
+        since_date = wherescape.read_parameter(hwm_param_name)
+        if since_date and since_date.strip():
+            # Parse the datetime and subtract lookback period
+            since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
+            since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
+            since_date = since_datetime.strftime("%Y-%m-%d")
+            logging.info(
+                f"Incremental load: fetching {data_type} after {since_date} ({lookback_weeks} weeks before HWM)"
+            )
+        else:
+            logging.info(f"Full load: {hwm_param_name} parameter not set")
+    except Exception as e:
+        logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
+
+    return since_date
+
+
 def friday_pulse_load_data(lookback_weeks: int = 3):
     """
     Main Friday Pulse load data function. Loads data from Friday Pulse and pushes it to
     the warehouse. This is the glue between the friday_pulse_wrapper and WhereScape.
 
-    This function automatically determines which endpoint to use based on the file_name
-    in the load object, supporting: topics, groups, group_types, group_notes,
-    general_results, and group_results.
+    This function:
+    1. Initializes WhereScape object
+    2. Gets the table name from the load object
+    3. Determines the subject (topics, groups, group_types, group_notes, general_results, group_results, etc.)
+    4. Reads the high water mark parameter for incremental loading (if applicable)
+    5. Fetches data from the Friday Pulse API with optional date filtering
+    6. Prepares and inserts data into the target warehouse table
+    7. Updates task log with row counts
 
     Args:
         lookback_weeks: Number of weeks to look back from the high water mark to capture
                        late responses. Default is 3 weeks. Only applies to endpoints
-                       that support date filtering (general_results, group_results, group_notes).
+                       that support date filtering (general_results, group_results, group_notes,
+                       general_notes, general_risks, group_risks).
     """
     start_time = datetime.now()
 
@@ -83,133 +123,37 @@ def friday_pulse_load_data(lookback_weeks: int = 3):
         source_description = "groups"
 
     elif "group_notes" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching group notes after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "group notes")
         logging.info("Loading group notes data...")
         values = client.get_group_notes(since_date=since_date)
         source_description = "group_notes"
 
     elif "group_results" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching group results after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "group results")
         logging.info("Loading group results data...")
         values = client.get_group_results(since_date=since_date)
         source_description = "group_results"
 
     elif "general_notes" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching general notes after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "general notes")
         logging.info("Loading general notes data...")
         values = client.get_general_notes(since_date=since_date)
         source_description = "general_notes"
 
     elif "group_risks" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching group risks after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "group risks")
         logging.info("Loading group risks data...")
         values = client.get_group_risks(since_date=since_date)
         source_description = "group_risks"
 
     elif "general_risks" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching general risks after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "general risks")
         logging.info("Loading general risks data...")
         values = client.get_general_risks(since_date=since_date)
         source_description = "general_risks"
 
     elif "general_results" in table_name:
-        # Get high water mark for incremental loading
-        since_date = None
-        try:
-            since_date = wherescape.read_parameter(hwm_param_name)
-            if since_date and since_date.strip():
-                # Parse the datetime and subtract lookback period
-                since_datetime = datetime.strptime(since_date.strip()[:10], "%Y-%m-%d")
-                since_datetime = since_datetime - timedelta(weeks=lookback_weeks)
-                since_date = since_datetime.strftime("%Y-%m-%d")
-                logging.info(
-                    f"Incremental load: fetching results after {since_date} ({lookback_weeks} weeks before HWM)"
-                )
-            else:
-                logging.info(f"Full load: {hwm_param_name} parameter not set")
-        except Exception as e:
-            logging.warning(f"Could not read {hwm_param_name} parameter, performing full load: {e}")
-
+        since_date = get_incremental_since_date(wherescape, hwm_param_name, lookback_weeks, "results")
         logging.info("Loading general results data...")
         values = client.get_general_results(since_date=since_date)
         source_description = "general_results"
