@@ -287,7 +287,7 @@ class Jira:
                 min(history_list) if len(history_list) > 0 else None
             )
 
-            flattend_dict = flatten_json(json_response=issue, name_to_skip="fields")
+            flattend_dict = flatten_json(json_response=issue, name_to_skip="fields", legacy_list_handling=True)
             data[issue["id"]] = filter_dict(flattend_dict, issues_keys_list)
 
         data_as_frame = pd.DataFrame(
