@@ -6,6 +6,7 @@ functions to fetch and flatten results data for warehouse loading.
 """
 
 import logging
+import time
 from typing import Any
 
 import requests
@@ -32,25 +33,78 @@ class FridayPulseClient:
 
     # Private helper methods
 
-    def _request(self, url: str, timeout: int = 30) -> Any:
-        """Send a GET request to the specified URL.
+    def _request(self, url: str, timeout: int = 30, max_retries: int = 3) -> Any:
+        """Send a GET request to the specified URL with retry logic.
 
         The request incorporates an Authorization header containing a Bearer token.
         Returns the JSON response received from the external service.
+        Retries on temporary errors (5xx, timeouts) with exponential backoff.
 
         Args:
             url: The URL path to append to the base URL
             timeout: Request timeout in seconds (default: 30)
+            max_retries: Maximum number of retry attempts (default: 3)
 
         Returns:
             JSON response from the API
+
+        Raises:
+            requests.exceptions.RequestException: If all retry attempts fail
         """
-        response = requests.get(
-            "https://app.fridaypulse.com/" + url,
-            headers={"Authorization": f"Bearer {self._bearer_token}"},
-            timeout=timeout,
-        )
-        response.raise_for_status()
+        full_url = "https://app.fridaypulse.com/" + url
+        response = None
+
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(
+                    full_url,
+                    headers={"Authorization": f"Bearer {self._bearer_token}"},
+                    timeout=timeout,
+                )
+                response.raise_for_status()
+                break  # Success, exit retry loop
+
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    wait_time = 2**attempt  # Exponential backoff: 1s, 2s, 4s
+                    logging.info(
+                        f"Timeout on attempt {attempt + 1}/{max_retries} for {url}, retrying in {wait_time}s..."
+                    )
+                    time.sleep(wait_time)
+                else:
+                    logging.error(f"Timeout after {max_retries} attempts for {url}")
+                    raise
+
+            except requests.exceptions.HTTPError as e:
+                # Retry on 5xx server errors (temporary issues)
+                if e.response.status_code >= 500:
+                    if attempt < max_retries - 1:
+                        wait_time = 2**attempt  # Exponential backoff: 1s, 2s, 4s
+                        logging.info(
+                            f"{e.response.status_code} error on attempt {attempt + 1}/{max_retries} for {url}, "
+                            f"retrying in {wait_time}s..."
+                        )
+                        time.sleep(wait_time)
+                    else:
+                        logging.error(f"{e.response.status_code} error after {max_retries} attempts for {url}")
+                        raise
+                else:
+                    # 4xx errors (client errors) should not be retried
+                    logging.error(f"{e.response.status_code} client error for {url}")
+                    raise
+
+            except requests.exceptions.RequestException as e:
+                # Retry on connection errors
+                if attempt < max_retries - 1:
+                    wait_time = 2**attempt  # Exponential backoff: 1s, 2s, 4s
+                    logging.info(
+                        f"Request error on attempt {attempt + 1}/{max_retries} for {url}: {e}, "
+                        f"retrying in {wait_time}s..."
+                    )
+                    time.sleep(wait_time)
+                else:
+                    logging.error(f"Request error after {max_retries} attempts for {url}: {e}")
+                    raise
 
         return response.json()
 
@@ -147,28 +201,20 @@ class FridayPulseClient:
             logging.info(f"Processing date {date_idx}/{len(result_dates)}: {date}")
 
             for group_idx, group_id in enumerate(group_ids, 1):
-                try:
-                    # Build API URL with date parameter
-                    url = url_template.format(group_id=group_id, date=date)
+                # Build API URL with date parameter
+                url = url_template.format(group_id=group_id, date=date)
 
-                    # Get data for this group and date from API
-                    items = self._request(url)
+                # Get data for this group and date from API
+                items = self._request(url)
 
-                    if items:
-                        logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} {data_type}")
+                if items:
+                    logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} {data_type}")
 
-                    # Flatten each item and add group_id
-                    for item in items:
-                        flattened = flatten_json(item)
-                        flattened["group_id"] = group_id
-                        all_data.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.warning(f"  Timeout retrieving {data_type} for group {group_id} on {date}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.warning(f"  Error retrieving {data_type} for group {group_id} on {date}: {e}, skipping...")
-                    continue
+                # Flatten each item and add group_id
+                for item in items:
+                    flattened = flatten_json(item)
+                    flattened["group_id"] = group_id
+                    all_data.append(flattened)
 
         return all_data
 
@@ -211,19 +257,14 @@ class FridayPulseClient:
 
             logging.debug(f"Fetching groups for group type: {group_type_code}")
 
-            try:
-                groups = self._request(f"api/v1/group-types/{group_type_code}/groups")
-                logging.debug(f"  Retrieved {len(groups)} groups for {group_type_code}")
+            groups = self._request(f"api/v1/group-types/{group_type_code}/groups")
+            logging.debug(f"  Retrieved {len(groups)} groups for {group_type_code}")
 
-                # Flatten each group and add group_type_code
-                for group in groups:
-                    flattened = flatten_json(group)
-                    flattened["group_type_code"] = group_type_code
-                    all_groups.append(flattened)
-
-            except requests.exceptions.RequestException as e:
-                logging.error(f"  Error retrieving groups for {group_type_code}: {e}, skipping...")
-                continue
+            # Flatten each group and add group_type_code
+            for group in groups:
+                flattened = flatten_json(group)
+                flattened["group_type_code"] = group_type_code
+                all_groups.append(flattened)
 
         logging.info(f"Completed: retrieved {len(all_groups)} total groups")
         return all_groups
@@ -257,16 +298,12 @@ class FridayPulseClient:
         # If no since_date provided, fetch all results without date parameter
         if since_date is None:
             logging.info("Fetching all results without date filter...")
-            try:
-                results = self._request("api/v1/results")
-                logging.info(f"Retrieved {len(results)} total results")
+            results = self._request("api/v1/results")
+            logging.info(f"Retrieved {len(results)} total results")
 
-                for result in results:
-                    flattened = self._flatten_result(result, result.get("question_count", 0))
-                    all_results.append(flattened)
-
-            except requests.exceptions.RequestException as e:
-                logging.error(f"Error retrieving results: {e}")
+            for result in results:
+                flattened = self._flatten_result(result, result.get("question_count", 0))
+                all_results.append(flattened)
 
         else:
             # Get all available result dates
@@ -285,22 +322,14 @@ class FridayPulseClient:
 
                 logging.info(f"Processing date {idx}/{len(result_dates)}: {date} ({question_count} questions)")
 
-                try:
-                    # Get results for this date from API
-                    results = self._request(f"api/v1/results?date={date}")
-                    logging.info(f"  Retrieved {len(results)} results for {date}")
+                # Get results for this date from API
+                results = self._request(f"api/v1/results?date={date}")
+                logging.info(f"  Retrieved {len(results)} results for {date}")
 
-                    # Flatten each result and add question_count
-                    for result in results:
-                        flattened = self._flatten_result(result, question_count)
-                        all_results.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.error(f"  Timeout retrieving results for {date}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.error(f"  Error retrieving results for {date}: {e}, skipping...")
-                    continue
+                # Flatten each result and add question_count
+                for result in results:
+                    flattened = self._flatten_result(result, question_count)
+                    all_results.append(flattened)
 
         logging.info(f"Completed: retrieved {len(all_results)} total results")
         return all_results
@@ -330,26 +359,18 @@ class FridayPulseClient:
             logging.info("Fetching latest results for all groups without date filter...")
 
             for group_idx, group_id in enumerate(group_ids, 1):
-                try:
-                    # Get latest results for this group (no date parameter)
-                    url = f"api/v1/groups/{group_id}/results"
-                    items = self._request(url)
+                # Get latest results for this group (no date parameter)
+                url = f"api/v1/groups/{group_id}/results"
+                items = self._request(url)
 
-                    if items:
-                        logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} results")
+                if items:
+                    logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} results")
 
-                    # Flatten each item and add group_id
-                    for item in items:
-                        flattened = flatten_json(item)
-                        flattened["group_id"] = group_id
-                        all_results.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.warning(f"  Timeout retrieving results for group {group_id}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.warning(f"  Error retrieving results for group {group_id}: {e}, skipping...")
-                    continue
+                # Flatten each item and add group_id
+                for item in items:
+                    flattened = flatten_json(item)
+                    flattened["group_id"] = group_id
+                    all_results.append(flattened)
 
             logging.info(f"Completed: retrieved {len(all_results)} total results from {len(group_ids)} groups")
 
@@ -390,16 +411,12 @@ class FridayPulseClient:
         # If no since_date provided, fetch all notes without date parameter
         if since_date is None:
             logging.info("Fetching all notes without date filter...")
-            try:
-                notes = self._request("api/v1/notes")
-                logging.info(f"Retrieved {len(notes)} total notes")
+            notes = self._request("api/v1/notes")
+            logging.info(f"Retrieved {len(notes)} total notes")
 
-                for note in notes:
-                    flattened = flatten_json(note)
-                    all_notes.append(flattened)
-
-            except requests.exceptions.RequestException as e:
-                logging.error(f"Error retrieving notes: {e}")
+            for note in notes:
+                flattened = flatten_json(note)
+                all_notes.append(flattened)
 
         else:
             # Get all available result dates
@@ -417,22 +434,14 @@ class FridayPulseClient:
 
                 logging.info(f"Processing date {idx}/{len(result_dates)}: {date}")
 
-                try:
-                    # Get notes for this date from API
-                    notes = self._request(f"api/v1/notes?date={date}")
-                    logging.info(f"  Retrieved {len(notes)} notes for {date}")
+                # Get notes for this date from API
+                notes = self._request(f"api/v1/notes?date={date}")
+                logging.info(f"  Retrieved {len(notes)} notes for {date}")
 
-                    # Flatten each note
-                    for note in notes:
-                        flattened = flatten_json(note)
-                        all_notes.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.error(f"  Timeout retrieving notes for {date}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.error(f"  Error retrieving notes for {date}: {e}, skipping...")
-                    continue
+                # Flatten each note
+                for note in notes:
+                    flattened = flatten_json(note)
+                    all_notes.append(flattened)
 
         logging.info(f"Completed: retrieved {len(all_notes)} total notes")
         return all_notes
@@ -455,16 +464,12 @@ class FridayPulseClient:
         # If no since_date provided, fetch all risks without date parameter
         if since_date is None:
             logging.info("Fetching all general risks without date filter...")
-            try:
-                risks = self._request("api/v1/risk")
-                logging.info(f"Retrieved {len(risks)} total general risks")
+            risks = self._request("api/v1/risk")
+            logging.info(f"Retrieved {len(risks)} total general risks")
 
-                for risk in risks:
-                    flattened = flatten_json(risk)
-                    all_risks.append(flattened)
-
-            except requests.exceptions.RequestException as e:
-                logging.error(f"Error retrieving general risks: {e}")
+            for risk in risks:
+                flattened = flatten_json(risk)
+                all_risks.append(flattened)
 
         else:
             # Get all available result dates
@@ -482,22 +487,14 @@ class FridayPulseClient:
 
                 logging.info(f"Processing date {idx}/{len(result_dates)}: {date}")
 
-                try:
-                    # Get risks for this date from API
-                    risks = self._request(f"api/v1/risk?date={date}")
-                    logging.info(f"  Retrieved {len(risks)} general risks for {date}")
+                # Get risks for this date from API
+                risks = self._request(f"api/v1/risk?date={date}")
+                logging.info(f"  Retrieved {len(risks)} general risks for {date}")
 
-                    # Flatten each risk
-                    for risk in risks:
-                        flattened = flatten_json(risk)
-                        all_risks.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.error(f"  Timeout retrieving general risks for {date}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.error(f"  Error retrieving general risks for {date}: {e}, skipping...")
-                    continue
+                # Flatten each risk
+                for risk in risks:
+                    flattened = flatten_json(risk)
+                    all_risks.append(flattened)
 
         logging.info(f"Completed: retrieved {len(all_risks)} total general risks")
         return all_risks
@@ -527,26 +524,18 @@ class FridayPulseClient:
             logging.info("Fetching latest risks for all groups without date filter...")
 
             for group_idx, group_id in enumerate(group_ids, 1):
-                try:
-                    # Get latest risks for this group (no date parameter)
-                    url = f"api/v1/groups/{group_id}/risk"
-                    items = self._request(url)
+                # Get latest risks for this group (no date parameter)
+                url = f"api/v1/groups/{group_id}/risk"
+                items = self._request(url)
 
-                    if items:
-                        logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} risks")
+                if items:
+                    logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} risks")
 
-                    # Flatten each item and add group_id
-                    for item in items:
-                        flattened = flatten_json(item)
-                        flattened["group_id"] = group_id
-                        all_risks.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.warning(f"  Timeout retrieving risks for group {group_id}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.warning(f"  Error retrieving risks for group {group_id}: {e}, skipping...")
-                    continue
+                # Flatten each item and add group_id
+                for item in items:
+                    flattened = flatten_json(item)
+                    flattened["group_id"] = group_id
+                    all_risks.append(flattened)
 
             logging.info(f"Completed: retrieved {len(all_risks)} total risks from {len(group_ids)} groups")
 
@@ -594,26 +583,18 @@ class FridayPulseClient:
             logging.info("Fetching latest notes for all groups without date filter...")
 
             for group_idx, group_id in enumerate(group_ids, 1):
-                try:
-                    # Get latest notes for this group (no date parameter)
-                    url = f"api/v1/groups/{group_id}/notes"
-                    items = self._request(url)
+                # Get latest notes for this group (no date parameter)
+                url = f"api/v1/groups/{group_id}/notes"
+                items = self._request(url)
 
-                    if items:
-                        logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} notes")
+                if items:
+                    logging.debug(f"  Group {group_idx}/{len(group_ids)} ({group_id}): {len(items)} notes")
 
-                    # Flatten each item and add group_id
-                    for item in items:
-                        flattened = flatten_json(item)
-                        flattened["group_id"] = group_id
-                        all_notes.append(flattened)
-
-                except requests.exceptions.Timeout:
-                    logging.warning(f"  Timeout retrieving notes for group {group_id}, skipping...")
-                    continue
-                except requests.exceptions.RequestException as e:
-                    logging.warning(f"  Error retrieving notes for group {group_id}: {e}, skipping...")
-                    continue
+                # Flatten each item and add group_id
+                for item in items:
+                    flattened = flatten_json(item)
+                    flattened["group_id"] = group_id
+                    all_notes.append(flattened)
 
             logging.info(f"Completed: retrieved {len(all_notes)} total notes from {len(group_ids)} groups")
 

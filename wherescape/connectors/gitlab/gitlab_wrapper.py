@@ -98,7 +98,7 @@ class Gitlab:
             json_response = response.json()
 
             for resource_object in json_response:
-                cleaned_json = filter_dict(flatten_json(resource_object), keys_to_keep)
+                cleaned_json = filter_dict(flatten_json(resource_object, legacy_list_handling=True), keys_to_keep)
                 final_json = fill_out_empty_keys(cleaned_json, keys_to_keep, overwrite)
                 all_resources.append(list(final_json.values()))
 

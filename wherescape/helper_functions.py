@@ -182,15 +182,19 @@ def filter_dict(dict_to_filter, keys_to_keep):
     return {key: dict_to_filter[key] for key in dict_to_filter if key in set(keys_to_keep)}
 
 
-def flatten_json(json_response, name_to_skip=None):
+def flatten_json(json_response, name_to_skip=None, legacy_list_handling=False):
     """
     This function flattens the json_response from an API request.
     Nested dicts are flattened.
-    Lists are converted to comma-separated strings (for both simple values and dicts).
+
+    By default (legacy_list_handling=False), lists are converted to comma-separated strings.
+    With legacy_list_handling=True, lists create numbered columns (item0_, item1_, etc.).
 
     Parameters:
     json_response (object): The dict that needs to be flattened
     name_to_skip (string): key to skip while flattening
+    legacy_list_handling (bool): If True, use numbered columns for lists (item0_, item1_).
+                                  If False (default), convert lists to comma-separated strings.
 
     Returns:
     out: The dict with the flattened key value pairs
@@ -206,31 +210,38 @@ def flatten_json(json_response, name_to_skip=None):
                     new_name = name + a + "_"
                 flatten(x[a], new_name)
         elif isinstance(x, list):
-            if len(x) > 0:
-                # Check if list contains simple values (strings, numbers, etc.)
-                if all(isinstance(item, (str, int, float, bool, type(None))) for item in x):
-                    # Convert to comma-separated string
-                    out[name[:-1]] = ", ".join(str(item) if item is not None else "" for item in x)
-                elif all(isinstance(item, dict) for item in x):
-                    # List contains dictionaries - collect all unique keys
-                    all_keys = set()
-                    for item in x:
-                        all_keys.update(item.keys())
-
-                    # For each key, create a comma-separated string of values
-                    for key in sorted(all_keys):
-                        values = []
-                        for item in x:
-                            value = item.get(key)
-                            values.append(str(value) if value is not None else "")
-                        out[name + key] = ", ".join(values)
-                else:
-                    # Mixed types or other complex structure - use numbered approach
+            if legacy_list_handling:
+                # Legacy behavior: numbered columns for all list items
+                if len(x) > 0:
                     for i, a in enumerate(x):
                         flatten(a, name + str(i) + "_")
             else:
-                # Empty list
-                out[name[:-1]] = None
+                # New behavior: comma-separated strings
+                if len(x) > 0:
+                    # Check if list contains simple values (strings, numbers, etc.)
+                    if all(isinstance(item, (str, int, float, bool, type(None))) for item in x):
+                        # Convert to comma-separated string
+                        out[name[:-1]] = ", ".join(str(item) if item is not None else "" for item in x)
+                    elif all(isinstance(item, dict) for item in x):
+                        # List contains dictionaries - collect all unique keys
+                        all_keys = set()
+                        for item in x:
+                            all_keys.update(item.keys())
+
+                        # For each key, create a comma-separated string of values
+                        for key in sorted(all_keys):
+                            values = []
+                            for item in x:
+                                value = item.get(key)
+                                values.append(str(value) if value is not None else "")
+                            out[name + key] = ", ".join(values)
+                    else:
+                        # Mixed types or other complex structure - use numbered approach
+                        for i, a in enumerate(x):
+                            flatten(a, name + str(i) + "_")
+                else:
+                    # Empty list
+                    out[name[:-1]] = None
         else:
             out[name[:-1]] = x
 
