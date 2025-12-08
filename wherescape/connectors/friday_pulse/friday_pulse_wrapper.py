@@ -281,14 +281,15 @@ class FridayPulseClient:
     # Public API methods - Complex data retrieval with date filtering
 
     def get_general_results(self, since_date: str = None) -> list[dict]:
-        """Get all general results from Friday Pulse, optionally filtered by date.
+        """Get general results from Friday Pulse, optionally filtered by date.
 
-        This function fetches all available result dates and retrieves results for each date.
-        Results are flattened for easy database insertion.
+        When since_date is provided, fetches all result dates after that date and retrieves
+        results for each date. When since_date is None, fetches only the latest results
+        (no date filtering - returns most recent survey data).
 
         Args:
             since_date: Optional date string (YYYY-MM-DD) to filter results created after this date.
-                       If None, fetches results without date filtering from the API.
+                       If None, fetches only the latest results without date filtering.
 
         Returns:
             List of flattened dictionaries containing result data, ready for database insertion
@@ -337,11 +338,13 @@ class FridayPulseClient:
     def get_group_results(self, since_date: str = None) -> list[dict]:
         """Get results for all groups from Friday Pulse, optionally filtered by date.
 
-        This function fetches all available result dates, then retrieves results for each
-        group for each date. Results are flattened for easy database insertion.
+        When since_date is provided, fetches all result dates after that date and retrieves
+        results for each group for each date. When since_date is None, fetches only the
+        latest results for each group (no date filtering).
 
         Args:
-            since_date: Optional date string (YYYY-MM-DD) to filter results created after this date
+            since_date: Optional date string (YYYY-MM-DD) to filter results created after this date.
+                       If None, fetches only the latest results for each group.
 
         Returns:
             List of flattened dictionaries containing group result data, ready for database insertion
@@ -394,14 +397,15 @@ class FridayPulseClient:
         return all_results
 
     def get_general_notes(self, since_date: str = None) -> list[dict]:
-        """Get all general notes from Friday Pulse, optionally filtered by date.
+        """Get general notes from Friday Pulse, optionally filtered by date.
 
-        This function fetches notes that are not associated with specific groups.
-        Notes are flattened for easy database insertion.
+        Fetches notes that are not associated with specific groups. When since_date is provided,
+        fetches all result dates after that date and retrieves notes for each date. When
+        since_date is None, fetches only the latest notes (no date filtering).
 
         Args:
             since_date: Optional date string (YYYY-MM-DD) to filter notes created after this date.
-                       If None, fetches notes without date filtering from the API.
+                       If None, fetches only the latest notes without date filtering.
 
         Returns:
             List of flattened dictionaries containing note data, ready for database insertion
@@ -447,14 +451,15 @@ class FridayPulseClient:
         return all_notes
 
     def get_general_risks(self, since_date: str = None) -> list[dict]:
-        """Get all general risks from Friday Pulse, optionally filtered by date.
+        """Get general risks from Friday Pulse, optionally filtered by date.
 
-        This function fetches general risk data from the API.
-        Risks are flattened for easy database insertion.
+        When since_date is provided, fetches all result dates after that date and retrieves
+        risks for each date. When since_date is None, fetches only the latest risks
+        (no date filtering).
 
         Args:
             since_date: Optional date string (YYYY-MM-DD) to filter risks created after this date.
-                       If None, fetches risks without date filtering from the API.
+                       If None, fetches only the latest risks without date filtering.
 
         Returns:
             List of flattened dictionaries containing risk data, ready for database insertion
@@ -502,11 +507,13 @@ class FridayPulseClient:
     def get_group_risks(self, since_date: str = None) -> list[dict]:
         """Get risks for all groups from Friday Pulse, optionally filtered by date.
 
-        This function fetches all available result dates, then retrieves risks for each
-        group for each date. Risks are flattened for easy database insertion.
+        When since_date is provided, fetches all result dates after that date and retrieves
+        risks for each group for each date. When since_date is None, fetches only the
+        latest risks for each group (no date filtering).
 
         Args:
-            since_date: Optional date string (YYYY-MM-DD) to filter risks created after this date
+            since_date: Optional date string (YYYY-MM-DD) to filter risks created after this date.
+                       If None, fetches only the latest risks for each group.
 
         Returns:
             List of flattened dictionaries containing group risk data, ready for database insertion
@@ -561,11 +568,13 @@ class FridayPulseClient:
     def get_group_notes(self, since_date: str = None) -> list[dict]:
         """Get notes for all groups from Friday Pulse, optionally filtered by date.
 
-        This function fetches all available result dates, then retrieves notes for each
-        group for each date. Notes are flattened for easy database insertion.
+        When since_date is provided, fetches all result dates after that date and retrieves
+        notes for each group for each date. When since_date is None, fetches only the
+        latest notes for each group (no date filtering).
 
         Args:
-            since_date: Optional date string (YYYY-MM-DD) to filter notes created after this date
+            since_date: Optional date string (YYYY-MM-DD) to filter notes created after this date.
+                       If None, fetches only the latest notes for each group.
 
         Returns:
             List of flattened dictionaries containing group notes data, ready for database insertion
