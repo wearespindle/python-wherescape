@@ -1,8 +1,8 @@
-from datetime import time
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import os
 import sys
+from datetime import time
+from logging.handlers import TimedRotatingFileHandler
 
 
 class WhereScapeLogHandler(logging.Handler):
@@ -88,9 +88,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     https://docs.python.org/3/library/sys.html#sys.excepthook
     """
     logger = logging.getLogger()
-    logger.critical(
-        "Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback)
-    )
+    logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 
 def initialise_wherescape_logging(wherescape):

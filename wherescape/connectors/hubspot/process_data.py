@@ -9,9 +9,7 @@ This module processes the collected data so it can be send to the Hubspot Module
 """
 
 
-def hubspot_process_results(
-    access_token: str, results: list, column_names: list, table_name: str
-):
+def hubspot_process_results(access_token: str, results: list, column_names: list, table_name: str):
     """
     function that handles the processing of the results for it to be send to Hubspot
     Function to process the results to be send to hubspot.
@@ -66,7 +64,7 @@ def send_data_to_hubspot(object_type: str, properties: list, hubspot_instance: H
 
 def create_data_dict(result: list, column_names: list, known_names: list):
     """
-    This Function processes a list of results into a dict to fit the needs and 
+    This Function processes a list of results into a dict to fit the needs and
     expectations from HubSpot.
 
     Parameters:
@@ -146,6 +144,4 @@ def get_object_name(table_name: str):
     elif "deals" in table_name or "deal" in table_name:
         return "deals"
     else:
-        logging.error(
-            "Could not identify the specific hubspot object type based of the table name."
-        )
+        logging.error("Could not identify the specific hubspot object type based of the table name.")

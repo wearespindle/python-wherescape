@@ -1,0 +1,5 @@
+# Development dependencies for wherescape project
+# Install with: pip install -r requirements-dev.txt
+
+# Code linting and formatting
+ruff>=0.15.1,<0.16.0

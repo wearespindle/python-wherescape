@@ -46,23 +46,21 @@ class WhereScape:
         wsl_meta_dns = os.getenv("WSL_META_DSN")
         wsl_meta_user = os.getenv("WSL_META_USER")
         wsl_meta_pwd = os.getenv("WSL_META_PWD")
-        self.meta_db_connection_string = (
-            f"DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
-        )
+        self.meta_db_connection_string = f"DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
 
         wsl_tgt_dns = os.getenv("WSL_TGT_DSN")
         wsl_tgt_user = os.getenv("WSL_TGT_USER")
         wsl_tgt_pwd = os.getenv("WSL_TGT_PWD")
-        self.target_db_connection_string = (
-            f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd}"
-        )
+        self.target_db_connection_string = f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd};sslmode=prefer"
+
+        wsl_src_dns = os.getenv("WSL_SRC_DSN")
+        wsl_src_user = os.getenv("WSL_SRC_USER")
+        wsl_src_pwd = os.getenv("WSL_SRC_PWD")
+        self.source_db_connection_string = f"DSN={wsl_src_dns};UID={wsl_src_user};PWD={wsl_src_pwd};sslmode=prefer"
 
         self.sequence = os.getenv("WSL_SEQUENCE")
-        self.job_key = os.getenv("WSL_JOB_KEY")
-        self.job_name = os.getenv("WSL_JOB_NAME")
-        if self.job_name is None:
-            # The WhereScape object is initialised outside of a job
-            self.job_name = "job"
+        self.job_key = os.getenv("WSL_JOB_KEY", "no-job-key")
+        self.job_name = os.getenv("WSL_JOB_NAME", "no-job-name")
         self.task_key = os.getenv("WSL_TASK_KEY")
         self.task_name = os.getenv("WSL_TASK_NAME")
 
@@ -105,7 +103,7 @@ class WhereScape:
         elif self.schema == "stage":
             sql = "SELECT sc_col_name, sc_data_type FROM ws_stage_col WHERE sc_obj_key = ? ORDER BY sc_order"
         else:
-            logging.warning("Invalid schema: %s", self.schema)
+            logging.warning(f"Invalid schema: {self.schema}")
             return None
 
         results = self.query_meta(sql, [self.object_key])
@@ -244,6 +242,47 @@ class WhereScape:
             conn.commit()
             cursor.close()
 
+    def query_source(self, sql, params=[]):
+        """
+        Query a source database. Makes use of the generic query function.
+
+        Returns a list of tuples
+        """
+        try:
+            conn = pyodbc.connect(self.source_db_connection_string)
+            result = self.query(conn, sql, params)
+        except Exception as e:
+            logging.error(e)
+            raise
+        return result
+
+    def push_to_source(self, sql, params=[]):
+        """
+        Function to push data to a source database. Returns rowcount.
+
+        Input :
+        sql     : a sql statement, possibly with ? placeholders for parameters
+        params  : a tuple with values to replace ? placeholders in the SQL
+
+        Example:
+        push_to_source('INSERT INTO schemaname.tablename (columname) VALUES (?)',  (value,) )
+
+        """
+        try:
+            conn = pyodbc.connect(self.source_db_connection_string)
+            cursor = conn.cursor()
+            cursor = cursor.execute(sql, params)
+        except Exception as e:
+            rowcount = 0
+            conn.rollback()
+            logging.error(e)
+            raise
+        else:
+            rowcount = cursor.rowcount
+            conn.commit()
+            cursor.close()
+        return rowcount
+
     def read_parameter(self, name, include_comment=False):
         """
         Function to read a parameter from Wherescape.
@@ -339,9 +378,7 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result"""
 
-        return_values = self.query_meta(
-            sql, self.common_input_parameter_list + function_parameter_list
-        )
+        return_values = self.query_meta(sql, self.common_input_parameter_list + function_parameter_list)
         return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
@@ -392,10 +429,86 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result;"""
 
-        return_values = self.query_meta(
-            sql, self.common_input_parameter_list + function_parameter_list
-        )
+        return_values = self.query_meta(sql, self.common_input_parameter_list + function_parameter_list)
         return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
         return return_code, return_message, result_number
+
+    def update_task_log(
+        self,
+        inserted=0,
+        updated=0,
+        replaced=0,
+        deleted=0,
+        discarded=0,
+        rejected=0,
+        errored=0,
+    ):
+        """
+        Updates row counts for a task in the Task Log using the WsWrkTask API from WhereScape.
+
+        Updates row counts for the specified task in the Task Log. Task Log messages (and row counts)
+        are accessible via the "Scheduler" tab/window and/or the WS_ADMIN_V_TASK view of the WS_WRK_TASK_RUN and
+        WS_WRK_TASK_LOG tables.
+
+        This routine is intended to be executed by a task of a job since it requires a valid job, task,
+        and job sequence number that are provided by a WhereScape RED Scheduler.
+
+        Input:
+         - various counters
+
+        Output Result Number:
+        •  0 Success
+        • -1 Warning
+        • -3 Error
+
+        Examples:
+        # 100 records inserted
+        update_task_log (100)
+        update_task_log (inserted = 100, updated = 0, deleted = 0)
+
+        """
+        sql = """
+        SET NOCOUNT ON
+        DECLARE @out nvarchar(max);
+        EXEC @out=WsWrkTask
+        @p_job_key = ?
+        , @p_task_key = ?
+        , @p_sequence = ?
+        , @p_inserted = ?
+        , @p_updated   = ?
+        , @p_replaced  = ?
+        , @p_deleted    = ?
+        , @p_discarded  = ?
+        , @p_rejected  = ?
+        , @p_errored   = ?;
+        SELECT @out AS return_value;
+        """
+
+        sequence = os.environ["WSL_SEQUENCE"]
+        job_name = os.environ["WSL_JOB_NAME"]
+        task_name = os.environ["WSL_TASK_NAME"]
+        job_id = os.environ["WSL_JOB_KEY"]
+        task_id = os.environ["WSL_TASK_KEY"]
+
+        parameters = [
+            job_id,
+            task_id,
+            sequence,
+            inserted,
+            updated,
+            replaced,
+            deleted,
+            discarded,
+            rejected,
+            errored,
+        ]
+
+        try:
+            result = self.push_to_meta(sql, parameters)
+            return result
+        except Exception as e:
+            logging.error(
+                f"Error in update task log for job id/name: {job_id}  {job_name} task is/name: {task_id} {task_name} : {str(e)}"
+            )
