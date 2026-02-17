@@ -121,9 +121,7 @@ def gitlab_load_data(wherescape_instance, load_type, is_legacy=False):
         # Execute the sql
         wherescape_instance.push_many_to_target(sql, rows)
         logging.info(f"{len(rows)} rows successfully inserted in {table_name}")
-        wherescape_instance.main_message = (
-            f"{load_type.capitalize()} successfully loaded {len(rows)} rows"
-        )
+        wherescape_instance.main_message = f"{load_type.capitalize()} successfully loaded {len(rows)} rows"
     else:
         logging.info(f"No modified values found for {load_type.capitalize()}")
         wherescape_instance.main_message = f"No modified values found for {load_type.capitalize()}"

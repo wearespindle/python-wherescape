@@ -46,23 +46,17 @@ class WhereScape:
         wsl_meta_dns = os.getenv("WSL_META_DSN")
         wsl_meta_user = os.getenv("WSL_META_USER")
         wsl_meta_pwd = os.getenv("WSL_META_PWD")
-        self.meta_db_connection_string = (
-            f"DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
-        )
+        self.meta_db_connection_string = f"DSN={wsl_meta_dns};UID={wsl_meta_user};PWD={wsl_meta_pwd}"
 
         wsl_tgt_dns = os.getenv("WSL_TGT_DSN")
         wsl_tgt_user = os.getenv("WSL_TGT_USER")
         wsl_tgt_pwd = os.getenv("WSL_TGT_PWD")
-        self.target_db_connection_string = (
-            f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd};sslmode=prefer"
-        )
+        self.target_db_connection_string = f"DSN={wsl_tgt_dns};UID={wsl_tgt_user};PWD={wsl_tgt_pwd};sslmode=prefer"
 
         wsl_src_dns = os.getenv("WSL_SRC_DSN")
         wsl_src_user = os.getenv("WSL_SRC_USER")
         wsl_src_pwd = os.getenv("WSL_SRC_PWD")
-        self.source_db_connection_string = (
-            f"DSN={wsl_src_dns};UID={wsl_src_user};PWD={wsl_src_pwd};sslmode=prefer"
-        )
+        self.source_db_connection_string = f"DSN={wsl_src_dns};UID={wsl_src_user};PWD={wsl_src_pwd};sslmode=prefer"
 
         self.sequence = os.getenv("WSL_SEQUENCE")
         self.job_key = os.getenv("WSL_JOB_KEY", "no-job-key")
@@ -384,9 +378,7 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result"""
 
-        return_values = self.query_meta(
-            sql, self.common_input_parameter_list + function_parameter_list
-        )
+        return_values = self.query_meta(sql, self.common_input_parameter_list + function_parameter_list)
         return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])
@@ -437,9 +429,7 @@ class WhereScape:
         , @p_result   = @out2 OUTPUT;
         SELECT @out AS return_code,@out1 AS return_msg,@out2 AS return_result;"""
 
-        return_values = self.query_meta(
-            sql, self.common_input_parameter_list + function_parameter_list
-        )
+        return_values = self.query_meta(sql, self.common_input_parameter_list + function_parameter_list)
         return_code = return_values[0][0]
         return_message = return_values[0][1]
         result_number = int(return_values[0][2])

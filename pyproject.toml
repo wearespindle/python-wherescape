@@ -1,6 +1,6 @@
 [tool.ruff]
-# Target Python 3.12
-target-version = "py312"
+# Target Python 3.14
+target-version = "py314"
 
 # Set line length to match common Python conventions
 line-length = 119

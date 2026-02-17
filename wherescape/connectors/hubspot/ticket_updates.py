@@ -5,6 +5,7 @@ from wherescape.connectors.hubspot.hubspot_wrapper import Hubspot, create_filter
 from wherescape.connectors.hubspot.utils import get_double_nerd_ids, get_double_tickets
 from wherescape.wherescape import WhereScape
 
+
 """
 This module requires only the access token to update information
 """
@@ -19,6 +20,7 @@ ticket_properties = [
     "notes",
 ]
 
+
 def merge_double_tickets(parameter_name: str):
     """
     Function start the process of merging tickets with the same nerds ticket id.
@@ -29,16 +31,14 @@ def merge_double_tickets(parameter_name: str):
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logging.info("connecting to Wherescape")
     wherescape_instance = WhereScape()
-    logging.info(
-        f"Start time: {start_time} for hubspot merge_double_tickets"
-    )
+    logging.info(f"Start time: {start_time} for hubspot merge_double_tickets")
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
         logging.error(f"Nothing Token found under parameter: {parameter_name}.")
-        exit()        
+        exit()
 
     hubspot = Hubspot(access_token)
-    
+
     all_tickets = hubspot.get_all("tickets", ticket_properties)
 
     double_ticket_ids = get_double_nerd_ids(all_tickets)
@@ -68,9 +68,9 @@ def merge_double_tickets(parameter_name: str):
             hubspot.batch_archive(batch_list, "tickets")
 
             del update_tickets[:100]
-    result = hubspot.update_batch(update_tickets, "tickets") 
+    result = hubspot.update_batch(update_tickets, "tickets")
     if result is None:
-        exit() # exit if nothing was updated. to avoid archiving everything
+        exit()  # exit if nothing was updated. to avoid archiving everything
 
     delete_ids = []
     for ticket in delete_tickets:
@@ -87,6 +87,7 @@ def merge_double_tickets(parameter_name: str):
     # delete remaining < 100 items
     hubspot.batch_archive(delete_ids, "tickets")
 
+
 def hubspot_update_company_associaton(parameter_name: str):
     """
     Function to set the right company to a hubspot ticket based on ticket propery nerds_customer_id and company property client_number.
@@ -97,9 +98,7 @@ def hubspot_update_company_associaton(parameter_name: str):
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logging.info("connecting to Wherescape")
     wherescape_instance = WhereScape()
-    logging.info(
-        f"Start time: {start_time} for hubspot merge_double_tickets"
-    )
+    logging.info(f"Start time: {start_time} for hubspot merge_double_tickets")
     # get parameter
     access_token = wherescape_instance.read_parameter(parameter_name)
     if access_token is None:
@@ -107,7 +106,7 @@ def hubspot_update_company_associaton(parameter_name: str):
         exit()
 
     hubspot = Hubspot(access_token)
-    
+
     # Get Nerds company.
     filters = []
     filters.append(create_filter("domain", "EQ", "nerds.nl"))
@@ -117,7 +116,6 @@ def hubspot_update_company_associaton(parameter_name: str):
     if nerds_company is None:
         logging.error("problem while locating company")
         return
-    
 
     # Get tickets with Nerds as associated company.
     ticket_filters = []
@@ -125,7 +123,7 @@ def hubspot_update_company_associaton(parameter_name: str):
     ticket_filters.append(create_filter("nerds_customer_id", "HAS_PROPERTY"))
     ticket_filters.append(create_filter("nerds_customer_email", "EQ", "anoniem@voys.nerds.nl"))
     tickets = hubspot.filtered_search(hs_object="tickets", filters=ticket_filters, properties=["nerds_customer_id"])
-    logging.info("%i tickets found with " % len(tickets) )
+    logging.info("%i tickets found with " % len(tickets))
 
     for ticket in tickets:
         correct_company = None
@@ -138,13 +136,11 @@ def hubspot_update_company_associaton(parameter_name: str):
         associated_companies = hubspot.get_associations(ticket.id, "ticket", "company")
         # see if correct company is already there.
         for association in associated_companies:
-            company = hubspot.get_object(
-                association.to_object_id, "companies", ["client_id", "domain", "city"]
-            )
-            if company is not None: # we can stop once we find the correct one
+            company = hubspot.get_object(association.to_object_id, "companies", ["client_id", "domain", "city"])
+            if company is not None:  # we can stop once we find the correct one
                 correct_company = company
                 break
-        
+
         if correct_company is None:
             filters = []
             # Client id is numeric, so if customer id is not, the search would give an error.
@@ -154,16 +150,14 @@ def hubspot_update_company_associaton(parameter_name: str):
 
                 if association is not None and len(association) == 1:
                     response = hubspot.create_association(
-                        from_object_id= company.id, 
-                        from_object_type= "companies",
-                        to_object_id= ticket.id, 
+                        from_object_id=company.id,
+                        from_object_type="companies",
+                        to_object_id=ticket.id,
                         to_object_type="tickets",
-                        association_type="primary_company_to_ticket"
+                        association_type="primary_company_to_ticket",
                     )
-                    if response is None: # no response indicates it failed
+                    if response is None:  # no response indicates it failed
                         logging.warning(f"Correct company could not be set for ticket with record id {ticket.id}.")
-                    
+
             else:
                 logging.warning(f"customer_id could not be used: {customer_id}")
-        
-

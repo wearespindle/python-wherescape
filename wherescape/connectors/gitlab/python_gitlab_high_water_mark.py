@@ -1,5 +1,5 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from ... import WhereScape
 
@@ -14,17 +14,11 @@ def gitlab_next_high_water_mark():
     """
     wherescape_instance = WhereScape()
     next_high_water_mark = datetime.today().isoformat(timespec="seconds")
-    current_high_water_mark = wherescape_instance.read_parameter(
-        "gitlab_high_water_mark"
-    )
+    current_high_water_mark = wherescape_instance.read_parameter("gitlab_high_water_mark")
     logging.info(f"Current high water mark is {current_high_water_mark}")
     logging.info(f"Next high water mark will be {next_high_water_mark}")
-    wherescape_instance.main_message = (
-        f"Next high water mark will be {next_high_water_mark}"
-    )
-    wherescape_instance.write_parameter(
-        "gitlab_high_water_mark_next", next_high_water_mark
-    )
+    wherescape_instance.main_message = f"Next high water mark will be {next_high_water_mark}"
+    wherescape_instance.write_parameter("gitlab_high_water_mark_next", next_high_water_mark)
 
 
 def gitlab_update_high_water_mark():
@@ -35,11 +29,7 @@ def gitlab_update_high_water_mark():
     """
     wherescape_instance = WhereScape()
 
-    next_high_water_mark = wherescape_instance.read_parameter(
-        "gitlab_high_water_mark_next"
-    )
+    next_high_water_mark = wherescape_instance.read_parameter("gitlab_high_water_mark_next")
     wherescape_instance.write_parameter("gitlab_high_water_mark", next_high_water_mark)
-    wherescape_instance.main_message = (
-        f"High water mark is set to {next_high_water_mark}"
-    )
+    wherescape_instance.main_message = f"High water mark is set to {next_high_water_mark}"
     logging.info(f"High water mark is set to {next_high_water_mark}")

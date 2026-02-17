@@ -13,8 +13,11 @@ columns and the same name as the load table but prefixed with ds_.
 4. The ds table needs to resude in a 'datastore' schema.
 5. After the load table script has run, the ds table needs to be processed.
 """
+
 import logging
+
 from hubspot.crm.properties.exceptions import ForbiddenException
+
 from ...helper_functions import prepare_metadata_query
 
 
@@ -33,9 +36,7 @@ def compare_columns(wherescape_columns, hubspot_columns):
     return missing_in_wherescape, missing_in_hubspot
 
 
-def create_table_rows(
-    missing_in_wherescape, missing_in_hubspot, environment, table_name
-):
+def create_table_rows(missing_in_wherescape, missing_in_hubspot, environment, table_name):
     """Function that creates the table row list for the insert query."""
     table_rows = []
     if len(missing_in_wherescape) > 0:
@@ -60,9 +61,7 @@ def get_ds_rows(wherescape_instance):
     return rows
 
 
-def hubspot_check_missing_columns(
-    wherescape_instance, hubspot_instance, table_name, object_type, environment
-):
+def hubspot_check_missing_columns(wherescape_instance, hubspot_instance, table_name, object_type, environment):
     """
     Query the hubspot api for the supplied environment and object_type and
     compare with the wherescape objects.
@@ -82,17 +81,13 @@ def hubspot_check_missing_columns(
                 object_type=object_type, archived=False
             )
         except ForbiddenException:
-            logging.info(
-                f"No access for type {object_type} via the Hubspot api for {environment}"
-            )
+            logging.info(f"No access for type {object_type} via the Hubspot api for {environment}")
         else:
             api_results = api_response.to_dict()
             hubspot_columns = []
             for result in api_results["results"]:
                 hubspot_columns.append(result["name"])
-            missing_in_wherescape, missing_in_hubspot = compare_columns(
-                wherescape_columns, hubspot_columns
-            )
+            missing_in_wherescape, missing_in_hubspot = compare_columns(wherescape_columns, hubspot_columns)
             table_rows = create_table_rows(
                 missing_in_wherescape,
                 missing_in_hubspot,

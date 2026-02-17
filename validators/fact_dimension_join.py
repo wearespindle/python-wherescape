@@ -1,4 +1,5 @@
 """Module with function to validate fact-dimension joins."""
+
 import csv
 import logging
 import os
@@ -23,9 +24,7 @@ def check_fact_dimension_join(output_file_location=""):
     wherescape = WhereScape()
 
     start_time = datetime.now()
-    logging.info(
-        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for check_fact_dimension_join"
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for check_fact_dimension_join")
 
     date = datetime.now().strftime("%Y-%m-%d")
 

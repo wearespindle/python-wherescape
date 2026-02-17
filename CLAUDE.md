@@ -22,12 +22,13 @@ This is a Python library for WhereScape RED, a data warehouse automation tool. T
 - `WhereScapeLogHandler` buffers logs and outputs them with WhereScape-specific exit codes on flush
 - Exit codes: `1` (success), `-1` (warnings), `-2` (errors), `-3` (critical)
 - Logs to both console (for WhereScape) and rotating file handler (Saturday night rotation)
-- Must be initialized via `initialise_wherescape_logging(wherescape_instance)`
+- Automatically initialized when WhereScape instance is created (in `WhereScape.__init__()`)
 - Sets up unhandled exception logging
 
 **helper_functions.py** - Shared utilities:
 - `prepare_metadata_query()`: Generates SQL to create/update load table column metadata in WhereScape repository
 - `create_column_names()`: Slugifies display names to valid column names (max 59 chars)
+- `create_legacy_column_names()`: Legacy version that appends numbers to all columns (preserved for backward compatibility with existing tables)
 - `flatten_json()`: Flattens nested JSON responses from APIs
 - `filter_dict()` and `fill_out_empty_keys()`: Clean and normalize API responses
 
@@ -57,6 +58,13 @@ All connectors follow a consistent pattern with three components:
 - **gitlab**: Projects, issues, tags, pipelines, merge requests, commits, branches (incremental via high water marks)
 - **hubspot**: Companies, contacts, deals, tickets, engagements (supports multiple environments)
 - **jira**: Projects and issues (full and incremental loads)
+
+**Note:** The HubSpot connector has a unique structure that deviates from the standard three-file pattern:
+- `collect_data.py` - Main entry point (replaces standard `{source}_load_data.py`)
+- `process_data.py` - Processes and sends data to HubSpot (bi-directional sync)
+- `ticket_updates.py` - Specialized operations (merge tickets, fix company associations)
+- `utils.py` - Shared utilities for HubSpot operations
+- Supports bidirectional sync (reading from WhereScape, writing back to HubSpot)
 
 ### Validators
 
@@ -125,7 +133,7 @@ All environment variables start with `WSL_` prefix:
 
 ### Running Tests
 
-There is no formal test suite. The `test.py` file in the root can be used for ad-hoc testing with a local environment setup.
+There is no formal test suite. Individual connectors may have test files (e.g., `anythingllm_test.py`) for ad-hoc testing with a local environment setup.
 
 ### Code Formatting and Linting
 
@@ -142,7 +150,7 @@ ruff format .
 ```
 
 Configuration details:
-- Target: Python 3.12
+- Target: Python 3.14
 - Line length: 119 characters
 - Enabled rules: pycodestyle (E/W), pyflakes (F), isort (I), pep8-naming (N), flake8-bugbear (B), flake8-comprehensions (C4), flake8-simplify (SIM), pyupgrade (UP)
 - See [pyproject.toml](pyproject.toml) for complete configuration

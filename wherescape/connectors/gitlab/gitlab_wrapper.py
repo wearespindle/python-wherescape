@@ -1,9 +1,11 @@
 """Module to fetch data (e.g. tickets, projects, pipelines) from the Gitlab API"""
-import requests
+
 import logging
 
+import requests
+
+from ...helper_functions import fill_out_empty_keys, filter_dict, flatten_json
 from .gitlab_data_types_column_names import COLUMN_NAMES_AND_DATA_TYPES
-from ...helper_functions import flatten_json, filter_dict, fill_out_empty_keys
 
 
 class Gitlab:
@@ -88,9 +90,7 @@ class Gitlab:
                 break
 
             if response.status_code == 404:
-                logging.info(
-                    f"{resource_api}\n Resource not found."
-                )
+                logging.info(f"{resource_api}\n Resource not found.")
                 break
 
             response.raise_for_status()
@@ -123,13 +123,9 @@ class Gitlab:
         keys_to_keep = COLUMN_NAMES_AND_DATA_TYPES["projects"].keys()
         resource_api = "projects"
 
-        params = {
-            "order_by": "id"
-        }
+        params = {"order_by": "id"}
 
-        all_projects = self.paginate_through_resource(
-            resource_api, keys_to_keep, params
-        )
+        all_projects = self.paginate_through_resource(resource_api, keys_to_keep, params)
         return all_projects
 
     def get_release_tags(self):
@@ -185,9 +181,7 @@ class Gitlab:
             project_id = project[0]
             resource_api = f"projects/{project_id}/issues"
 
-            project_issues = self.paginate_through_resource(
-                resource_api, keys_to_keep, params
-            )
+            project_issues = self.paginate_through_resource(resource_api, keys_to_keep, params)
             all_issues.extend(project_issues)
 
         return all_issues
@@ -211,9 +205,7 @@ class Gitlab:
         for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/pipelines"
-            project_pipelines = self.paginate_through_resource(
-                resource_api, keys_to_keep, params
-            )
+            project_pipelines = self.paginate_through_resource(resource_api, keys_to_keep, params)
             all_pipelines.extend(project_pipelines)
 
         return all_pipelines
@@ -237,9 +229,7 @@ class Gitlab:
         for project in self.projects:
             project_id = project[0]
             resource_api = f"projects/{project_id}/merge_requests"
-            project_merge_requests = self.paginate_through_resource(
-                resource_api, keys_to_keep, params
-            )
+            project_merge_requests = self.paginate_through_resource(resource_api, keys_to_keep, params)
             all_merge_requests.extend(project_merge_requests)
 
         return all_merge_requests

@@ -46,9 +46,7 @@ EXPECTED_COLUMNS = [
 def anythingllm_create_metadata():
     """Create metadata for AnythingLLM chats load table."""
     start_time = datetime.now()
-    logging.info(
-        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for anythingllm_create_metadata"
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for anythingllm_create_metadata")
 
     # Initialise WhereScape (logging is initialised through WhereScape object)
     wherescape = WhereScape()
@@ -119,12 +117,8 @@ def anythingllm_create_metadata():
 
     # Execute the SQL
     wherescape.push_to_meta(sql)
-    wherescape.main_message = (
-        f"Created {len(columns) + 2} columns in metadata table for embed {embed_uuid}"
-    )
+    wherescape.main_message = f"Created {len(columns) + 2} columns in metadata table for embed {embed_uuid}"
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        f"Time elapsed: {(end_time - start_time).seconds} seconds for anythingllm_create_metadata"
-    )
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for anythingllm_create_metadata")
