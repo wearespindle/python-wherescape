@@ -2,4 +2,4 @@
 # Install with: pip install -r requirements-dev.txt
 
 # Code linting and formatting
-ruff>=0.14.0,<0.15.0
+ruff>=0.14.0,<0.16.0
