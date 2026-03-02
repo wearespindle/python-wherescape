@@ -2,9 +2,9 @@
 
 import json
 import logging
+
 import pandas as pd
 import requests
-
 from requests.auth import HTTPBasicAuth
 
 from ...helper_functions import filter_dict, flatten_json
@@ -105,14 +105,10 @@ class Jira:
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         auth = HTTPBasicAuth(self.user, self.apikey)
 
-        response = requests.request(
-            method, url, data=payload, headers=headers, auth=auth
-        )
+        response = requests.request(method, url, data=payload, headers=headers, auth=auth)
 
         if response.status_code != 200:
-            raise Exception(
-                f"JIRA connection error {response.status_code}: {response.content}"
-            )
+            raise Exception(f"JIRA connection error {response.status_code}: {response.content}")
         return response
 
     def get_all_projects(self, as_numpy=True):
@@ -148,9 +144,7 @@ class Jira:
                 columns=list(project_keys_list),
             )
 
-            data_as_frame = self.clean_dataframe(
-                data_as_frame, KEYS_TO_KEEP_FROM_PROJECTS_JSON
-            )
+            data_as_frame = self.clean_dataframe(data_as_frame, KEYS_TO_KEEP_FROM_PROJECTS_JSON)
 
             return data_as_frame.values.tolist()
         return json_response["values"]
@@ -172,9 +166,7 @@ class Jira:
         for project in projects:
             if project["isPrivate"]:
                 continue
-            all_issues_per_project.extend(
-                self.get_issue_data_per_project(project["id"], since)
-            )
+            all_issues_per_project.extend(self.get_issue_data_per_project(project["id"], since))
         return all_issues_per_project
 
     def get_issue_data_per_project(self, project_id, since=None):
@@ -241,22 +233,16 @@ class Jira:
 
         for key, value in properties_to_transform.items():
             # to make it a little bit more faster, let's skip object, since it is already an object (string)
-            if "object" == value:
+            if value == "object":
                 continue
             try:
-
                 # When working with dates, we want to keep None values None and not NaT. Otherwise we get a 00:00:00 date in wherescape
-                if (
-                    value == "datetime64[ns]"
-                    and dataframe[key].loc[dataframe.index[0]] is None
-                ):
+                if value == "datetime64[ns]" and dataframe[key].loc[dataframe.index[0]] is None:
                     continue
                 else:
                     dataframe[key] = dataframe[key].astype(value, errors="ignore")
             except KeyError:
-                logging.info(
-                    key + " key not in dataframe, skipping transforming datatype"
-                )
+                logging.info(key + " key not in dataframe, skipping transforming datatype")
                 dataframe[key] = ""  # todo: check if now keys are missing.
         return dataframe
 
@@ -283,19 +269,13 @@ class Jira:
                     if item["field"] == "status" and item["toString"] == "In Progress":
                         history_list.append(history["created"])
 
-            issue["status_in_progress_date"] = (
-                min(history_list) if len(history_list) > 0 else None
-            )
+            issue["status_in_progress_date"] = min(history_list) if len(history_list) > 0 else None
 
             flattend_dict = flatten_json(json_response=issue, name_to_skip="fields", legacy_list_handling=True)
             data[issue["id"]] = filter_dict(flattend_dict, issues_keys_list)
 
-        data_as_frame = pd.DataFrame(
-            data.values(), list(data.keys()), columns=list(issues_keys_list)
-        )
-        data_as_frame = self.clean_dataframe(
-            data_as_frame, KEYS_TO_KEEP_FROM_TICKETS_JSON
-        )
+        data_as_frame = pd.DataFrame(data.values(), list(data.keys()), columns=list(issues_keys_list))
+        data_as_frame = self.clean_dataframe(data_as_frame, KEYS_TO_KEEP_FROM_TICKETS_JSON)
         try:
             issue_data_in_list = data_as_frame.values.tolist()
         except:

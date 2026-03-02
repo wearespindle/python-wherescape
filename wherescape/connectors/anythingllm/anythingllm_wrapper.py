@@ -90,7 +90,7 @@ def _flatten_chat(chat):
             "metrics_output_tps": response_obj.get("metrics", {}).get("outputTps"),
             "metrics_duration": response_obj.get("metrics", {}).get("duration"),
         }
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:
         # If response is not valid JSON, store as-is
         response_data = {
             "response_text": chat.get("response", ""),
@@ -114,7 +114,7 @@ def _flatten_chat(chat):
             "connection_ip": conn_obj.get("ip"),
             "connection_username": conn_obj.get("username"),
         }
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:
         connection_data = {
             "connection_host": None,
             "connection_ip": None,

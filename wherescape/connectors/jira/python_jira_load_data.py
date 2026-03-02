@@ -132,15 +132,11 @@ def jira_load_data(load_type, use_high_water_mark=False, since=None, is_legacy=F
         logging.info(f"Successfully inserted {len(rows)} rows in to the load table.")
 
         # Update the high_water_mark. Will also be updated if use_high_water_mark=False
-        wherescape_instance.write_parameter(
-            "jira_high_water_mark", start_time.strftime("%Y-%m-%d %H:%M")
-        )
+        wherescape_instance.write_parameter("jira_high_water_mark", start_time.strftime("%Y-%m-%d %H:%M"))
         logging.info(f"New high water mark is: {start_time.strftime('%Y-%m-%d %H:%M')}")
 
         # Add success message
-        wherescape_instance.main_message = (
-            f"Successfully inserted {len(rows)} rows in to the load table."
-        )
+        wherescape_instance.main_message = f"Successfully inserted {len(rows)} rows in to the load table."
 
     else:
         logging.info("No object changes received from JIRA")

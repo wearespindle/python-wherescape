@@ -8,6 +8,7 @@ Usage
 2) Save the file as ws_env.py (in your local development environment)
 3) Make sure that ws_env.py is in .gitignore
 """
+
 import os
 
 
@@ -49,9 +50,7 @@ def setup_env(tablename, schema="load", environment="dev1", source="dev1"):
         if source == "sgmt":
             os.environ["WSL_SRC_DSN"] = "wswh prod"
             os.environ["WSL_SRC_DSN_ARCH"] = "64"
-            os.environ[
-                "WSL_SRC_SERVER"
-            ] = "xxxxxxx.xxxxxxx.eu-central-1.rds.amazonaws.com"
+            os.environ["WSL_SRC_SERVER"] = "xxxxxxx.xxxxxxx.eu-central-1.rds.amazonaws.com"
             os.environ["WSL_SRC_DBPORT"] = ""
             os.environ["WSL_SRC_DBID"] = ""
             os.environ["WSL_SRC_DB"] = "__db_name__"
@@ -61,9 +60,7 @@ def setup_env(tablename, schema="load", environment="dev1", source="dev1"):
         else:
             os.environ["WSL_SRC_DSN"] = "wswh dev1"
             os.environ["WSL_SRC_DSN_ARCH"] = "64"
-            os.environ[
-                "WSL_SRC_SERVER"
-            ] = "xxxxxx.xxxxxx.eu-central-1.rds.amazonaws.com"
+            os.environ["WSL_SRC_SERVER"] = "xxxxxx.xxxxxx.eu-central-1.rds.amazonaws.com"
             os.environ["WSL_SRC_DBPORT"] = ""
             os.environ["WSL_SRC_DBID"] = ""
             os.environ["WSL_SRC_DB"] = "__db_name__"
@@ -100,9 +97,7 @@ def setup_env(tablename, schema="load", environment="dev1", source="dev1"):
 
     os.environ["WSL_BINDIR"] = "C:\\Program Files\\WhereScape\\RED\\"
     # os.environ['WSL_WORKDIR'] = f"C:\\WhereScape\\Scheduler\\Work\\{capped_environment}\\"
-    os.environ[
-        "WSL_WORKDIR"
-    ] = "C:\\Users\\Bart\\Documents\\GitHub\\wherescape-warehouse\\"
+    os.environ["WSL_WORKDIR"] = "C:\\Users\\Bart\\Documents\\GitHub\\wherescape-warehouse\\"
 
     os.environ["WSL_SEQUENCE"] = "1234"
     os.environ["WSL_JOB_KEY"] = "9999"
@@ -115,9 +110,7 @@ def setup_env(tablename, schema="load", environment="dev1", source="dev1"):
     # setup passwords for warehouse.py
     git_dir = r"C:\WhereScape\GitlabRepository"
 
-    os.environ["CONFIG_JSON_PATH"] = (
-        git_dir + r"\wherescape-warehouse\python\config.wherescape.json"
-    )
+    os.environ["CONFIG_JSON_PATH"] = git_dir + r"\wherescape-warehouse\python\config.wherescape.json"
 
     # -- set passwords
     # -- script can run in all environments

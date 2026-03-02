@@ -142,27 +142,25 @@ def test_flatten_chat():
         "embed_id": 456,
         "usersId": 789,
         "createdAt": "2024-01-15T10:30:00Z",
-        "response": json.dumps({
-            "text": "The weather is sunny today.",
-            "type": "text",
-            "attachments": ["file1.pdf", "file2.png"],
-            "sources": [
-                {"title": "Weather Report", "url": "https://example.com/weather"},
-                {"title": "Climate Data", "url": "https://example.com/climate"}
-            ],
-            "metrics": {
-                "completion_tokens": 15,
-                "prompt_tokens": 8,
-                "total_tokens": 23,
-                "outputTps": 12.5,
-                "duration": 1200
+        "response": json.dumps(
+            {
+                "text": "The weather is sunny today.",
+                "type": "text",
+                "attachments": ["file1.pdf", "file2.png"],
+                "sources": [
+                    {"title": "Weather Report", "url": "https://example.com/weather"},
+                    {"title": "Climate Data", "url": "https://example.com/climate"},
+                ],
+                "metrics": {
+                    "completion_tokens": 15,
+                    "prompt_tokens": 8,
+                    "total_tokens": 23,
+                    "outputTps": 12.5,
+                    "duration": 1200,
+                },
             }
-        }),
-        "connection_information": json.dumps({
-            "host": "example.com",
-            "ip": "192.168.1.100",
-            "username": "testuser"
-        })
+        ),
+        "connection_information": json.dumps({"host": "example.com", "ip": "192.168.1.100", "username": "testuser"}),
     }
 
     try:
@@ -172,11 +170,26 @@ def test_flatten_chat():
 
         # Verify all expected fields are present
         expected_fields = [
-            "id", "prompt", "session_id", "include", "embed_id", "user_id", "created_at",
-            "response_text", "response_type", "response_attachments", "response_sources",
-            "response_sources_count", "metrics_completion_tokens", "metrics_prompt_tokens",
-            "metrics_total_tokens", "metrics_output_tps", "metrics_duration",
-            "connection_host", "connection_ip", "connection_username"
+            "id",
+            "prompt",
+            "session_id",
+            "include",
+            "embed_id",
+            "user_id",
+            "created_at",
+            "response_text",
+            "response_type",
+            "response_attachments",
+            "response_sources",
+            "response_sources_count",
+            "metrics_completion_tokens",
+            "metrics_prompt_tokens",
+            "metrics_total_tokens",
+            "metrics_output_tps",
+            "metrics_duration",
+            "connection_host",
+            "connection_ip",
+            "connection_username",
         ]
 
         logging.info(f"Fields in result: {len(result)}")

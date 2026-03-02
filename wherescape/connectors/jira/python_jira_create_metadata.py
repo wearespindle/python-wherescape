@@ -1,14 +1,14 @@
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 
-from .jira_wrapper import Jira
-from ...wherescape import WhereScape
 from ...helper_functions import (
-    prepare_metadata_query,
     create_column_names,
     create_display_names,
+    prepare_metadata_query,
 )
+from ...wherescape import WhereScape
+from .jira_wrapper import Jira
 
 
 def jira_create_metadata_project():

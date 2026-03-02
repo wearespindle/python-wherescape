@@ -20,9 +20,7 @@ def anythingllm_load_data_chats():
     # First initialise WhereScape to setup logging
     logging.info("Connecting to WhereScape")
     wherescape_instance = WhereScape()
-    logging.info(
-        f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for anythingllm_load_data_chats"
-    )
+    logging.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')} for anythingllm_load_data_chats")
 
     # Get the relevant values from WhereScape
     api_key = os.getenv("WSL_SRCCFG_APIKEY")
@@ -91,15 +89,11 @@ def anythingllm_load_data_chats():
         logging.info(f"Successfully inserted {len(rows)} rows in to the load table.")
 
         # Add success message
-        wherescape_instance.main_message = (
-            f"Successfully inserted {len(rows)} rows in to the load table."
-        )
+        wherescape_instance.main_message = f"Successfully inserted {len(rows)} rows in to the load table."
 
     else:
         logging.info("No object changes received from AnythingLLM")
 
     # Final logging
     end_time = datetime.now()
-    logging.info(
-        f"Time elapsed: {(end_time - start_time).seconds} seconds for anythingllm_load_data_chats"
-    )
+    logging.info(f"Time elapsed: {(end_time - start_time).seconds} seconds for anythingllm_load_data_chats")

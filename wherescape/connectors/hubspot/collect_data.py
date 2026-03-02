@@ -35,9 +35,7 @@ def hubspot_load_data():
         logging.info("hubspot update done")
 
 
-def hubspot_get_token(
-    wherescape_instance: WhereScape, table_name: str, develop_env: bool
-):
+def hubspot_get_token(wherescape_instance: WhereScape, table_name: str, develop_env: bool):
     """
     Function to get the hubspot access token from the table.
     First trying with environemnt specification from table_name.
