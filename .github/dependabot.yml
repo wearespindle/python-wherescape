@@ -9,4 +9,8 @@ updates:
   - package-ecosystem: "uv"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
