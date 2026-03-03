@@ -6,6 +6,7 @@ ws_env.py
 *.pyc
 __pycache__
 virtual/
+.venv/
 config.py
 script_tester.py
 .python-version

@@ -11,7 +11,19 @@ maintained
 
 ### Requirements
 
-Pip install requirements.txt. Needs to run on a WhereScape server.
+Requires Python 3.14. Dependencies are managed with [uv](https://docs.astral.sh/uv/).
+
+Install dependencies:
+```bash
+uv sync
+```
+
+Install including development tools (ruff):
+```bash
+uv sync --group dev
+```
+
+Needs to run on a WhereScape server.
 
 ### Installation
 
