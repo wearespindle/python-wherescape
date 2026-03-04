@@ -77,14 +77,31 @@ All connectors follow a consistent pattern with three components:
 
 ### Requirements
 
-Install runtime dependencies:
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Dependencies are defined in [pyproject.toml](pyproject.toml) and pinned in `uv.lock`.
+
+Install all dependencies (creates `.venv` automatically):
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
-Install development dependencies:
+Install including dev dependencies:
 ```bash
-pip install -r requirements-dev.txt
+uv sync --group dev
+```
+
+Run a command within the project environment:
+```bash
+uv run python some_script.py
+```
+
+Add a new dependency:
+```bash
+uv add <package>
+```
+
+Add a new dev dependency:
+```bash
+uv add --group dev <package>
 ```
 
 Required packages:
