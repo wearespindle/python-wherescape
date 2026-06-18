@@ -107,6 +107,7 @@ class WhereScape:
             return None
 
         results = self.query_meta(sql, [self.object_key])
+        column_names, column_types = [], []
         if results:
             column_names = [result[0] for result in results]
             column_types = [result[1] for result in results]
