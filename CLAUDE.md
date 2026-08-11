@@ -150,7 +150,13 @@ All environment variables start with `WSL_` prefix:
 
 ### Running Tests
 
-There is no formal test suite. Individual connectors may have test files (e.g., `anythingllm_test.py`) for ad-hoc testing with a local environment setup.
+Unit tests live in `wherescape/tests/`. The project itself has no pytest dependency; run them from the parent wherescape-warehouse repository:
+
+```bash
+uv run --project python pytest python/wherescape_os/wherescape/tests/ -v
+```
+
+Individual connectors may additionally have test files (e.g., `anythingllm_test.py`) for ad-hoc testing with a local environment setup.
 
 ### Code Formatting and Linting
 

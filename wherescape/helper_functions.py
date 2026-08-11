@@ -2,6 +2,28 @@ from dateutil.parser import parse
 from slugify import slugify
 
 
+# Python class name -> PostgreSQL type mapping (https://www.psycopg.org/docs/usage.html)
+# Based on FreshServiceWrapper.TYPE_MAPPING in the warehouse repository, but
+# keyed by Python 3 class names so lookups on type(value).__name__ actually
+# match, and with float mapped to numeric instead of real (Python floats are
+# 8 bytes; real is 4 bytes and would lose precision).
+TYPE_MAPPING = {
+    "NoneType": "text",
+    "bool": "bool",
+    "float": "numeric",
+    "int": "bigint",
+    "str": "text",
+    "Decimal": "numeric",
+    "date": "date",
+    "time": "time",
+    "datetime": "timestamp",
+    "timedelta": "interval",
+    "list": "text",
+    # "list": "text[]",
+    "UUID": "uuid",
+}
+
+
 def create_column_names(display_names=None):
     """
     Some api sources (like Notion) don't have column names that easily
@@ -294,6 +316,9 @@ def infer_postgres_type(value, column_name: str) -> str:
     """
     Infer PostgreSQL data type from a sample value.
 
+    Maps the Python type of the value through TYPE_MAPPING, with column name
+    heuristics for None values and date-like strings.
+
     Args:
         value: Sample value from the data
         column_name: Name of the column (for heuristics)
@@ -306,26 +331,19 @@ def infer_postgres_type(value, column_name: str) -> str:
         if any(kw in column_name.lower() for kw in ["date", "time", "created", "updated"]):
             return "timestamp"
         elif any(kw in column_name.lower() for kw in ["count", "id", "number"]):
-            return "int"
+            return "bigint"
         elif any(kw in column_name.lower() for kw in ["rate", "score", "percent"]):
             return "numeric"
         else:
             return "text"
 
-    # Infer from actual value
-    if isinstance(value, bool):
-        return "bool"
-    elif isinstance(value, int):
-        return "bigint" if abs(value) > 2147483647 else "int"
-    elif isinstance(value, float):
-        return "numeric"
-    elif isinstance(value, str):
+    if isinstance(value, str):
         # Check if it looks like a date
         if any(kw in column_name.lower() for kw in ["date", "time", "created", "updated"]):
             return "timestamp"
         return "text"
-    else:
-        return "text"
+
+    return TYPE_MAPPING.get(type(value).__name__, "text")
 
 
 def get_metadata_from_sample_data(
@@ -349,7 +367,7 @@ def get_metadata_from_sample_data(
         >>> columns
         ['id', 'name', 'score', 'created_at', 'active']
         >>> types
-        ['int', 'text', 'numeric', 'timestamp', 'bool']
+        ['bigint', 'text', 'numeric', 'timestamp', 'bool']
     """
     if not sample_data:
         return [], []
