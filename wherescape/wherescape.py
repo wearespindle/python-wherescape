@@ -352,20 +352,22 @@ class WhereScape:
             object_name = self.load_full_name
 
         sql = """
+        DECLARE @object_name nvarchar(256) = ?;
+        DECLARE @property_name nvarchar(256) = ?;
         SELECT COALESCE(tab.epv_value, src.epv_value, tgt.epv_value, '')
         FROM ws_ext_prop_def def
         LEFT OUTER JOIN ws_ext_prop_value tab
             ON tab.epv_obj_key = (
                 SELECT oo_obj_key
                 FROM ws_obj_object
-                WHERE UPPER(oo_name) = UPPER(?)
+                WHERE UPPER(oo_name) = UPPER(@object_name)
             )
             AND tab.epv_def_key = def.epd_key
         LEFT OUTER JOIN ws_ext_prop_value src
             ON src.epv_obj_key = (
                 SELECT lt_connect_key
                 FROM ws_load_tab
-                WHERE UPPER(lt_table_name) = UPPER(?)
+                WHERE UPPER(lt_table_name) = UPPER(@object_name)
             )
             AND src.epv_def_key = def.epd_key
         LEFT OUTER JOIN ws_ext_prop_value tgt
@@ -374,13 +376,13 @@ class WhereScape:
                 FROM ws_dbc_connect
                 JOIN ws_dbc_target ON dt_connect_key = dc_obj_key
                 JOIN ws_obj_object ON oo_target_key = dt_target_key
-                WHERE UPPER(oo_name) = UPPER(?)
+                WHERE UPPER(oo_name) = UPPER(@object_name)
             )
             AND tgt.epv_def_key = def.epd_key
-        WHERE UPPER(def.epd_variable_name) = UPPER(?)"""
+        WHERE UPPER(def.epd_variable_name) = UPPER(@property_name)"""
 
         try:
-            result = self.query_meta(sql, [object_name, object_name, object_name, property_name])
+            result = self.query_meta(sql, [object_name, property_name])
         except Exception as e:
             logging.error(e)
             raise
