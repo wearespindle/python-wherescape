@@ -18,8 +18,10 @@ TYPE_MAPPING = {
     "time": "time",
     "datetime": "timestamp",
     "timedelta": "interval",
+    # list maps to text, not text[]: loads bind values through pyodbc/ODBC,
+    # which cannot pass a Python list as a PostgreSQL array parameter, so a
+    # text[] column could never be written by the load scripts.
     "list": "text",
-    # "list": "text[]",
     "UUID": "uuid",
 }
 

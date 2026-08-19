@@ -66,7 +66,22 @@ def check_environment_variables():
     return embed_uuid, api_key, base_url
 
 
-def test_get_all_embed_chats(embed_uuid, api_key, base_url):
+def test_get_all_embed_chats():
+    """
+    Pytest entry point for the get_all_embed_chats integration test.
+
+    Skips when the required ANYTHINGLLM_* environment variables are not set,
+    so the suite can run without a live AnythingLLM instance.
+    """
+    embed_uuid, api_key, base_url = check_environment_variables()
+    if not all([embed_uuid, api_key, base_url]):
+        import pytest
+
+        pytest.skip("ANYTHINGLLM_* environment variables not set")
+    run_get_all_embed_chats(embed_uuid, api_key, base_url)
+
+
+def run_get_all_embed_chats(embed_uuid, api_key, base_url):
     """
     Test the get_all_embed_chats function.
 
@@ -287,7 +302,7 @@ def main():
         return
 
     # Run integration test
-    test_get_all_embed_chats(embed_uuid, api_key, base_url)
+    run_get_all_embed_chats(embed_uuid, api_key, base_url)
 
 
 if __name__ == "__main__":
