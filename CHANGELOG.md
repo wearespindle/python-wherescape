@@ -24,3 +24,4 @@
 | 2023-11-02  | Added Hubspot missing columns check feature to the Hubspot connector |
 | 2024-01-19  | Included counts of facts without dimensions in fact-dimension join validator |
 | 2024-01-19  | Added source connection configuration properties to the Wherescape object  |
+| 2026-10-01  | Added `WhereScape.copy_tables_from_source()` (copy_tables.py): COPY tables from the source to the target connection, e.g. to refresh dev from prod |
