@@ -34,26 +34,40 @@ LOCK_TIMEOUT = "60s"
 def odbc_dsn_to_connect_kwargs(odbc_dsn, user, password):
     """Turn a Windows ODBC DSN (psqlODBC) into psycopg2.connect() keyword arguments.
 
-    Host, port, database and sslmode come from HKLM\\SOFTWARE\\ODBC\\ODBC.INI\\<dsn>; user and
-    password are not stored there and come from the WhereScape connection (WSL_*_USER/PWD).
+    Host, port, database and sslmode come from the DSN's registry key; user and password are
+    not stored there and come from the WhereScape connection (WSL_*_USER/PWD). The DSN is looked
+    up as a System DSN and then as a User DSN, each in the 64-bit and the 32-bit registry view.
     """
-    from winreg import HKEY_LOCAL_MACHINE, OpenKeyEx, QueryValueEx
+    import winreg
+
+    if not odbc_dsn:
+        raise ValueError("no ODBC DSN given: is the source/target connection set on the WhereScape object?")
 
     def value(key, name, default=None):
         try:
-            return QueryValueEx(key, name)[0] or default
+            return winreg.QueryValueEx(key, name)[0] or default
         except FileNotFoundError:
             return default
 
-    with OpenKeyEx(HKEY_LOCAL_MACHINE, f"SOFTWARE\\ODBC\\ODBC.INI\\{odbc_dsn}") as key:
-        return {
-            "host": value(key, "Servername"),
-            "port": value(key, "Port", "5432"),
-            "dbname": value(key, "Database"),
-            "sslmode": value(key, "SSLmode", "prefer").lower(),
-            "user": user,
-            "password": password,
-        }
+    path = f"SOFTWARE\\ODBC\\ODBC.INI\\{odbc_dsn}"
+    for hive in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+        for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+            try:
+                key = winreg.OpenKeyEx(hive, path, 0, winreg.KEY_READ | view)
+            except FileNotFoundError:
+                continue
+            with key:
+                return {
+                    "host": value(key, "Servername"),
+                    "port": value(key, "Port", "5432"),
+                    "dbname": value(key, "Database"),
+                    "sslmode": value(key, "SSLmode", "prefer").lower(),
+                    "user": user,
+                    "password": password,
+                }
+    raise FileNotFoundError(
+        f"ODBC DSN {odbc_dsn!r} not found as System or User DSN (64- or 32-bit) in the registry of this server"
+    )
 
 
 def resolve_tables(requested, available):
