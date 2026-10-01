@@ -17,6 +17,7 @@ This is a Python library for WhereScape RED, a data warehouse automation tool. T
 - WhereScape parameter management: `read_parameter()`, `write_parameter()`
 - Job log management: `update_task_log()`, `job_clear_logs_by_date()`, `job_clear_archive_by_date()`
 - Column metadata retrieval: `get_columns()`
+- Table copy between PostgreSQL connections: `copy_tables_from_source(schema, tables)` (logic in `copy_tables.py`; opens the DSNs with psycopg2 to stream with COPY)
 
 **logging.py** - Custom WhereScape logging handler:
 - `WhereScapeLogHandler` buffers logs and outputs them with WhereScape-specific exit codes on flush
