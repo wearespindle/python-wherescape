@@ -53,7 +53,6 @@ All connectors follow a consistent pattern with three components:
 
 ### Available Connectors
 
-- **anythingllm**: Chat history and workspace data from AnythingLLM
 - **friday_pulse**: Employee happiness survey data (with lookback period for late responses)
 - **gitlab**: Projects, issues, tags, pipelines, merge requests, commits, branches (incremental via high water marks)
 - **hubspot**: Companies, contacts, deals, tickets, engagements (supports multiple environments)
@@ -155,8 +154,6 @@ Unit tests live in `wherescape/tests/`. The project itself has no pytest depende
 ```bash
 uv run --project python pytest python/wherescape_os/wherescape/tests/ -v
 ```
-
-Individual connectors may additionally have test files (e.g., `anythingllm_test.py`) for ad-hoc testing with a local environment setup.
 
 ### Code Formatting and Linting
 
