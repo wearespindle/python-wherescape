@@ -94,6 +94,46 @@ class WhereScape:
             results = self.query_meta(sql, [self.table])
             self.object_key = results[0][0]
 
+    def copy_tables_from_source(self, schema, tables=None):
+        """
+        Copy PostgreSQL tables of `schema` from the source connection into the target connection.
+
+        Meant for refreshing a dev warehouse from production: run it from an object whose source
+        connection points at prod and whose target points at dev. Both connections must be
+        psqlODBC DSNs; they are opened with psycopg2 so the data can stream with COPY.
+
+        Input:
+        schema  : schema name, the same on both sides
+        tables  : list of table names (or one name); None copies every table in the target schema
+
+        Returns {table: rows copied, or None if that table failed}. Failed tables are logged at
+        ERROR (WhereScape return code -2); a configuration problem (source == target, unknown
+        table) raises before anything is copied. See copy_tables.py for how a table is published.
+        """
+        import psycopg2
+
+        from .copy_tables import copy_tables, odbc_dsn_to_connect_kwargs
+
+        source = psycopg2.connect(
+            **odbc_dsn_to_connect_kwargs(os.getenv("WSL_SRC_DSN"), os.getenv("WSL_SRC_USER"), os.getenv("WSL_SRC_PWD"))
+        )
+        try:
+            target = psycopg2.connect(
+                **odbc_dsn_to_connect_kwargs(
+                    os.getenv("WSL_TGT_DSN"), os.getenv("WSL_TGT_USER"), os.getenv("WSL_TGT_PWD")
+                )
+            )
+            try:
+                result = copy_tables(source, target, schema, tables)
+            finally:
+                target.close()
+        finally:
+            source.close()
+
+        if self.sequence:
+            self.update_task_log(inserted=sum(rows for rows in result.values() if rows))
+        return result
+
     def get_columns(self):
         """
         Function to get the column names and types of the connected table.
